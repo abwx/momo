@@ -6,6 +6,7 @@ export type Category = {
   name: string;
   icon: string;
   color: string;
+  password?: string | null;
   created_at: number;
 };
 
@@ -37,6 +38,7 @@ export async function initDatabase() {
       name TEXT NOT NULL,
       icon TEXT NOT NULL,
       color TEXT NOT NULL,
+      password TEXT,
       created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS items (
@@ -71,6 +73,12 @@ export async function initDatabase() {
     if (!hasReminderColumn) {
       await db.execAsync('ALTER TABLE items ADD COLUMN reminder_time INTEGER;');
     }
+    
+    const catTableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(categories)');
+    const hasPasswordColumn = catTableInfo.some(col => col.name === 'password');
+    if (!hasPasswordColumn) {
+      await db.execAsync('ALTER TABLE categories ADD COLUMN password TEXT;');
+    }
   } catch (e) {
     console.error('Error checking/migrating schema:', e);
   }
@@ -84,11 +92,11 @@ export async function getCategories(): Promise<Category[]> {
   return await database.getAllAsync<Category>('SELECT * FROM categories ORDER BY created_at DESC');
 }
 
-export async function addCategory(name: string, icon: string, color: string): Promise<number> {
+export async function addCategory(name: string, icon: string, color: string, password?: string): Promise<number> {
   const database = await initDatabase();
   const result = await database.runAsync(
-    'INSERT INTO categories (name, icon, color, created_at) VALUES (?, ?, ?, ?)',
-    [name, icon, color, Date.now()]
+    'INSERT INTO categories (name, icon, color, password, created_at) VALUES (?, ?, ?, ?, ?)',
+    [name, icon, color, password || null, Date.now()]
   );
   return result.lastInsertRowId;
 }
