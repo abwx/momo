@@ -30,8 +30,15 @@ const UrlItemCard = ({ item, handleOpenItem, handleDelete }: { item: MemoryItem,
 
   const getStatusIcon = () => {
     if (status === 'checking') return <ActivityIndicator size={20} style={{ margin: 10 }} />;
-    if (status === 'ok') return <IconButton icon="check-circle" iconColor="green" />;
-    return <IconButton icon="alert-circle" iconColor="red" />;
+    if (status === 'ok') return <IconButton icon="check-circle" iconColor="green" size={20} />;
+    return <IconButton icon="alert-circle" iconColor="red" size={20} />;
+  };
+
+  const handleCopyUrl = async () => {
+    if (item.content) {
+      await Clipboard.setStringAsync(item.content);
+      Alert.alert('已复制', '网址已复制到剪贴板');
+    }
   };
 
   return (
@@ -44,7 +51,8 @@ const UrlItemCard = ({ item, handleOpenItem, handleDelete }: { item: MemoryItem,
         right={() => (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             {getStatusIcon()}
-            <IconButton icon="delete-outline" onPress={() => handleDelete(item.id)} />
+            <IconButton icon="content-copy" size={20} onPress={handleCopyUrl} />
+            <IconButton icon="delete-outline" size={20} onPress={() => handleDelete(item.id)} />
           </View>
         )}
       />
