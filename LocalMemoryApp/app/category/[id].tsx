@@ -1,11 +1,56 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, Alert, Linking, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, FlatList, Alert, Linking } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { Text, FAB, Card, IconButton, useTheme, Portal, Dialog, TextInput, Button, Menu, Divider } from 'react-native-paper';
+import { Text, FAB, Card, IconButton, useTheme, Portal, Dialog, TextInput, Button, ActivityIndicator } from 'react-native-paper';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect } from 'expo-router';
 import { getItemsByCategory, addItem, deleteItem, MemoryItem } from '@/database/db';
+
+// Component for URL Item with real-time status check
+const UrlItemCard = ({ item, handleOpenItem, handleDelete }: { item: MemoryItem, handleOpenItem: (item: MemoryItem) => void, handleDelete: (id: number) => void }) => {
+  const [status, setStatus] = useState<'checking' | 'ok' | 'error'>('checking');
+  
+  useEffect(() => {
+    let isMounted = true;
+    
+    const checkUrl = async () => {
+      if (!item.content) return;
+      try {
+        const response = await fetch(item.content, { method: 'HEAD', mode: 'no-cors' });
+        if (isMounted) setStatus('ok');
+      } catch (error) {
+        if (isMounted) setStatus('error');
+      }
+    };
+    
+    checkUrl();
+    return () => { isMounted = false; };
+  }, [item.content]);
+
+  const getStatusIcon = () => {
+    if (status === 'checking') return <ActivityIndicator size={20} style={{ margin: 10 }} />;
+    if (status === 'ok') return <IconButton icon="check-circle" iconColor="green" />;
+    return <IconButton icon="alert-circle" iconColor="red" />;
+  };
+
+  return (
+    <Card style={styles.card} onPress={() => handleOpenItem(item)} onLongPress={() => handleDelete(item.id)}>
+      <Card.Title
+        title={item.title}
+        subtitle={item.content}
+        subtitleNumberOfLines={2}
+        left={(props) => <IconButton {...props} icon="link" />}
+        right={() => (
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {getStatusIcon()}
+            <IconButton icon="delete-outline" onPress={() => handleDelete(item.id)} />
+          </View>
+        )}
+      />
+    </Card>
+  );
+};
 
 export default function CategoryDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -113,9 +158,12 @@ export default function CategoryDetailScreen() {
   };
 
   const renderItem = ({ item }: { item: MemoryItem }) => {
+    if (item.type === 'url') {
+      return <UrlItemCard item={item} handleOpenItem={handleOpenItem} handleDelete={handleDelete} />;
+    }
+
     const getIcon = () => {
       if (item.type === 'text') return 'text-box-outline';
-      if (item.type === 'url') return 'link';
       return 'file-document-outline';
     };
 
@@ -170,14 +218,25 @@ export default function CategoryDetailScreen() {
 
       {/* Text Dialog */}
       <Portal>
-        <Dialog visible={textDialogVisible} onDismiss={() => setTextDialogVisible(false)}>
+        <Dialog 
+          visible={textDialogVisible} 
+          onDismiss={() => {
+            setTextDialogVisible(false);
+            setNewItemTitle('');
+            setNewItemContent('');
+          }}
+        >
           <Dialog.Title>新建文本记录</Dialog.Title>
           <Dialog.Content>
             <TextInput label="标题" value={newItemTitle} onChangeText={setNewItemTitle} mode="outlined" style={styles.input} />
             <TextInput label="内容" value={newItemContent} onChangeText={setNewItemContent} mode="outlined" multiline numberOfLines={4} />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setTextDialogVisible(false)}>取消</Button>
+            <Button onPress={() => {
+              setTextDialogVisible(false);
+              setNewItemTitle('');
+              setNewItemContent('');
+            }}>取消</Button>
             <Button onPress={handleAddText}>保存</Button>
           </Dialog.Actions>
         </Dialog>
@@ -185,14 +244,25 @@ export default function CategoryDetailScreen() {
 
       {/* URL Dialog */}
       <Portal>
-        <Dialog visible={urlDialogVisible} onDismiss={() => setUrlDialogVisible(false)}>
+        <Dialog 
+          visible={urlDialogVisible} 
+          onDismiss={() => {
+            setUrlDialogVisible(false);
+            setNewItemTitle('');
+            setNewItemContent('');
+          }}
+        >
           <Dialog.Title>新建网址</Dialog.Title>
           <Dialog.Content>
             <TextInput label="标题 (例如: 百度)" value={newItemTitle} onChangeText={setNewItemTitle} mode="outlined" style={styles.input} />
             <TextInput label="网址 (例如: https://baidu.com)" value={newItemContent} onChangeText={setNewItemContent} mode="outlined" keyboardType="url" />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setUrlDialogVisible(false)}>取消</Button>
+            <Button onPress={() => {
+              setUrlDialogVisible(false);
+              setNewItemTitle('');
+              setNewItemContent('');
+            }}>取消</Button>
             <Button onPress={handleAddUrl}>保存</Button>
           </Dialog.Actions>
         </Dialog>
