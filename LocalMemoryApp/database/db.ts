@@ -19,6 +19,7 @@ export type MemoryItem = {
   content: string | null;
   file_uri: string | null;
   file_name: string | null;
+  reminder_time: number | null;
   created_at: number;
 };
 
@@ -46,6 +47,7 @@ export async function initDatabase() {
       content TEXT,
       file_uri TEXT,
       file_name TEXT,
+      reminder_time INTEGER,
       created_at INTEGER NOT NULL,
       FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
     );
@@ -60,6 +62,17 @@ export async function initDatabase() {
       'INSERT INTO categories (name, icon, color, created_at) VALUES (?, ?, ?, ?)',
       ['默认分类', 'folder', '#6200EE', Date.now()]
     );
+  }
+
+  // Handle migration to add reminder_time if missing
+  try {
+    const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(items)');
+    const hasReminderColumn = tableInfo.some(col => col.name === 'reminder_time');
+    if (!hasReminderColumn) {
+      await db.execAsync('ALTER TABLE items ADD COLUMN reminder_time INTEGER;');
+    }
+  } catch (e) {
+    console.error('Error checking/migrating schema:', e);
   }
 
   return db;
@@ -116,8 +129,8 @@ export async function addItem(item: Omit<MemoryItem, 'id' | 'created_at'>): Prom
   }
 
   const result = await database.runAsync(
-    `INSERT INTO items (category_id, type, title, content, file_uri, file_name, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO items (category_id, type, title, content, file_uri, file_name, reminder_time, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       item.category_id,
       item.type,
@@ -125,6 +138,7 @@ export async function addItem(item: Omit<MemoryItem, 'id' | 'created_at'>): Prom
       item.content || null,
       finalUri || null,
       item.file_name || null,
+      item.reminder_time || null,
       Date.now()
     ]
   );
