@@ -14,13 +14,14 @@ export type ItemType = 'text' | 'url' | 'file';
 
 export type MemoryItem = {
   id: number;
-  category_id: number;
+  category_id: number | null; // Allow null for quick captures
   type: ItemType;
   title: string;
   content: string | null;
   file_uri: string | null;
   file_name: string | null;
   reminder_time: number | null;
+  tags: string | null; // Stored as JSON string array
   created_at: number;
 };
 
@@ -43,15 +44,16 @@ export async function initDatabase() {
     );
     CREATE TABLE IF NOT EXISTS items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      category_id INTEGER NOT NULL,
+      category_id INTEGER,
       type TEXT NOT NULL,
       title TEXT NOT NULL,
       content TEXT,
       file_uri TEXT,
       file_name TEXT,
       reminder_time INTEGER,
+      tags TEXT,
       created_at INTEGER NOT NULL,
-      FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
+      FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE SET NULL
     );
   `);
 
@@ -72,6 +74,11 @@ export async function initDatabase() {
     const hasReminderColumn = tableInfo.some(col => col.name === 'reminder_time');
     if (!hasReminderColumn) {
       await db.execAsync('ALTER TABLE items ADD COLUMN reminder_time INTEGER;');
+    }
+    
+    const hasTagsColumn = tableInfo.some(col => col.name === 'tags');
+    if (!hasTagsColumn) {
+      await db.execAsync('ALTER TABLE items ADD COLUMN tags TEXT;');
     }
     
     const catTableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(categories)');
@@ -117,6 +124,23 @@ export async function getItemsByCategory(categoryId: number): Promise<MemoryItem
   );
 }
 
+export async function getAllItems(): Promise<MemoryItem[]> {
+  const database = await initDatabase();
+  return await database.getAllAsync<MemoryItem>(
+    'SELECT * FROM items ORDER BY created_at DESC'
+  );
+}
+
+export async function getItemsByTag(tag: string): Promise<MemoryItem[]> {
+  const database = await initDatabase();
+  // Simplified search: since tags is a JSON array string like '["#tag1", "#tag2"]'
+  // we can use LIKE to find if it contains the tag.
+  return await database.getAllAsync<MemoryItem>(
+    `SELECT * FROM items WHERE tags LIKE ? ORDER BY created_at DESC`,
+    [`%"${tag}"%`]
+  );
+}
+
 export async function addItem(item: Omit<MemoryItem, 'id' | 'created_at'>): Promise<number> {
   const database = await initDatabase();
   
@@ -137,8 +161,8 @@ export async function addItem(item: Omit<MemoryItem, 'id' | 'created_at'>): Prom
   }
 
   const result = await database.runAsync(
-    `INSERT INTO items (category_id, type, title, content, file_uri, file_name, reminder_time, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO items (category_id, type, title, content, file_uri, file_name, reminder_time, tags, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       item.category_id,
       item.type,
@@ -147,6 +171,7 @@ export async function addItem(item: Omit<MemoryItem, 'id' | 'created_at'>): Prom
       finalUri || null,
       item.file_name || null,
       item.reminder_time || null,
+      item.tags || null,
       Date.now()
     ]
   );

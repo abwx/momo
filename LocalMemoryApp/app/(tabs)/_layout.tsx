@@ -17,6 +17,13 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
+        name="timeline"
+        options={{
+          title: '记忆流',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet.rectangle" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: '分类',

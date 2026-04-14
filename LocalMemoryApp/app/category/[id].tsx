@@ -17,6 +17,13 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Helper to extract tags like #work #idea from text
+const extractTags = (text: string): string[] => {
+  const regex = /#[a-zA-Z0-9_\u4e00-\u9fa5]+/g;
+  const matches = text.match(regex);
+  return matches ? Array.from(new Set(matches)) : [];
+};
+
 // Component for URL Item with real-time status check
 const UrlItemCard = ({ item, handleOpenItem, handleDelete }: { item: MemoryItem, handleOpenItem: (item: MemoryItem) => void, handleDelete: (id: number) => void }) => {
   const [status, setStatus] = useState<'checking' | 'ok' | 'error'>('checking');
@@ -137,6 +144,8 @@ export default function CategoryDetailScreen() {
       reminderTime = await scheduleReminder('文本提醒: ' + newItemTitle, newItemContent, reminderDate);
     }
 
+    const tags = extractTags(newItemTitle + ' ' + newItemContent);
+
     await addItem({
       category_id: categoryId,
       type: 'text',
@@ -145,6 +154,7 @@ export default function CategoryDetailScreen() {
       file_uri: null,
       file_name: null,
       reminder_time: reminderTime,
+      tags: tags.length > 0 ? JSON.stringify(tags) : null,
     });
     setTextDialogVisible(false);
     resetDialogForm();
@@ -153,6 +163,7 @@ export default function CategoryDetailScreen() {
 
   const handleAddUrl = async () => {
     if (!newItemTitle.trim() || !newItemContent.trim()) return;
+    const tags = extractTags(newItemTitle + ' ' + newItemContent);
     await addItem({
       category_id: categoryId,
       type: 'url',
@@ -161,6 +172,7 @@ export default function CategoryDetailScreen() {
       file_uri: null,
       file_name: null,
       reminder_time: null,
+      tags: tags.length > 0 ? JSON.stringify(tags) : null,
     });
     setUrlDialogVisible(false);
     resetDialogForm();
@@ -174,6 +186,8 @@ export default function CategoryDetailScreen() {
       if (result.canceled) return;
 
       const file = result.assets[0];
+      const tags = extractTags(file.name);
+      
       await addItem({
         category_id: categoryId,
         type: 'file',
@@ -182,6 +196,7 @@ export default function CategoryDetailScreen() {
         file_uri: file.uri,
         file_name: file.name,
         reminder_time: null,
+        tags: tags.length > 0 ? JSON.stringify(tags) : null,
       });
       loadItems();
     } catch (e) {
