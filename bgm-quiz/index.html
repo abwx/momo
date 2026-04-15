@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>测一测你的人生BGM</title>
+    <meta name="description" content="一个轻量的心理测试：测一测你的人生BGM，生成可分享链接。" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="brand">
+          <div class="logo">BGM</div>
+          <div class="titles">
+            <h1>测一测你的人生BGM</h1>
+            <p>10 个选择题，给你一段“人生主题曲”的感觉</p>
+          </div>
+        </div>
+      </header>
+ 
+      <main class="main">
+        <section class="card" id="screen-start">
+          <h2>开始测试</h2>
+          <p class="muted">
+            这是一个轻量的心理测试，不会上传任何数据。结果只保存在当前页面和链接参数里。
+          </p>
+          <button class="btn primary" id="btn-start">开始</button>
+        </section>
+ 
+        <section class="card hidden" id="screen-quiz">
+          <div class="progress">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text" id="progress-text"></div>
+          </div>
+ 
+          <h2 class="q-title" id="q-title"></h2>
+          <p class="q-desc muted" id="q-desc"></p>
+ 
+          <div class="options" id="options"></div>
+ 
+          <div class="footer-row">
+            <button class="btn ghost" id="btn-back">上一步</button>
+            <button class="btn" id="btn-skip">跳过</button>
+          </div>
+        </section>
+ 
+        <section class="card hidden" id="screen-result">
+          <div class="result-head">
+            <div class="badge" id="result-badge"></div>
+            <h2 id="result-title"></h2>
+            <p class="muted" id="result-desc"></p>
+          </div>
+ 
+          <div class="result-block">
+            <h3>你的 BGM 关键词</h3>
+            <div class="chips" id="result-chips"></div>
+          </div>
+ 
+          <div class="result-block">
+            <h3>推荐听感</h3>
+            <div class="links">
+              <a class="link" id="link-search" target="_blank" rel="noreferrer">去搜索这首“人生BGM”</a>
+              <a class="link" id="link-share" href="#">复制分享链接</a>
+            </div>
+            <p class="hint muted" id="share-hint"></p>
+          </div>
+ 
+          <div class="footer-row">
+            <button class="btn" id="btn-restart">再测一次</button>
+            <button class="btn ghost" id="btn-review">查看答案</button>
+          </div>
+ 
+          <details class="answers" id="answers">
+            <summary>你的选择</summary>
+            <div id="answers-list"></div>
+          </details>
+        </section>
+      </main>
+ 
+      <footer class="footer">
+        <span class="muted">本地运行 / 可放到 GitHub Pages</span>
+      </footer>
+    </div>
+ 
+    <script src="./script.js" type="module"></script>
+  </body>
+</html>
