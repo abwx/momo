@@ -1,14 +1,14 @@
 :root {
-  --bg: #0b0f17;
+  --bg: #080b12;
   --card: rgba(255, 255, 255, 0.06);
-  --card-2: rgba(255, 255, 255, 0.10);
+  --card-2: rgba(255, 255, 255, 0.12);
   --text: rgba(255, 255, 255, 0.92);
   --muted: rgba(255, 255, 255, 0.65);
-  --outline: rgba(255, 255, 255, 0.14);
+  --outline: rgba(255, 255, 255, 0.16);
   --primary: #7c5cff;
-  --primary-2: #21d4fd;
+  --primary-2: #00d2ff;
   --danger: #ff4d6d;
-  --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --shadow: 0 28px 90px rgba(0, 0, 0, 0.40);
 }
  
 * {
@@ -25,9 +25,10 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
     "Segoe UI Emoji";
   color: var(--text);
-  background: radial-gradient(900px 500px at 20% 10%, rgba(124, 92, 255, 0.25), transparent 60%),
-    radial-gradient(900px 500px at 80% 30%, rgba(33, 212, 253, 0.18), transparent 60%),
-    radial-gradient(900px 500px at 30% 90%, rgba(255, 77, 109, 0.10), transparent 60%),
+  background: radial-gradient(900px 520px at 20% 10%, rgba(124, 92, 255, 0.30), transparent 62%),
+    radial-gradient(900px 520px at 80% 30%, rgba(0, 210, 255, 0.18), transparent 62%),
+    radial-gradient(900px 520px at 30% 90%, rgba(255, 77, 109, 0.12), transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 40%),
     var(--bg);
 }
  
@@ -83,7 +84,7 @@ body {
  
 .card {
   width: 100%;
-  background: var(--card);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
   border: 1px solid var(--outline);
   border-radius: 18px;
   padding: 18px;
@@ -203,7 +204,7 @@ body {
  
 .option.selected {
   border-color: rgba(124, 92, 255, 0.6);
-  background: rgba(124, 92, 255, 0.12);
+  background: linear-gradient(180deg, rgba(124, 92, 255, 0.16), rgba(0, 210, 255, 0.06));
 }
  
 .option.selected .dot {
@@ -241,6 +242,127 @@ body {
   border-top: 1px solid var(--outline);
   margin-top: 14px;
   padding-top: 14px;
+}
+
+.player {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--outline);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+}
+
+.cover {
+  width: 132px;
+  height: 132px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.85), rgba(0, 210, 255, 0.78));
+  position: relative;
+  overflow: hidden;
+}
+
+.cover::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.22), transparent 55%);
+  transform: rotate(18deg);
+}
+
+.cover-mark {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 2;
+}
+
+.cover-mark .m1 {
+  font-weight: 900;
+  letter-spacing: 0.4px;
+}
+
+.cover-mark .m2 {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.player-meta {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.track-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.track-artist {
+  font-size: 12px;
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.seek {
+  margin-top: 4px;
+}
+
+.seek-bar {
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--outline);
+  background: rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.seek-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(124, 92, 255, 0.95), rgba(0, 210, 255, 0.92));
+  transition: width 120ms linear;
+}
+
+.time {
+  font-size: 12px;
+}
+
+.autoplay-hint {
+  margin: 0;
+  font-size: 12px;
+  min-height: 16px;
 }
  
 .result-block h3 {
@@ -330,5 +452,14 @@ details summary {
 @media (max-width: 520px) {
   .footer-row {
     flex-direction: column;
+  }
+
+  .player {
+    grid-template-columns: 1fr;
+  }
+
+  .cover {
+    width: 100%;
+    height: 200px;
   }
 }
