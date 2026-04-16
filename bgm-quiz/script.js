@@ -338,6 +338,51 @@ let currentQuestion = 0;
 let userScores = {};
 let finalResultKey = '';
 
+// Global BGM logic
+const homeBgm = document.getElementById('home-bgm');
+const bgmToggle = document.getElementById('bgm-toggle');
+let isHomeBgmPlaying = false;
+let userHasInteracted = false;
+
+homeBgm.volume = 0.4; // Soft background volume
+
+function toggleHomeBgm() {
+  if (isHomeBgmPlaying) {
+    homeBgm.pause();
+    bgmToggle.classList.remove('playing');
+    isHomeBgmPlaying = false;
+  } else {
+    homeBgm.play().then(() => {
+      bgmToggle.classList.add('playing');
+      isHomeBgmPlaying = true;
+    }).catch(err => console.log('BGM autoplay blocked:', err));
+  }
+}
+
+bgmToggle.addEventListener('click', toggleHomeBgm);
+
+// Try to autoplay on first user interaction anywhere
+document.body.addEventListener('click', () => {
+  if (!userHasInteracted && document.querySelector('.screen.active').id !== 'result-screen') {
+    userHasInteracted = true;
+    if (!isHomeBgmPlaying) toggleHomeBgm();
+  }
+}, { once: true });
+
+// Floating notes effect
+setInterval(() => {
+  const activeScreen = document.querySelector('.screen.active');
+  if (activeScreen && activeScreen.id === 'home-screen') {
+    const note = document.createElement('div');
+    note.className = 'floating-note';
+    note.innerHTML = ['♪', '♫', '♩', '♬'][Math.floor(Math.random() * 4)];
+    note.style.left = (40 + Math.random() * 20) + '%';
+    note.style.bottom = '40%';
+    document.getElementById('home-screen').appendChild(note);
+    setTimeout(() => note.remove(), 3000);
+  }
+}, 800);
+
 // DOM Elements
 const homeScreen = document.getElementById('home-screen');
 const quizScreen = document.getElementById('quiz-screen');
@@ -554,6 +599,7 @@ function showResult() {
   showScreen(resultScreen);
   
   // Attempt autoplay
+  if (isHomeBgmPlaying) toggleHomeBgm(); // Pause home BGM
   togglePlay();
 }
 
