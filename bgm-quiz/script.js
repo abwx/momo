@@ -2,87 +2,154 @@ const questions = [
   {
     text: "如果明天世界末日，你今晚会去哪里？",
     options: [
-      { text: "熟悉的便利店，买最后一次啤酒", score: { lofi: 3, indie: 1 } },
-      { text: "开着车，在没有人的高架桥上狂飙", score: { synthwave: 3, citypop: 2 } },
-      { text: "最燥的Livehouse，在人群中跳到力竭", score: { edm: 3, synthwave: 1 } },
-      { text: "爬上最高的山顶，安静等待最后的日出", score: { cinematic: 3, indie: 2 } }
+      { text: "熟悉的便利店，买最后一次啤酒", score: { lofi: 3, indie: 1, postrock: 2 } },
+      { text: "开着车，在没有人的高架桥上狂飙", score: { synthwave: 3, citypop: 2, phonk: 1 } },
+      { text: "最燥的Livehouse，在人群中跳到力竭", score: { edm: 3, synthwave: 1, trap: 2 } },
+      { text: "爬上最高的山顶，安静等待最后的日出", score: { cinematic: 3, indie: 2, ambient: 3 } }
     ]
   },
   {
     text: "深夜睡不着时，你脑海里最常出现什么画面？",
     options: [
-      { text: "霓虹灯闪烁的雨夜街头", score: { citypop: 3, synthwave: 1 } },
-      { text: "那些未曾说出口的遗憾和抱歉", score: { lofi: 3, indie: 2 } },
-      { text: "万人欢呼的舞台中央", score: { edm: 3, cinematic: 1 } },
-      { text: "一条看不见尽头的旷野公路", score: { indie: 3, cinematic: 2 } }
+      { text: "霓虹灯闪烁的雨夜街头", score: { citypop: 3, synthwave: 1, jazz: 2 } },
+      { text: "那些未曾说出口的遗憾和抱歉", score: { lofi: 3, indie: 2, acoustic: 3 } },
+      { text: "万人欢呼的舞台中央", score: { edm: 3, cinematic: 1, trap: 1 } },
+      { text: "一条看不见尽头的旷野公路", score: { indie: 3, cinematic: 2, postrock: 3 } }
     ]
   },
   {
     text: "你在一段感情中，通常扮演什么角色？",
     options: [
-      { text: "默默陪伴的倾听者", score: { lofi: 3, indie: 1 } },
-      { text: "轰轰烈烈的带领者", score: { edm: 3, synthwave: 1 } },
-      { text: "理智且保持距离的观察者", score: { synthwave: 3, citypop: 2 } },
-      { text: "愿意牺牲一切的付出者", score: { cinematic: 3, lofi: 1 } }
+      { text: "默默陪伴的倾听者", score: { lofi: 3, acoustic: 3, ambient: 2 } },
+      { text: "轰轰烈烈的带领者", score: { edm: 3, trap: 2, synthwave: 1 } },
+      { text: "理智且保持距离的观察者", score: { synthwave: 3, citypop: 2, jazz: 3 } },
+      { text: "愿意牺牲一切的付出者", score: { cinematic: 3, postrock: 3, lofi: 1 } }
     ]
   },
   {
     text: "如果能获得一种超能力，你想要：",
     options: [
-      { text: "回到过去某个特定的瞬间", score: { citypop: 3, indie: 2 } },
-      { text: "能听到所有植物的呼吸", score: { lofi: 3, indie: 3 } },
-      { text: "让全世界跟着你的节奏跳舞", score: { edm: 3, citypop: 1 } },
-      { text: "用意念创造出浩瀚的宇宙", score: { cinematic: 3, synthwave: 2 } }
+      { text: "回到过去某个特定的瞬间", score: { citypop: 3, acoustic: 2, lofi: 1 } },
+      { text: "能听到所有植物的呼吸", score: { ambient: 3, indie: 3, acoustic: 1 } },
+      { text: "让全世界跟着你的节奏跳舞", score: { edm: 3, trap: 3, phonk: 2 } },
+      { text: "用意念创造出浩瀚的宇宙", score: { cinematic: 3, postrock: 2, synthwave: 2 } }
+    ]
+  },
+  {
+    text: "面对突然袭来的巨大压力，你会如何应对？",
+    options: [
+      { text: "把自己关在房间里，断绝一切联系", score: { lofi: 3, ambient: 3, acoustic: 2 } },
+      { text: "去健身房或者去跑步，用汗水发泄", score: { edm: 2, phonk: 3, trap: 2 } },
+      { text: "找一家常去的咖啡馆或清吧坐一个下午", score: { citypop: 2, jazz: 3, lofi: 1 } },
+      { text: "开车去海边或者山里大喊一顿", score: { postrock: 3, indie: 3, cinematic: 1 } }
+    ]
+  },
+  {
+    text: "你最希望拥有哪种类型的朋友？",
+    options: [
+      { text: "能一起在凌晨压马路聊哲学的", score: { indie: 3, postrock: 2, acoustic: 2 } },
+      { text: "品味极佳，能带你发掘小众好店的", score: { citypop: 3, jazz: 3, synthwave: 1 } },
+      { text: "随时能叫出来喝酒蹦迪的", score: { edm: 3, trap: 3, phonk: 2 } },
+      { text: "不需要常联系但懂你所有沉默的", score: { ambient: 3, lofi: 3, cinematic: 2 } }
+    ]
+  },
+  {
+    text: "你的衣柜里，哪种颜色的衣服最多？",
+    options: [
+      { text: "黑白灰，极简且舒适", score: { lofi: 2, ambient: 3, acoustic: 2 } },
+      { text: "高饱和度，亮眼且个性", score: { edm: 3, trap: 2, phonk: 3 } },
+      { text: "复古色调，如墨绿、酒红、大地色", score: { citypop: 3, jazz: 3, indie: 2 } },
+      { text: "随性混搭，不拘一格", score: { synthwave: 3, postrock: 2, indie: 1 } }
+    ]
+  },
+  {
+    text: "如果你的人生是一部电影，它最可能是：",
+    options: [
+      { text: "一部画面唯美但台词很少的文艺片", score: { ambient: 3, lofi: 2, acoustic: 3 } },
+      { text: "一部充满赛博朋克元素的科幻巨制", score: { synthwave: 3, cinematic: 3, phonk: 2 } },
+      { text: "一部充满意外和反转的公路电影", score: { indie: 3, postrock: 3, citypop: 1 } },
+      { text: "一部节奏明快、色彩浓烈的青春片", score: { edm: 3, trap: 3, jazz: 1 } }
     ]
   }
 ];
 
+// Netease Music IDs are used to generate iframe widgets
 const results = {
   lofi: {
     title: "Lo-Fi 治愈白噪音",
     desc: "你是温柔的倾听者。在这个吵闹的世界里，你就像一家永远亮着灯的午夜便利店，用不张扬的频率，治愈着身边的人。",
     color: "linear-gradient(135deg, #a18cd1, #fbc2eb)",
-    icon: "fa-coffee"
+    icon: "fa-coffee",
+    songId: "1403774122" // Lofi Boy
   },
   citypop: {
     title: "City Pop 浪漫都市",
     desc: "你骨子里带着迷人的复古与浪漫。像一阵吹过霓虹街头的晚风，即使在快节奏的都市里，你永远踩着属于自己的优雅节拍。",
     color: "linear-gradient(135deg, #f6d365, #fda085)",
-    icon: "fa-city"
+    icon: "fa-city",
+    songId: "493911" // Plastic Love - Mariya Takeuchi (Cover or similar vibes on Netease)
   },
   edm: {
     title: "EDM 派对动物",
     desc: "你的心脏是一颗永不疲倦的低音炮。你热情、直接、充满能量，永远年轻，永远热泪盈眶，生命对你而言就是一场不停歇的派对。",
     color: "linear-gradient(135deg, #f85032, #e73827)",
-    icon: "fa-bolt"
+    icon: "fa-bolt",
+    songId: "405998841" // Faded - Alan Walker
   },
   synthwave: {
     title: "Synthwave 复古未来",
     desc: "你是游走在现实与梦境边缘的漫游者。带着合成器般迷幻且冷静的特质，你在这个世界上总显得有些特别，迷人且深邃。",
     color: "linear-gradient(135deg, #ff00cc, #333399)",
-    icon: "fa-rocket"
+    icon: "fa-rocket",
+    songId: "34850785" // Nightcall - Kavinsky
   },
   indie: {
     title: "Indie Folk 独立民谣",
     desc: "你向往自由与旷野。一把木吉他，一条没有尽头的公路。你不喜欢被规则束缚，内心藏着最纯粹的诗意与远方。",
     color: "linear-gradient(135deg, #56ab2f, #a8e063)",
-    icon: "fa-leaf"
+    icon: "fa-leaf",
+    songId: "514761281" // 理想三旬
   },
   cinematic: {
     title: "Cinematic 史诗配乐",
     desc: "你的灵魂宏大且深沉。你生来就是为了体验最极致的情感，不论是跌宕起伏还是波澜壮阔，你都是自己人生的头号主角。",
     color: "linear-gradient(135deg, #141E30, #243B55)",
-    icon: "fa-film"
+    icon: "fa-film",
+    songId: "28285910" // Star Sky - Two Steps From Hell
+  },
+  postrock: {
+    title: "Post-Rock 后摇滚",
+    desc: "你的情绪像是一座休眠的火山。平时沉默寡言，但在某些时刻，你的内心会爆发出震撼人心的力量与轰鸣。",
+    color: "linear-gradient(135deg, #434343, #000000)",
+    icon: "fa-mountain",
+    songId: "421092" // 惘闻 - 岁月老去
+  },
+  ambient: {
+    title: "Ambient 环境音乐",
+    desc: "你有一种能让人安静下来的魔力。你不需要太多言语，你的存在本身就像一片没有边界的湖水，包容且宁静。",
+    color: "linear-gradient(135deg, #e0c3fc, #8ec5fc)",
+    icon: "fa-water",
+    songId: "2116538" // Weightless
+  },
+  trap: {
+    title: "Trap 陷阱说唱",
+    desc: "你自信、张扬、不羁。你清楚地知道自己想要什么，并且会毫不掩饰地去争取。你的生活态度就是保持真实，保持锐利。",
+    color: "linear-gradient(135deg, #11998e, #38ef7d)",
+    icon: "fa-fire",
+    songId: "1430584488" // The Box
+  },
+  jazz: {
+    title: "Jazz 慵懒爵士",
+    desc: "你的灵魂是自由且不可预测的。你喜欢即兴的浪漫，讨厌一成不变的规矩。和你在一起，永远不知道下一秒会有怎样的惊喜。",
+    color: "linear-gradient(135deg, #c5a059, #8d6e3c)",
+    icon: "fa-glass-martini-alt",
+    songId: "27759600" // Fly Me To The Moon
   }
 };
 
 let currentQuestion = 0;
-let userScores = { lofi: 0, citypop: 0, edm: 0, synthwave: 0, indie: 0, cinematic: 0 };
+let userScores = {};
 let finalResultKey = '';
-
-// Audio Context & Nodes
-let audioCtx = null;
-let currentOscillators = [];
 
 // DOM Elements
 const homeScreen = document.getElementById('home-screen');
@@ -106,23 +173,16 @@ const resultDesc = document.getElementById('result-desc');
 const resultCover = document.getElementById('result-cover');
 const shareBtn = document.getElementById('share-btn');
 const retryBtn = document.getElementById('retry-btn');
-const playPauseBtn = document.getElementById('play-pause-btn');
 const equalizerAnim = document.getElementById('equalizer-anim');
-const trackName = document.getElementById('track-name');
+const realPlayerContainer = document.getElementById('real-player-container');
 const allResultsGrid = document.getElementById('all-results-grid');
-
-let isPlaying = false;
-let currentPlayingCard = null; // null for main result, or string key for all-results
 
 // --- Init & Navigation ---
 
-function initAudio() {
-  if (!audioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContext();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
+function initScores() {
+  userScores = {};
+  for(let key in results) {
+    userScores[key] = 0;
   }
 }
 
@@ -132,32 +192,30 @@ function showScreen(screenEl) {
 }
 
 startBtn.addEventListener('click', () => {
-  initAudio();
   currentQuestion = 0;
-  userScores = { lofi: 0, citypop: 0, edm: 0, synthwave: 0, indie: 0, cinematic: 0 };
+  initScores();
   showScreen(quizScreen);
   renderQuestion();
 });
 
 retryBtn.addEventListener('click', () => {
-  stopAudio();
+  realPlayerContainer.innerHTML = '';
+  equalizerAnim.classList.add('paused');
   showScreen(homeScreen);
 });
 
 viewAllBtn.addEventListener('click', () => {
-  initAudio();
   renderAllResults();
   showScreen(allResultsScreen);
 });
 
 viewAllBtnResult.addEventListener('click', () => {
-  stopAudio();
+  realPlayerContainer.innerHTML = '';
   renderAllResults();
   showScreen(allResultsScreen);
 });
 
 backHomeBtn.addEventListener('click', () => {
-  stopAudio();
   showScreen(homeScreen);
 });
 
@@ -171,7 +229,7 @@ function renderQuestion() {
   
   progressFill.style.width = `${((currentQuestion) / questions.length) * 100}%`;
 
-  q.options.forEach((opt, index) => {
+  q.options.forEach((opt) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
     btn.innerText = opt.text;
@@ -182,7 +240,9 @@ function renderQuestion() {
 
 function handleAnswer(score) {
   for (let key in score) {
-    userScores[key] += score[key];
+    if (userScores[key] !== undefined) {
+      userScores[key] += score[key];
+    }
   }
   
   currentQuestion++;
@@ -216,10 +276,19 @@ function showResult() {
   resultTitle.innerText = res.title;
   resultDesc.innerText = res.desc;
   resultCover.style.background = res.color;
-  trackName.innerText = `正在播放：${res.title}`;
+  
+  // Render Netease iframe
+  // auto=1 for autoplay (might be blocked by browser policy, but we set it)
+  realPlayerContainer.innerHTML = `
+    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=86 
+      src="https://music.163.com/outchain/player?type=2&id=${res.songId}&auto=1&height=66">
+    </iframe>
+  `;
+  
+  // Start equalizer anim
+  equalizerAnim.classList.remove('paused');
   
   showScreen(resultScreen);
-  playAudio(finalResultKey);
 }
 
 // --- All Results Page ---
@@ -247,168 +316,30 @@ function renderAllResults() {
 }
 
 window.togglePreview = function(key, btnEl) {
-  if (isPlaying && currentPlayingCard === key) {
-    stopAudio();
-    btnEl.classList.remove('playing');
-    btnEl.innerHTML = '<i class="fas fa-play"></i>';
-    return;
-  }
-  
-  stopAudio();
-  // reset all buttons
+  // Clear any existing active states
+  document.querySelectorAll('.album-card .real-player-inline').forEach(el => el.remove());
   document.querySelectorAll('.album-play-btn').forEach(el => {
-    el.classList.remove('playing');
-    el.innerHTML = '<i class="fas fa-play"></i>';
+    el.style.display = 'flex';
   });
+
+  const res = results[key];
+  const card = btnEl.parentElement;
   
-  currentPlayingCard = key;
-  btnEl.classList.add('playing');
-  btnEl.innerHTML = '<i class="fas fa-pause"></i>';
-  playAudio(key, true);
+  btnEl.style.display = 'none'; // hide play button
+  
+  // inject iframe right below the info
+  const playerDiv = document.createElement('div');
+  playerDiv.className = 'real-player-inline';
+  playerDiv.style.width = '100%';
+  playerDiv.style.marginTop = '10px';
+  playerDiv.innerHTML = `
+    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=86 
+      src="https://music.163.com/outchain/player?type=2&id=${res.songId}&auto=1&height=66">
+    </iframe>
+  `;
+  
+  card.appendChild(playerDiv);
 };
-
-// --- Audio Engine (Generative) ---
-
-function stopAudio() {
-  currentOscillators.forEach(node => {
-    try { node.stop(); } catch(e) {}
-    node.disconnect();
-  });
-  currentOscillators = [];
-  isPlaying = false;
-  equalizerAnim.classList.add('paused');
-  playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-}
-
-function playAudio(key, isPreview = false) {
-  if (!audioCtx) initAudio();
-  stopAudio();
-
-  const now = audioCtx.currentTime;
-  const masterGain = audioCtx.createGain();
-  masterGain.connect(audioCtx.destination);
-  masterGain.gain.setValueAtTime(0, now);
-  masterGain.gain.linearRampToValueAtTime(0.5, now + 1); // fade in
-
-  isPlaying = true;
-  if (!isPreview) {
-    equalizerAnim.classList.remove('paused');
-    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-    currentPlayingCard = null;
-  }
-
-  // Synthesize styles based on key
-  if (key === 'lofi') {
-    createChord(masterGain, [261.63, 329.63, 392.00, 493.88], 'sine', now); // Cmaj7
-    createNoise(masterGain, now);
-  } else if (key === 'citypop') {
-    createChord(masterGain, [311.13, 392.00, 466.16, 587.33], 'triangle', now); // Ebmaj9
-    createBass(masterGain, 77.78, now); // Eb2
-  } else if (key === 'edm') {
-    createBass(masterGain, 65.41, now, 'sawtooth', true); // C2 pumping
-    createChord(masterGain, [523.25, 659.25], 'square', now); 
-  } else if (key === 'synthwave') {
-    createChord(masterGain, [220.00, 261.63, 329.63, 440.00], 'sawtooth', now); // Am
-    createBass(masterGain, 55.00, now, 'square'); // A1
-  } else if (key === 'indie') {
-    createArp(masterGain, [261.63, 329.63, 392.00], 'triangle', now); // C
-  } else if (key === 'cinematic') {
-    createChord(masterGain, [130.81, 196.00, 261.63, 311.13], 'sine', now); // Cm slow
-    masterGain.gain.linearRampToValueAtTime(0.8, now + 3);
-  }
-}
-
-playPauseBtn.addEventListener('click', () => {
-  if (isPlaying) {
-    stopAudio();
-  } else {
-    playAudio(finalResultKey);
-  }
-});
-
-// Sound Helpers
-function createChord(masterGain, freqs, type, now) {
-  freqs.forEach(f => {
-    const osc = audioCtx.createOscillator();
-    osc.type = type;
-    osc.frequency.value = f;
-    const lfo = audioCtx.createOscillator();
-    lfo.frequency.value = 0.5; // slight chorus/movement
-    const lfoGain = audioCtx.createGain();
-    lfoGain.gain.value = 2;
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
-    
-    osc.connect(masterGain);
-    osc.start(now);
-    lfo.start(now);
-    currentOscillators.push(osc, lfo);
-  });
-}
-
-function createBass(masterGain, freq, now, type='sine', pumping=false) {
-  const osc = audioCtx.createOscillator();
-  osc.type = type;
-  osc.frequency.value = freq;
-  
-  const gain = audioCtx.createGain();
-  if (pumping) {
-    // sidechain effect simulation
-    setInterval(() => {
-      if(!isPlaying) return;
-      const t = audioCtx.currentTime;
-      gain.gain.setValueAtTime(0.1, t);
-      gain.gain.exponentialRampToValueAtTime(0.8, t + 0.2);
-    }, 500);
-  } else {
-    gain.gain.value = 0.6;
-  }
-
-  osc.connect(gain);
-  gain.connect(masterGain);
-  osc.start(now);
-  currentOscillators.push(osc);
-}
-
-function createArp(masterGain, freqs, type, now) {
-  const osc = audioCtx.createOscillator();
-  osc.type = type;
-  osc.connect(masterGain);
-  osc.start(now);
-  currentOscillators.push(osc);
-  
-  let i = 0;
-  const interval = setInterval(() => {
-    if (!isPlaying) { clearInterval(interval); return; }
-    osc.frequency.setValueAtTime(freqs[i % freqs.length], audioCtx.currentTime);
-    i++;
-  }, 300);
-}
-
-function createNoise(masterGain, now) {
-  const bufferSize = audioCtx.sampleRate * 2; 
-  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = Math.random() * 2 - 1;
-  }
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = buffer;
-  noise.loop = true;
-  
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = 800;
-  
-  const gain = audioCtx.createGain();
-  gain.gain.value = 0.05; // very quiet vinyl crackle
-  
-  noise.connect(filter);
-  filter.connect(gain);
-  gain.connect(masterGain);
-  noise.start(now);
-  currentOscillators.push(noise);
-}
 
 // --- Share ---
 
@@ -430,9 +361,5 @@ window.onload = () => {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('bgm')) {
     showResult();
-    // Add a toast hint for autoplay policy
-    setTimeout(() => {
-      if(!isPlaying) showToast('🎶 点击播放按钮试听 TA 的人生BGM');
-    }, 1000);
   }
 };
