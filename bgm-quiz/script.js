@@ -465,6 +465,27 @@ function renderAllResults() {
           <i class="fas fa-play"></i>
         </div>
       </div>
+      <div class="album-details">
+        <div class="traits-container" style="justify-content: flex-start; margin: 12px 0;">
+          ${res.traits.map(t => `<span class="trait-tag">${t}</span>`).join('')}
+        </div>
+        <div class="detail-section" style="margin-bottom: 12px;">
+          <p class="detail-text quote-text" style="font-size: 13px;">${res.motto}</p>
+        </div>
+        <div class="detail-section" style="margin-bottom: 12px;">
+          <p class="detail-text" style="font-size: 13px; line-height: 1.6;">${res.analysis}</p>
+        </div>
+        <div class="row-layout">
+          <div class="detail-box" style="padding: 10px;">
+            <h3 class="detail-title" style="font-size: 12px; margin-bottom: 5px;"><i class="fas fa-wind"></i> 灵魂氛围</h3>
+            <p class="detail-text highlight-text" style="font-size: 12px;">${res.vibe}</p>
+          </div>
+          <div class="detail-box" style="padding: 10px;">
+            <h3 class="detail-title" style="font-size: 12px; margin-bottom: 5px;"><i class="fas fa-handshake"></i> 契合频率</h3>
+            <p class="detail-text highlight-text" style="font-size: 12px;">${res.match}</p>
+          </div>
+        </div>
+      </div>
     `;
     allResultsGrid.appendChild(card);
   }
@@ -478,7 +499,8 @@ window.togglePreview = function(key, btnEl) {
   });
 
   const res = results[key];
-  const card = btnEl.parentElement;
+  const card = btnEl.closest('.album-card');
+  const header = card.querySelector('.album-card-header');
   
   btnEl.style.display = 'none'; // hide play button
   
@@ -496,7 +518,7 @@ window.togglePreview = function(key, btnEl) {
     </audio>
   `;
   
-  card.appendChild(playerDiv);
+  header.insertAdjacentElement('afterend', playerDiv);
 };
 
 // --- Share ---
