@@ -73,77 +73,117 @@ const questions = [
   }
 ];
 
-// Netease Music IDs are used to generate iframe widgets
+// High quality royalty-free MP3s and Unsplash Covers
 const results = {
   lofi: {
     title: "Lo-Fi 治愈白噪音",
     desc: "你是温柔的倾听者。在这个吵闹的世界里，你就像一家永远亮着灯的午夜便利店，用不张扬的频率，治愈着身边的人。",
-    color: "linear-gradient(135deg, #a18cd1, #fbc2eb)",
-    icon: "fa-coffee",
-    songId: "1403774122" // Lofi Boy
+    traits: ["温柔", "细腻", "内耗治疗者"],
+    songName: "Lofi Study Vibes",
+    artist: "FASSounds",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3",
+    coverImg: "https://images.unsplash.com/photo-1516280440502-a29286fa6443?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#a18cd1",
+    icon: "fa-coffee"
   },
   citypop: {
     title: "City Pop 浪漫都市",
     desc: "你骨子里带着迷人的复古与浪漫。像一阵吹过霓虹街头的晚风，即使在快节奏的都市里，你永远踩着属于自己的优雅节拍。",
-    color: "linear-gradient(135deg, #f6d365, #fda085)",
-    icon: "fa-city",
-    songId: "493911" // Plastic Love - Mariya Takeuchi (Cover or similar vibes on Netease)
+    traits: ["复古", "浪漫", "微醺"],
+    songName: "Night City Lights",
+    artist: "Tangerine",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939ef2a02.mp3",
+    coverImg: "https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#fda085",
+    icon: "fa-city"
   },
   edm: {
     title: "EDM 派对动物",
     desc: "你的心脏是一颗永不疲倦的低音炮。你热情、直接、充满能量，永远年轻，永远热泪盈眶，生命对你而言就是一场不停歇的派对。",
-    color: "linear-gradient(135deg, #f85032, #e73827)",
-    icon: "fa-bolt",
-    songId: "405998841" // Faded - Alan Walker
+    traits: ["热情", "直接", "能量爆棚"],
+    songName: "Electronic Future",
+    artist: "QubeSounds",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2022/11/08/audio_64b6e5e8e8.mp3",
+    coverImg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#f85032",
+    icon: "fa-bolt"
   },
   synthwave: {
     title: "Synthwave 复古未来",
     desc: "你是游走在现实与梦境边缘的漫游者。带着合成器般迷幻且冷静的特质，你在这个世界上总显得有些特别，迷人且深邃。",
-    color: "linear-gradient(135deg, #ff00cc, #333399)",
-    icon: "fa-rocket",
-    songId: "34850785" // Nightcall - Kavinsky
+    traits: ["迷幻", "赛博朋克", "深邃"],
+    songName: "Retrowave",
+    artist: "Prazkhanal",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2021/11/25/audio_91b3cb3cde.mp3",
+    coverImg: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#ff00cc",
+    icon: "fa-rocket"
   },
   indie: {
     title: "Indie Folk 独立民谣",
     desc: "你向往自由与旷野。一把木吉他，一条没有尽头的公路。你不喜欢被规则束缚，内心藏着最纯粹的诗意与远方。",
-    color: "linear-gradient(135deg, #56ab2f, #a8e063)",
-    icon: "fa-leaf",
-    songId: "514761281" // 理想三旬
+    traits: ["自由", "旷野", "诗意"],
+    songName: "Acoustic Folk",
+    artist: "Coma-Media",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2022/01/20/audio_5b31f79028.mp3",
+    coverImg: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#56ab2f",
+    icon: "fa-leaf"
   },
   cinematic: {
     title: "Cinematic 史诗配乐",
     desc: "你的灵魂宏大且深沉。你生来就是为了体验最极致的情感，不论是跌宕起伏还是波澜壮阔，你都是自己人生的头号主角。",
-    color: "linear-gradient(135deg, #141E30, #243B55)",
-    icon: "fa-film",
-    songId: "28285910" // Star Sky - Two Steps From Hell
+    traits: ["宏大", "深沉", "主角光环"],
+    songName: "Epic Cinematic",
+    artist: "Lexin_Music",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_2eb2761891.mp3",
+    coverImg: "https://images.unsplash.com/photo-1440407876336-62333a6f010f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#141E30",
+    icon: "fa-film"
   },
   postrock: {
     title: "Post-Rock 后摇滚",
     desc: "你的情绪像是一座休眠的火山。平时沉默寡言，但在某些时刻，你的内心会爆发出震撼人心的力量与轰鸣。",
-    color: "linear-gradient(135deg, #434343, #000000)",
-    icon: "fa-mountain",
-    songId: "421092" // 惘闻 - 岁月老去
+    traits: ["外冷内热", "爆发力", "孤独"],
+    songName: "Inspiring Cinematic",
+    artist: "Lexin_Music",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3",
+    coverImg: "https://images.unsplash.com/photo-1498036882173-b41c28af5a15?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#434343",
+    icon: "fa-mountain"
   },
   ambient: {
     title: "Ambient 环境音乐",
     desc: "你有一种能让人安静下来的魔力。你不需要太多言语，你的存在本身就像一片没有边界的湖水，包容且宁静。",
-    color: "linear-gradient(135deg, #e0c3fc, #8ec5fc)",
-    icon: "fa-water",
-    songId: "2116538" // Weightless
+    traits: ["宁静", "包容", "无边界"],
+    songName: "Deep Meditation",
+    artist: "Zen_Man",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2022/02/07/audio_65ab8f51a4.mp3",
+    coverImg: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#8ec5fc",
+    icon: "fa-water"
   },
   trap: {
     title: "Trap 陷阱说唱",
     desc: "你自信、张扬、不羁。你清楚地知道自己想要什么，并且会毫不掩饰地去争取。你的生活态度就是保持真实，保持锐利。",
-    color: "linear-gradient(135deg, #11998e, #38ef7d)",
-    icon: "fa-fire",
-    songId: "1430584488" // The Box
+    traits: ["自信", "张扬", "锐利"],
+    songName: "Trap Beat",
+    artist: "QubeSounds",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c1539c.mp3",
+    coverImg: "https://images.unsplash.com/photo-1605020420620-20c943cc4669?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#11998e",
+    icon: "fa-fire"
   },
   jazz: {
     title: "Jazz 慵懒爵士",
     desc: "你的灵魂是自由且不可预测的。你喜欢即兴的浪漫，讨厌一成不变的规矩。和你在一起，永远不知道下一秒会有怎样的惊喜。",
-    color: "linear-gradient(135deg, #c5a059, #8d6e3c)",
-    icon: "fa-glass-martini-alt",
-    songId: "27759600" // Fly Me To The Moon
+    traits: ["慵懒", "自由", "即兴"],
+    songName: "Smooth Jazz",
+    artist: "Music_Unlimited",
+    audioUrl: "https://cdn.pixabay.com/download/audio/2022/02/10/audio_f5eb8e8609.mp3",
+    coverImg: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    color: "#c5a059",
+    icon: "fa-glass-martini-alt"
   }
 };
 
@@ -170,14 +210,69 @@ const progressFill = document.getElementById('progress-fill');
 
 const resultTitle = document.getElementById('result-title');
 const resultDesc = document.getElementById('result-desc');
-const resultCover = document.getElementById('result-cover');
+const resultCoverImg = document.getElementById('result-cover-img');
+const resultTraits = document.getElementById('result-traits');
 const shareBtn = document.getElementById('share-btn');
 const retryBtn = document.getElementById('retry-btn');
 const equalizerAnim = document.getElementById('equalizer-anim');
-const realPlayerContainer = document.getElementById('real-player-container');
 const allResultsGrid = document.getElementById('all-results-grid');
 
-// --- Init & Navigation ---
+// Custom Audio Elements
+const customPlayBtn = document.getElementById('custom-play-btn');
+const trackName = document.getElementById('track-name');
+const trackArtist = document.getElementById('track-artist');
+const audioProgress = document.getElementById('audio-progress');
+const timeCurrent = document.getElementById('time-current');
+const timeTotal = document.getElementById('time-total');
+const progressContainer = document.getElementById('progress-container');
+
+const bgmAudio = new Audio();
+bgmAudio.loop = true;
+
+// --- Audio Controls ---
+
+function formatTime(seconds) {
+  if (isNaN(seconds)) return "00:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+}
+
+bgmAudio.addEventListener('timeupdate', () => {
+  if (bgmAudio.duration) {
+    const percent = (bgmAudio.currentTime / bgmAudio.duration) * 100;
+    audioProgress.style.width = `${percent}%`;
+    timeCurrent.innerText = formatTime(bgmAudio.currentTime);
+  }
+});
+
+bgmAudio.addEventListener('loadedmetadata', () => {
+  timeTotal.innerText = formatTime(bgmAudio.duration);
+});
+
+progressContainer.addEventListener('click', (e) => {
+  if (!bgmAudio.duration) return;
+  const rect = progressContainer.getBoundingClientRect();
+  const pos = (e.clientX - rect.left) / rect.width;
+  bgmAudio.currentTime = pos * bgmAudio.duration;
+});
+
+function togglePlay() {
+  if (bgmAudio.paused) {
+    bgmAudio.play().then(() => {
+      customPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+      equalizerAnim.classList.remove('paused');
+      resultCoverImg.classList.add('playing');
+    }).catch(err => console.log('Autoplay prevented:', err));
+  } else {
+    bgmAudio.pause();
+    customPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+    equalizerAnim.classList.add('paused');
+    resultCoverImg.classList.remove('playing');
+  }
+}
+
+customPlayBtn.addEventListener('click', togglePlay);
 
 function initScores() {
   userScores = {};
@@ -199,8 +294,11 @@ startBtn.addEventListener('click', () => {
 });
 
 retryBtn.addEventListener('click', () => {
-  realPlayerContainer.innerHTML = '';
+  bgmAudio.pause();
+  bgmAudio.currentTime = 0;
   equalizerAnim.classList.add('paused');
+  resultCoverImg.classList.remove('playing');
+  customPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
   showScreen(homeScreen);
 });
 
@@ -210,12 +308,16 @@ viewAllBtn.addEventListener('click', () => {
 });
 
 viewAllBtnResult.addEventListener('click', () => {
-  realPlayerContainer.innerHTML = '';
+  bgmAudio.pause();
+  customPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+  equalizerAnim.classList.add('paused');
+  resultCoverImg.classList.remove('playing');
   renderAllResults();
   showScreen(allResultsScreen);
 });
 
 backHomeBtn.addEventListener('click', () => {
+  bgmAudio.pause();
   showScreen(homeScreen);
 });
 
@@ -275,20 +377,23 @@ function showResult() {
   const res = results[finalResultKey];
   resultTitle.innerText = res.title;
   resultDesc.innerText = res.desc;
-  resultCover.style.background = res.color;
   
-  // Render Netease iframe
-  // auto=1 for autoplay (might be blocked by browser policy, but we set it)
-  realPlayerContainer.innerHTML = `
-    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=86 
-      src="https://music.163.com/outchain/player?type=2&id=${res.songId}&auto=1&height=66">
-    </iframe>
-  `;
+  // Set traits tags
+  resultTraits.innerHTML = res.traits.map(t => `<span class="trait-tag">${t}</span>`).join('');
   
-  // Start equalizer anim
-  equalizerAnim.classList.remove('paused');
+  // Set cover and music info
+  resultCoverImg.src = res.coverImg;
+  trackName.innerText = res.songName;
+  trackArtist.innerText = res.artist;
+  
+  // Audio playback
+  bgmAudio.src = res.audioUrl;
+  bgmAudio.currentTime = 0;
   
   showScreen(resultScreen);
+  
+  // Attempt autoplay
+  togglePlay();
 }
 
 // --- All Results Page ---
@@ -300,15 +405,16 @@ function renderAllResults() {
     const card = document.createElement('div');
     card.className = 'album-card';
     card.innerHTML = `
-      <div class="album-cover-small" style="background: ${res.color}">
-        <i class="fas ${res.icon}"></i>
-      </div>
-      <div class="album-info">
-        <div class="album-title">${res.title}</div>
-        <div class="album-desc">${res.desc}</div>
-      </div>
-      <div class="album-play-btn" data-key="${key}" onclick="togglePreview('${key}', this)">
-        <i class="fas fa-play"></i>
+      <div class="album-card-header">
+        <div class="album-cover-small" style="background: url('${res.coverImg}')">
+        </div>
+        <div class="album-info">
+          <div class="album-title">${res.title}</div>
+          <div class="album-desc">${res.desc}</div>
+        </div>
+        <div class="album-play-btn" data-key="${key}" onclick="togglePreview('${key}', this)">
+          <i class="fas fa-play"></i>
+        </div>
       </div>
     `;
     allResultsGrid.appendChild(card);
@@ -317,7 +423,7 @@ function renderAllResults() {
 
 window.togglePreview = function(key, btnEl) {
   // Clear any existing active states
-  document.querySelectorAll('.album-card .real-player-inline').forEach(el => el.remove());
+  document.querySelectorAll('.album-card .custom-audio-inline').forEach(el => el.remove());
   document.querySelectorAll('.album-play-btn').forEach(el => {
     el.style.display = 'flex';
   });
@@ -327,15 +433,18 @@ window.togglePreview = function(key, btnEl) {
   
   btnEl.style.display = 'none'; // hide play button
   
-  // inject iframe right below the info
+  // Pause main BGM if playing
+  if (!bgmAudio.paused) togglePlay();
+
+  // Inject custom player below info
   const playerDiv = document.createElement('div');
-  playerDiv.className = 'real-player-inline';
+  playerDiv.className = 'custom-audio-inline';
   playerDiv.style.width = '100%';
-  playerDiv.style.marginTop = '10px';
+  playerDiv.style.marginTop = '15px';
   playerDiv.innerHTML = `
-    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=100% height=86 
-      src="https://music.163.com/outchain/player?type=2&id=${res.songId}&auto=1&height=66">
-    </iframe>
+    <audio controls autoplay style="width: 100%; height: 40px; border-radius: 8px; outline: none;">
+      <source src="${res.audioUrl}" type="audio/mpeg">
+    </audio>
   `;
   
   card.appendChild(playerDiv);

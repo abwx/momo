@@ -40,18 +40,42 @@
     <div id="result-screen" class="screen">
       <h2 class="result-header">你的灵魂频率属于</h2>
       <div class="player-card glass-panel">
-        <div class="cover-art" id="result-cover">
+        
+        <!-- 大封面区域 -->
+        <div class="cover-art-large" id="result-cover-container">
+          <img id="result-cover-img" src="" alt="Album Cover">
           <div class="equalizer" id="equalizer-anim">
             <span></span><span></span><span></span><span></span>
           </div>
         </div>
+        
+        <!-- 标题与特质 -->
         <h1 id="result-title">风格名称</h1>
+        <div id="result-traits" class="traits-container"></div>
         <p id="result-desc">风格描述</p>
         
-        <div class="audio-controls">
-          <!-- 这里将被替换为真实的 iframe 播放器或保留原生控制 -->
-          <div id="real-player-container" style="width: 100%;"></div>
+        <!-- 自定义 HTML5 播放器 -->
+        <div class="custom-audio-player">
+          <div class="track-meta">
+            <div class="track-name" id="track-name">歌曲名</div>
+            <div class="track-artist" id="track-artist">歌手名</div>
+          </div>
+          
+          <div class="progress-container" id="progress-container">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="audio-progress"></div>
+            </div>
+            <div class="time-row">
+              <span id="time-current">00:00</span>
+              <span id="time-total">00:00</span>
+            </div>
+          </div>
+
+          <div class="player-controls">
+            <button id="custom-play-btn" class="play-circle-btn"><i class="fas fa-play"></i></button>
+          </div>
         </div>
+
       </div>
       
       <div class="action-buttons">
