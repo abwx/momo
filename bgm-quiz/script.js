@@ -20,10 +20,10 @@ const questions = [
   {
     text: "你在一段感情中，通常扮演什么角色？",
     options: [
+      { text: "明确自己想要什么，占据绝对主导", score: { trap: 3, edm: 1 } },
+      { text: "随性且不可预测，享受即兴浪漫", score: { jazz: 3, citypop: 1 } },
       { text: "默默陪伴的倾听者，给予温柔", score: { lofi: 3, ambient: 1 } },
-      { text: "保持恰到好处的距离与体面", score: { citypop: 3, jazz: 1 } },
-      { text: "明确自己想要什么，占据主导", score: { trap: 3, edm: 1 } },
-      { text: "随性且不可预测，享受即兴浪漫", score: { jazz: 3, citypop: 1 } }
+      { text: "保持恰到好处的距离与体面", score: { citypop: 3, jazz: 1 } }
     ]
   },
   {
@@ -63,30 +63,120 @@ const questions = [
     ]
   },
   {
+    text: "面对别人给你定下的规矩，你的第一反应是：",
+    options: [
+      { text: "规矩就是用来打破的，我只听自己的", score: { trap: 3, edm: 1 } },
+      { text: "表面上敷衍一下，背地里依然我行我素", score: { jazz: 3, citypop: 1 } },
+      { text: "只要不触碰我的底线，遵守也无妨", score: { lofi: 3, ambient: 1 } },
+      { text: "冷静地分析规矩背后的逻辑漏洞", score: { synthwave: 3, cinematic: 1 } }
+    ]
+  },
+  {
     text: "如果你的人生是一部电影，它最可能是：",
     options: [
-      { text: "画面唯美但台词很少的治愈文艺片", score: { lofi: 3, ambient: 1 } },
-      { text: "充满霓虹灯与黑客元素的科幻片", score: { synthwave: 3, cinematic: 1 } },
-      { text: "压抑了整整两个小时在最后一刻爆发的剧情片", score: { postrock: 3, indie: 1 } },
-      { text: "充满金钱、跑车与复仇的爽文大片", score: { trap: 3, edm: 1 } }
+      { text: "充满浪漫微醺试探的都市爱情片", score: { citypop: 3, jazz: 1 } },
+      { text: "节奏明快、色彩浓烈的青春狂欢片", score: { edm: 3, trap: 1 } },
+      { text: "一部极其深刻、配乐宏大的史诗巨制", score: { cinematic: 3, synthwave: 1 } },
+      { text: "压抑了整整两小时在最后爆发的悬疑片", score: { postrock: 3, indie: 1 } }
     ]
   },
   {
     text: "周末没有安排的下午，你最可能在做什么？",
     options: [
-      { text: "在装修精致的咖啡馆看路人", score: { citypop: 3, jazz: 1 } },
       { text: "背着包去城市边缘爬山或露营", score: { indie: 3, postrock: 1 } },
-      { text: "去潮牌店扫货或者在滑板公园", score: { trap: 3, edm: 1 } },
+      { text: "一个人坐在窗前看雨，什么都不想", score: { ambient: 3, lofi: 1 } },
+      { text: "去潮牌店扫货或者去滑板公园", score: { trap: 3, edm: 1 } },
       { text: "漫无目的地在老城区散步抓拍", score: { jazz: 3, citypop: 1 } }
     ]
   },
   {
-    text: "当看到令人震撼的绝美夕阳时，你的第一反应是？",
+    text: "社交聚会上，你通常的状态是：",
     options: [
-      { text: "兴奋地拍视频发给最好的朋友", score: { edm: 3, trap: 1 } },
-      { text: "觉得人类在宇宙面前极其渺小", score: { cinematic: 3, synthwave: 1 } },
-      { text: "只是静静地看着，让思绪放空", score: { ambient: 3, lofi: 1 } },
-      { text: "觉得这时候如果有一杯酒就完美了", score: { jazz: 3, citypop: 1 } }
+      { text: "找个安静的角落观察大家，不主动搭话", score: { lofi: 3, ambient: 1 } },
+      { text: "游刃有余地穿梭在人群中，和谁都能聊", score: { citypop: 3, jazz: 1 } },
+      { text: "绝对的中心，带动全场气氛的制造者", score: { edm: 3, trap: 1 } },
+      { text: "像个局外人，用理智且抽离的眼光看着", score: { synthwave: 3, cinematic: 1 } }
+    ]
+  },
+  {
+    text: "如果你有一张无限额的单程机票，你会去：",
+    options: [
+      { text: "开着越野车横穿荒无人烟的大峡谷", score: { indie: 3, postrock: 1 } },
+      { text: "去看极光、冰川，见证最壮丽的奇观", score: { cinematic: 3, synthwave: 1 } },
+      { text: "一个人去世界尽头的孤岛住上几个月", score: { postrock: 3, indie: 1 } },
+      { text: "去一个没人在乎时间的深山或湖畔", score: { ambient: 3, lofi: 1 } }
+    ]
+  },
+  {
+    text: "如果你能拥有一项超前科技，你希望是：",
+    options: [
+      { text: "一台能让你突破所有速度极限的推进器", score: { trap: 3, edm: 1 } },
+      { text: "能够随时随地合成出任何口味美酒的机器", score: { jazz: 3, citypop: 1 } },
+      { text: "一个能完美屏蔽世界所有噪音的结界", score: { lofi: 3, ambient: 1 } },
+      { text: "能够聪明地利用代码重构现实的算法", score: { citypop: 3, jazz: 1 } }
+    ]
+  },
+  {
+    text: "你最理想的周末状态是：",
+    options: [
+      { text: "叫上最疯的朋友们，去体验最刺激的项目", score: { edm: 3, trap: 1 } },
+      { text: "进入完全数字化的赛博世界畅游", score: { synthwave: 3, cinematic: 1 } },
+      { text: "背着吉他或相机，一个人去陌生的城市", score: { indie: 3, postrock: 1 } },
+      { text: "经历一场能被载入史册的宏大冒险", score: { cinematic: 3, synthwave: 1 } }
+    ]
+  },
+  {
+    text: "在工作中遇到极大的挫折时，你的处理方式是：",
+    options: [
+      { text: "咬紧牙关，把所有负面情绪转化为反击", score: { postrock: 3, indie: 1 } },
+      { text: "接受一切发生，相信时间会自然冲淡", score: { ambient: 3, lofi: 1 } },
+      { text: "越挫越勇，用更强势的态度把失去的夺回来", score: { trap: 3, edm: 1 } },
+      { text: "自嘲地笑笑，转头去喝杯酒换个心情", score: { jazz: 3, citypop: 1 } }
+    ]
+  },
+  {
+    text: "当有人对你产生误解时，你通常会：",
+    options: [
+      { text: "心里有些难过，但选择沉默，懂的自然懂", score: { lofi: 3, ambient: 1 } },
+      { text: "根本不在乎，觉得这只是一场游戏", score: { edm: 3, trap: 1 } },
+      { text: "一个人去旅行，在路上慢慢消化", score: { indie: 3, postrock: 1 } },
+      { text: "把自己关在房间里，进行高强度的思考", score: { postrock: 3, indie: 1 } }
+    ]
+  },
+  {
+    text: "如果要把你的房间重新装修，你会选择哪种风格：",
+    options: [
+      { text: "充满中古家具、黑胶唱片和暖色台灯", score: { citypop: 3, jazz: 1 } },
+      { text: "大面积的冷色调金属、霓虹灯带和几何", score: { synthwave: 3, cinematic: 1 } },
+      { text: "像是博物馆一样，有着极高挑高和古典元素", score: { cinematic: 3, synthwave: 1 } },
+      { text: "极简的日式侘寂风，没有一丝多余的装饰", score: { ambient: 3, lofi: 1 } }
+    ]
+  },
+  {
+    text: "当看到令人震撼的绝美夕阳时，你的第一反应是：",
+    options: [
+      { text: "兴奋地拍下照片并立即分享到社交网络", score: { trap: 3, edm: 1 } },
+      { text: "觉得好笑，甚至顺着风景自嘲两句", score: { jazz: 3, citypop: 1 } },
+      { text: "只是静静地看着，享受片刻的治愈", score: { lofi: 3, ambient: 1 } },
+      { text: "冷静地分析光线折射背后的物理学原理", score: { synthwave: 3, cinematic: 1 } }
+    ]
+  },
+  {
+    text: "你认为爱情最美好的样子是：",
+    options: [
+      { text: "势均力敌的拉扯，带着微醺的浪漫和试探", score: { citypop: 3, jazz: 1 } },
+      { text: "毫无保留地燃烧自己，轰轰烈烈地爱一场", score: { edm: 3, trap: 1 } },
+      { text: "像史诗一样深刻，愿意为了对方对抗世界", score: { cinematic: 3, synthwave: 1 } },
+      { text: "两个孤独的灵魂在黑暗中彼此确认成为依靠", score: { postrock: 3, indie: 1 } }
+    ]
+  },
+  {
+    text: "当你老了，回首一生，你希望自己：",
+    options: [
+      { text: "看遍了世界所有的风景，没有在一个地方停留过", score: { indie: 3, postrock: 1 } },
+      { text: "像水一样包容过一切，留下了宁静深远的影响", score: { ambient: 3, lofi: 1 } },
+      { text: "打破了无数的规则，留下了属于自己的烙印", score: { trap: 3, edm: 1 } },
+      { text: "经历过无数荒诞和有趣的事，活成了一个传奇", score: { jazz: 3, citypop: 1 } }
     ]
   }
 ];
