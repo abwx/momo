@@ -346,8 +346,6 @@ const allResultsScreen = document.getElementById('all-results-screen');
 const toast = document.getElementById('toast');
 
 const startBtn = document.getElementById('start-btn');
-const viewAllBtn = document.getElementById('view-all-btn');
-const viewAllBtnResult = document.getElementById('view-all-btn-result');
 const backHomeBtn = document.getElementById('back-home-btn');
 
 const questionText = document.getElementById('question-text');
@@ -450,25 +448,24 @@ retryBtn.addEventListener('click', () => {
   equalizerAnim.classList.add('paused');
   resultCoverImg.classList.remove('playing');
   customPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+  
+  // Also clean URL query if needed
+  const url = new URL(window.location);
+  url.searchParams.delete('bgm');
+  url.searchParams.delete('debug_results');
+  window.history.pushState({}, '', url);
+
   showScreen(homeScreen);
-});
-
-viewAllBtn.addEventListener('click', () => {
-  renderAllResults();
-  showScreen(allResultsScreen);
-});
-
-viewAllBtnResult.addEventListener('click', () => {
-  bgmAudio.pause();
-  customPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
-  equalizerAnim.classList.add('paused');
-  resultCoverImg.classList.remove('playing');
-  renderAllResults();
-  showScreen(allResultsScreen);
 });
 
 backHomeBtn.addEventListener('click', () => {
   bgmAudio.pause();
+  
+  const url = new URL(window.location);
+  url.searchParams.delete('bgm');
+  url.searchParams.delete('debug_results');
+  window.history.pushState({}, '', url);
+
   showScreen(homeScreen);
 });
 
@@ -651,10 +648,14 @@ shareBtn.addEventListener('click', () => {
     .catch(() => showToast('复制失败，请手动分享链接'));
 });
 
-// Check if loaded from shared link
+// Check if loaded from shared link or debug route
 window.onload = () => {
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('bgm')) {
+  
+  if (urlParams.get('debug_results') === 'true') {
+    renderAllResults();
+    showScreen(allResultsScreen);
+  } else if (urlParams.get('bgm')) {
     showResult();
   }
 };
