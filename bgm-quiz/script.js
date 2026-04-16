@@ -2,73 +2,91 @@ const questions = [
   {
     text: "如果明天世界末日，你今晚会去哪里？",
     options: [
-      { text: "熟悉的便利店，买最后一次啤酒", score: { lofi: 3, indie: 1, postrock: 2 } },
-      { text: "开着车，在没有人的高架桥上狂飙", score: { synthwave: 3, citypop: 2, phonk: 1 } },
-      { text: "最燥的Livehouse，在人群中跳到力竭", score: { edm: 3, synthwave: 1, trap: 2 } },
-      { text: "爬上最高的山顶，安静等待最后的日出", score: { cinematic: 3, indie: 2, ambient: 3 } }
+      { text: "熟悉的便利店，买最后一次啤酒", score: { lofi: 3, ambient: 1 } },
+      { text: "找一家复古清吧，点一杯特调", score: { citypop: 3, jazz: 1 } },
+      { text: "最燥的Livehouse，在人群中跳到力竭", score: { edm: 3, trap: 1 } },
+      { text: "开着车，在没有人的高架桥上狂飙", score: { synthwave: 3, cinematic: 1 } }
     ]
   },
   {
     text: "深夜睡不着时，你脑海里最常出现什么画面？",
     options: [
-      { text: "霓虹灯闪烁的雨夜街头", score: { citypop: 3, synthwave: 1, jazz: 2 } },
-      { text: "那些未曾说出口的遗憾和抱歉", score: { lofi: 3, indie: 2, acoustic: 3 } },
-      { text: "万人欢呼的舞台中央", score: { edm: 3, cinematic: 1, trap: 1 } },
-      { text: "一条看不见尽头的旷野公路", score: { indie: 3, cinematic: 2, postrock: 3 } }
+      { text: "一条看不见尽头的旷野公路", score: { indie: 3, postrock: 1 } },
+      { text: "宏大且波澜壮阔的宇宙星辰", score: { cinematic: 3, synthwave: 1 } },
+      { text: "巨浪拍打着无人的孤岛悬崖", score: { postrock: 3, indie: 1 } },
+      { text: "宁静的深海与偶尔游过的鲸鱼", score: { ambient: 3, lofi: 1 } }
     ]
   },
   {
     text: "你在一段感情中，通常扮演什么角色？",
     options: [
-      { text: "默默陪伴的倾听者", score: { lofi: 3, acoustic: 3, ambient: 2 } },
-      { text: "轰轰烈烈的带领者", score: { edm: 3, trap: 2, synthwave: 1 } },
-      { text: "理智且保持距离的观察者", score: { synthwave: 3, citypop: 2, jazz: 3 } },
-      { text: "愿意牺牲一切的付出者", score: { cinematic: 3, postrock: 3, lofi: 1 } }
+      { text: "默默陪伴的倾听者，给予温柔", score: { lofi: 3, ambient: 1 } },
+      { text: "保持恰到好处的距离与体面", score: { citypop: 3, jazz: 1 } },
+      { text: "明确自己想要什么，占据主导", score: { trap: 3, edm: 1 } },
+      { text: "随性且不可预测，享受即兴浪漫", score: { jazz: 3, citypop: 1 } }
     ]
   },
   {
     text: "如果能获得一种超能力，你想要：",
     options: [
-      { text: "回到过去某个特定的瞬间", score: { citypop: 3, acoustic: 2, lofi: 1 } },
-      { text: "能听到所有植物的呼吸", score: { ambient: 3, indie: 3, acoustic: 1 } },
-      { text: "让全世界跟着你的节奏跳舞", score: { edm: 3, trap: 3, phonk: 2 } },
-      { text: "用意念创造出浩瀚的宇宙", score: { cinematic: 3, postrock: 2, synthwave: 2 } }
+      { text: "让全世界跟着你的节奏跳舞", score: { edm: 3, trap: 1 } },
+      { text: "拥有一个由代码构成的虚拟空间", score: { synthwave: 3, cinematic: 1 } },
+      { text: "能听懂所有植物和动物的语言", score: { indie: 3, postrock: 1 } },
+      { text: "用意念创造出浩瀚的宇宙", score: { cinematic: 3, synthwave: 1 } }
     ]
   },
   {
     text: "面对突然袭来的巨大压力，你会如何应对？",
     options: [
-      { text: "把自己关在房间里，断绝一切联系", score: { lofi: 3, ambient: 3, acoustic: 2 } },
-      { text: "去健身房或者去跑步，用汗水发泄", score: { edm: 2, phonk: 3, trap: 2 } },
-      { text: "找一家常去的咖啡馆或清吧坐一个下午", score: { citypop: 2, jazz: 3, lofi: 1 } },
-      { text: "开车去海边或者山里大喊一顿", score: { postrock: 3, indie: 3, cinematic: 1 } }
+      { text: "开车去山里大喊，让情绪彻底爆发", score: { postrock: 3, indie: 1 } },
+      { text: "找个没人的地方冥想，自我消化", score: { ambient: 3, lofi: 1 } },
+      { text: "迎难而上，用绝对的实力碾压过去", score: { trap: 3, edm: 1 } },
+      { text: "喝杯小酒听听黑胶，等情绪自然消散", score: { jazz: 3, citypop: 1 } }
     ]
   },
   {
     text: "你最希望拥有哪种类型的朋友？",
     options: [
-      { text: "能一起在凌晨压马路聊哲学的", score: { indie: 3, postrock: 2, acoustic: 2 } },
-      { text: "品味极佳，能带你发掘小众好店的", score: { citypop: 3, jazz: 3, synthwave: 1 } },
-      { text: "随时能叫出来喝酒蹦迪的", score: { edm: 3, trap: 3, phonk: 2 } },
-      { text: "不需要常联系但懂你所有沉默的", score: { ambient: 3, lofi: 3, cinematic: 2 } }
+      { text: "不需要常联系但懂你所有沉默的", score: { lofi: 3, ambient: 1 } },
+      { text: "随时能叫出来喝酒蹦迪的", score: { edm: 3, trap: 1 } },
+      { text: "能一起在凌晨压马路聊哲学的", score: { indie: 3, postrock: 1 } },
+      { text: "平时话少但在关键时刻能为你出头的", score: { postrock: 3, indie: 1 } }
     ]
   },
   {
-    text: "你的衣柜里，哪种颜色的衣服最多？",
+    text: "你的衣柜里，哪种类型的衣服最多？",
     options: [
-      { text: "黑白灰，极简且舒适", score: { lofi: 2, ambient: 3, acoustic: 2 } },
-      { text: "高饱和度，亮眼且个性", score: { edm: 3, trap: 2, phonk: 3 } },
-      { text: "复古色调，如墨绿、酒红、大地色", score: { citypop: 3, jazz: 3, indie: 2 } },
-      { text: "随性混搭，不拘一格", score: { synthwave: 3, postrock: 2, indie: 1 } }
+      { text: "复古色调，如墨绿、酒红、大地色", score: { citypop: 3, jazz: 1 } },
+      { text: "充满未来感的机能风或前卫设计", score: { synthwave: 3, cinematic: 1 } },
+      { text: "剪裁立体、极具气场的长款风衣", score: { cinematic: 3, synthwave: 1 } },
+      { text: "柔软、宽松且没有束缚感的棉麻", score: { ambient: 3, lofi: 1 } }
     ]
   },
   {
     text: "如果你的人生是一部电影，它最可能是：",
     options: [
-      { text: "一部画面唯美但台词很少的文艺片", score: { ambient: 3, lofi: 2, acoustic: 3 } },
-      { text: "一部充满赛博朋克元素的科幻巨制", score: { synthwave: 3, cinematic: 3, phonk: 2 } },
-      { text: "一部充满意外和反转的公路电影", score: { indie: 3, postrock: 3, citypop: 1 } },
-      { text: "一部节奏明快、色彩浓烈的青春片", score: { edm: 3, trap: 3, jazz: 1 } }
+      { text: "画面唯美但台词很少的治愈文艺片", score: { lofi: 3, ambient: 1 } },
+      { text: "充满霓虹灯与黑客元素的科幻片", score: { synthwave: 3, cinematic: 1 } },
+      { text: "压抑了整整两个小时在最后一刻爆发的剧情片", score: { postrock: 3, indie: 1 } },
+      { text: "充满金钱、跑车与复仇的爽文大片", score: { trap: 3, edm: 1 } }
+    ]
+  },
+  {
+    text: "周末没有安排的下午，你最可能在做什么？",
+    options: [
+      { text: "在装修精致的咖啡馆看路人", score: { citypop: 3, jazz: 1 } },
+      { text: "背着包去城市边缘爬山或露营", score: { indie: 3, postrock: 1 } },
+      { text: "去潮牌店扫货或者在滑板公园", score: { trap: 3, edm: 1 } },
+      { text: "漫无目的地在老城区散步抓拍", score: { jazz: 3, citypop: 1 } }
+    ]
+  },
+  {
+    text: "当看到令人震撼的绝美夕阳时，你的第一反应是？",
+    options: [
+      { text: "兴奋地拍视频发给最好的朋友", score: { edm: 3, trap: 1 } },
+      { text: "觉得人类在宇宙面前极其渺小", score: { cinematic: 3, synthwave: 1 } },
+      { text: "只是静静地看着，让思绪放空", score: { ambient: 3, lofi: 1 } },
+      { text: "觉得这时候如果有一杯酒就完美了", score: { jazz: 3, citypop: 1 } }
     ]
   }
 ];
@@ -403,12 +421,19 @@ function handleAnswer(score) {
 
 function showResult() {
   let maxScore = -1;
+  let topKeys = [];
+  
   for (let key in userScores) {
     if (userScores[key] > maxScore) {
       maxScore = userScores[key];
-      finalResultKey = key;
+      topKeys = [key];
+    } else if (userScores[key] === maxScore) {
+      topKeys.push(key);
     }
   }
+
+  // Handle ties fairly by picking randomly among the top scoring results
+  finalResultKey = topKeys[Math.floor(Math.random() * topKeys.length)];
 
   // URL override for shared links
   const urlParams = new URLSearchParams(window.location.search);
