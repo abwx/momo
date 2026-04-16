@@ -1,108 +1,81 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>测一测你的人生BGM</title>
-    <meta name="description" content="一个轻量的心理测试：测一测你的人生BGM，生成可分享链接。" />
-    <link rel="stylesheet" href="./style.css" />
-  </head>
-  <body>
-    <div class="app">
-      <header class="header">
-        <div class="brand">
-          <div class="logo">BGM</div>
-          <div class="titles">
-            <h1>测一测你的人生BGM</h1>
-            <p>10 个选择题，给你一段“人生主题曲”的感觉</p>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>寻找你的人生BGM</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- 引入 FontAwesome 图标库 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- 动态背景 -->
+    <div class="bg-animation"></div>
+
+    <!-- 1. 首页 (黑胶唱片视觉) -->
+    <div id="home-screen" class="screen active">
+      <div class="vinyl-container">
+        <div class="vinyl-record">
+          <div class="vinyl-center"></div>
+        </div>
+      </div>
+      <h1 class="main-title">寻找你的人生BGM</h1>
+      <p class="subtitle">如果生命是一张唱片，<br>此刻的你，正在播放哪一首？</p>
+      <button id="start-btn" class="btn-primary glow-effect"><i class="fas fa-headphones"></i> 戴上耳机，开始测试</button>
+      <button id="view-all-btn" class="btn-text">浏览全部人生专辑</button>
+    </div>
+
+    <!-- 2. 测试页 -->
+    <div id="quiz-screen" class="screen">
+      <div class="progress-bar"><div id="progress-fill"></div></div>
+      <div class="question-container glass-panel">
+        <span id="question-number">01</span>
+        <h2 id="question-text">问题内容</h2>
+        <div id="options-container"></div>
+      </div>
+    </div>
+
+    <!-- 3. 结果页 (音乐播放器视觉) -->
+    <div id="result-screen" class="screen">
+      <h2 class="result-header">你的灵魂频率属于</h2>
+      <div class="player-card glass-panel">
+        <div class="cover-art" id="result-cover">
+          <div class="equalizer" id="equalizer-anim">
+            <span></span><span></span><span></span><span></span>
           </div>
         </div>
-      </header>
- 
-      <main class="main">
-        <section class="card" id="screen-start">
-          <h2>开始测试</h2>
-          <p class="muted">
-            这是一个轻量的心理测试，不会上传任何数据。结果只保存在当前页面和链接参数里。
-          </p>
-          <button class="btn primary" id="btn-start">开始</button>
-        </section>
- 
-        <section class="card hidden" id="screen-quiz">
-          <div class="progress">
-            <div class="progress-bar">
-              <div class="progress-fill" id="progress-fill"></div>
-            </div>
-            <div class="progress-text" id="progress-text"></div>
+        <h1 id="result-title">风格名称</h1>
+        <p id="result-desc">风格描述</p>
+        
+        <div class="audio-controls">
+          <button id="play-pause-btn" class="control-btn"><i class="fas fa-play"></i></button>
+          <div class="track-info">
+            <div class="track-name" id="track-name">专属BGM生成中...</div>
+            <div class="track-progress"><div id="track-fill"></div></div>
           </div>
- 
-          <h2 class="q-title" id="q-title"></h2>
-          <p class="q-desc muted" id="q-desc"></p>
- 
-          <div class="options" id="options"></div>
- 
-          <div class="footer-row">
-            <button class="btn ghost" id="btn-back">上一步</button>
-            <button class="btn" id="btn-skip">跳过</button>
-          </div>
-        </section>
- 
-        <section class="card hidden" id="screen-result">
-          <div class="result-head">
-            <div class="badge" id="result-badge"></div>
-            <h2 id="result-title"></h2>
-            <p class="muted" id="result-desc"></p>
-          </div>
- 
-          <div class="player">
-            <div class="cover" id="cover"></div>
-            <div class="player-meta">
-              <div class="track-title" id="track-title"></div>
-              <div class="track-artist muted" id="track-artist"></div>
-              <div class="player-controls">
-                <button class="icon-btn" id="btn-play" aria-label="play"></button>
-                <div class="time muted" id="time"></div>
-              </div>
-              <div class="seek">
-                <div class="seek-bar">
-                  <div class="seek-fill" id="seek-fill"></div>
-                </div>
-              </div>
-              <p class="autoplay-hint muted" id="autoplay-hint"></p>
-            </div>
-          </div>
- 
-          <div class="result-block">
-            <h3>你的 BGM 关键词</h3>
-            <div class="chips" id="result-chips"></div>
-          </div>
- 
-          <div class="result-block">
-            <h3>推荐听感</h3>
-            <div class="links">
-              <a class="link" id="link-search" target="_blank" rel="noreferrer">网易云：去搜同款风格</a>
-              <a class="link" id="link-share" href="#">复制分享链接</a>
-            </div>
-            <p class="hint muted" id="share-hint"></p>
-          </div>
- 
-          <div class="footer-row">
-            <button class="btn" id="btn-restart">再测一次</button>
-            <button class="btn ghost" id="btn-review">查看答案</button>
-          </div>
- 
-          <details class="answers" id="answers">
-            <summary>你的选择</summary>
-            <div id="answers-list"></div>
-          </details>
-        </section>
-      </main>
- 
-      <footer class="footer">
-        <span class="muted">本地运行 / 可放到 GitHub Pages</span>
-      </footer>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button id="share-btn" class="btn-secondary"><i class="fas fa-share-alt"></i> 分享我的BGM</button>
+        <button id="retry-btn" class="btn-text"><i class="fas fa-redo"></i> 重新测试</button>
+        <button id="view-all-btn-result" class="btn-text" style="margin-top: 10px;"><i class="fas fa-compact-disc"></i> 探索其他人生BGM</button>
+      </div>
     </div>
- 
-    <script src="./script.js" type="module"></script>
-  </body>
+
+    <!-- 4. 全部结果页 (专辑列表视觉) -->
+    <div id="all-results-screen" class="screen">
+      <button id="back-home-btn" class="btn-icon-top"><i class="fas fa-arrow-left"></i></button>
+      <h2 class="section-title">全部人生BGM</h2>
+      <p class="section-subtitle">探索灵魂的不同切面，点击试听</p>
+      <div id="all-results-grid" class="results-grid">
+        <!-- JS 动态生成卡片 -->
+      </div>
+    </div>
+  </div>
+  
+  <div id="toast" class="toast"></div>
+  <script src="script.js"></script>
+</body>
 </html>
