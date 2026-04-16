@@ -78,6 +78,10 @@ const results = {
     title: "Lo-Fi 治愈白噪音",
     desc: "你是温柔的倾听者。在这个吵闹的世界里，你就像一家永远亮着灯的午夜便利店，用不张扬的频率，治愈着身边的人。",
     traits: ["温柔", "细腻", "内耗治疗者"],
+    motto: "在世界的白噪音里，找到自己的心跳。",
+    analysis: "你拥有极高的共情能力，习惯于在喧嚣中寻找宁静。相比于无意义的社交，你更享受独处时的充实。你是一个极佳的倾听者，朋友们总是愿意向你倾诉，因为你身上有一种让人卸下防备的魔力。",
+    vibe: "雨天 · 热咖啡 · 旧书店",
+    match: "Ambient 环境音乐",
     songName: "Chill Wave",
     artist: "Kevin MacLeod",
     audioUrl: "audio/lofi.mp3",
@@ -89,6 +93,10 @@ const results = {
     title: "City Pop 浪漫都市",
     desc: "你骨子里带着迷人的复古与浪漫。像一阵吹过霓虹街头的晚风，即使在快节奏的都市里，你永远踩着属于自己的优雅节拍。",
     traits: ["复古", "浪漫", "微醺"],
+    motto: "用八十年代的晚风，吹散今天的烦恼。",
+    analysis: "你是一个无可救药的浪漫主义者，对生活有着独特的审美和追求。你喜欢城市夜晚的霓虹，喜欢微醺时的惬意。即使生活偶尔一地鸡毛，你也能用优雅的姿态和幽默感去化解。",
+    vibe: "霓虹灯 · 晚风 · 黑胶唱片",
+    match: "Jazz 慵懒爵士",
     songName: "Miami Nights",
     artist: "Kevin MacLeod",
     audioUrl: "audio/citypop.mp3",
@@ -100,6 +108,10 @@ const results = {
     title: "EDM 派对动物",
     desc: "你的心脏是一颗永不疲倦的低音炮。你热情、直接、充满能量，永远年轻，永远热泪盈眶，生命对你而言就是一场不停歇的派对。",
     traits: ["热情", "直接", "能量爆棚"],
+    motto: "只要心跳还在，派对就不会停歇。",
+    analysis: "你是天生的焦点，充满活力与激情。你不喜欢拐弯抹角，面对目标总是全力以赴。你的执行力极强，能在任何死气沉沉的团队中注入能量。对你来说，生命的意义在于燃烧。",
+    vibe: "闪光灯 · 低音炮 · 汗水",
+    match: "Trap 陷阱说唱",
     songName: "Electrodoodle",
     artist: "Kevin MacLeod",
     audioUrl: "audio/edm.mp3",
@@ -111,6 +123,10 @@ const results = {
     title: "Synthwave 复古未来",
     desc: "你是游走在现实与梦境边缘的漫游者。带着合成器般迷幻且冷静的特质，你在这个世界上总显得有些特别，迷人且深邃。",
     traits: ["迷幻", "赛博朋克", "深邃"],
+    motto: "在赛博朋克的梦境里，做一个清醒的漫游者。",
+    analysis: "你有着强烈的极客气质和未来感。你习惯用理性和逻辑看待世界，但内心深处却藏着对未知宇宙的无限幻想。你喜欢独树一帜，从不随波逐流，是朋友圈里的神秘人。",
+    vibe: "全息投影 · 复古跑车 · 电子网格",
+    match: "Cinematic 史诗配乐",
     songName: "The Complex",
     artist: "Kevin MacLeod",
     audioUrl: "audio/synthwave.mp3",
@@ -122,6 +138,10 @@ const results = {
     title: "Indie Folk 独立民谣",
     desc: "你向往自由与旷野。一把木吉他，一条没有尽头的公路。你不喜欢被规则束缚，内心藏着最纯粹的诗意与远方。",
     traits: ["自由", "旷野", "诗意"],
+    motto: "不需要终点，因为意义在路上。",
+    analysis: "你有着向往旷野的灵魂。你不喜欢被世俗的成功学绑架，更看重内心的自由与平和。你有着细腻的感知力，能从日常生活的一草一木中发现诗意。你是一个真正的生活体验派。",
+    vibe: "公路 · 木吉他 · 夕阳",
+    match: "Post-Rock 后摇滚",
     songName: "Easy Lemon",
     artist: "Kevin MacLeod",
     audioUrl: "audio/indie.mp3",
@@ -133,6 +153,10 @@ const results = {
     title: "Cinematic 史诗配乐",
     desc: "你的灵魂宏大且深沉。你生来就是为了体验最极致的情感，不论是跌宕起伏还是波澜壮阔，你都是自己人生的头号主角。",
     traits: ["宏大", "深沉", "主角光环"],
+    motto: "就算世界是荒诞的，也要活出史诗的质感。",
+    analysis: "你的情感内核极其丰富且宏大。你不会满足于平庸和琐碎，总是在寻找生命中那些震撼人心的瞬间。你有着极强的责任感和使命感，在关键时刻总是那个能扛起重任的人。",
+    vibe: "星空 · 巨浪 · 交响乐",
+    match: "Synthwave 复古未来",
     songName: "Movement Proposition",
     artist: "Kevin MacLeod",
     audioUrl: "audio/cinematic.mp3",
@@ -144,6 +168,10 @@ const results = {
     title: "Post-Rock 后摇滚",
     desc: "你的情绪像是一座休眠的火山。平时沉默寡言，但在某些时刻，你的内心会爆发出震撼人心的力量与轰鸣。",
     traits: ["外冷内热", "爆发力", "孤独"],
+    motto: "在绝对的沉默中，酝酿一场风暴。",
+    analysis: "你是一个外冷内热的人。表面上看起来波澜不惊，甚至有些孤僻，但内心却有着极其强烈的情感张力。你习惯用行动代替语言，当别人还在抱怨时，你已经默默完成了蜕变。",
+    vibe: "悬崖 · 闭眼 · 音浪",
+    match: "Indie Folk 独立民谣",
     songName: "Fluidscape",
     artist: "Kevin MacLeod",
     audioUrl: "audio/postrock.mp3",
@@ -155,6 +183,10 @@ const results = {
     title: "Ambient 环境音乐",
     desc: "你有一种能让人安静下来的魔力。你不需要太多言语，你的存在本身就像一片没有边界的湖水，包容且宁静。",
     traits: ["宁静", "包容", "无边界"],
+    motto: "像水一样包容，像风一样自由。",
+    analysis: "你达到了很多人难以企及的内心平和。你不争不抢，却总能以柔克刚。你对周围的环境有着极强的适应力，你的存在能让身边浮躁的人瞬间平静下来，是团队中最稳固的基石。",
+    vibe: "晨雾 · 冥想 · 深海",
+    match: "Lo-Fi 治愈白噪音",
     songName: "Local Forecast",
     artist: "Kevin MacLeod",
     audioUrl: "audio/ambient.mp3",
@@ -166,6 +198,10 @@ const results = {
     title: "Trap 陷阱说唱",
     desc: "你自信、张扬、不羁。你清楚地知道自己想要什么，并且会毫不掩饰地去争取。你的生活态度就是保持真实，保持锐利。",
     traits: ["自信", "张扬", "锐利"],
+    motto: "打破所有规则，建立我的秩序。",
+    analysis: "你极具反叛精神，自信且张扬。你讨厌被教做事，有着非常清晰的个人边界和野心。你不怕被误解，因为你知道真实的自己比完美的虚假更有力量。你是天生的开拓者。",
+    vibe: "街头 · 跑车 · 涂鸦",
+    match: "EDM 派对动物",
     songName: "Hustle",
     artist: "Kevin MacLeod",
     audioUrl: "audio/trap.mp3",
@@ -177,6 +213,10 @@ const results = {
     title: "Jazz 慵懒爵士",
     desc: "你的灵魂是自由且不可预测的。你喜欢即兴的浪漫，讨厌一成不变的规矩。和你在一起，永远不知道下一秒会有怎样的惊喜。",
     traits: ["慵懒", "自由", "即兴"],
+    motto: "生活是一场即兴演奏，没有错音，只有灵感。",
+    analysis: "你的灵魂充满了随机性和艺术感。你极其讨厌死板的计划，更喜欢跟随直觉行事。你有着极高的审美情趣和幽默感，能在最糟糕的境遇里找到乐子。你是一个无可救药的乐天派。",
+    vibe: "萨克斯 · 微醺 · 老酒馆",
+    match: "City Pop 浪漫都市",
     songName: "Cool Vibes",
     artist: "Kevin MacLeod",
     audioUrl: "audio/jazz.mp3",
@@ -211,6 +251,10 @@ const resultTitle = document.getElementById('result-title');
 const resultDesc = document.getElementById('result-desc');
 const resultCoverImg = document.getElementById('result-cover-img');
 const resultTraits = document.getElementById('result-traits');
+const resultMotto = document.getElementById('result-motto');
+const resultAnalysis = document.getElementById('result-analysis');
+const resultVibe = document.getElementById('result-vibe');
+const resultMapMatch = document.getElementById('result-match');
 const shareBtn = document.getElementById('share-btn');
 const retryBtn = document.getElementById('retry-btn');
 const equalizerAnim = document.getElementById('equalizer-anim');
@@ -379,6 +423,12 @@ function showResult() {
   
   // Set traits tags
   resultTraits.innerHTML = res.traits.map(t => `<span class="trait-tag">${t}</span>`).join('');
+  
+  // Set extra detailed info
+  resultMotto.innerText = res.motto;
+  resultAnalysis.innerText = res.analysis;
+  resultVibe.innerText = res.vibe;
+  resultMapMatch.innerText = res.match;
   
   // Set cover and music info
   resultCoverImg.src = res.coverImg;

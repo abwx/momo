@@ -515,6 +515,63 @@ body {
   box-shadow: 0 5px 10px rgba(255, 75, 43, 0.4);
 }
 
+/* 详情解析卡片 */
+.result-details {
+  width: 100%;
+  padding: 25px 20px;
+  margin-bottom: 25px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  text-align: left;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-title {
+  font-size: 14px;
+  color: var(--accent);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-main);
+  opacity: 0.9;
+}
+
+.quote-text {
+  font-style: italic;
+  color: #eee;
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+}
+
+.row-layout {
+  display: flex;
+  gap: 15px;
+}
+
+.detail-box {
+  flex: 1;
+  background: rgba(0,0,0,0.2);
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.highlight-text {
+  font-weight: 600;
+  color: #fff;
+}
+
 .action-buttons {
   width: 100%;
   display: flex;
