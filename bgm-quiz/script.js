@@ -85,7 +85,7 @@ const results = {
     songName: "Chill Wave",
     artist: "Kevin MacLeod",
     audioUrl: "audio/lofi.mp3",
-    coverImg: "https://images.unsplash.com/photo-1516280440502-a29286fa6443?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    coverImg: "https://images.unsplash.com/photo-1501139083538-0139583c060f?auto=format&fit=crop&w=500&q=80",
     color: "#a18cd1",
     icon: "fa-coffee"
   },
@@ -175,7 +175,7 @@ const results = {
     songName: "Fluidscape",
     artist: "Kevin MacLeod",
     audioUrl: "audio/postrock.mp3",
-    coverImg: "https://images.unsplash.com/photo-1498036882173-b41c28af5a15?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    coverImg: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=500&q=80",
     color: "#434343",
     icon: "fa-mountain"
   },
