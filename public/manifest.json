@@ -1,0 +1,10 @@
+{
+  "name": "发小出道前夜 · 校园篇",
+  "short_name": "发小前夜",
+  "description": "青春校园风互动心理小测：选角、分支剧情与恋爱人格倾向，仅供娱乐自察。",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#e8f4ef",
+  "theme_color": "#e8f4ef",
+  "lang": "zh-CN"
+}
