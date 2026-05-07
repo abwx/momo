@@ -40,6 +40,8 @@ export type SceneVN = SceneBase & {
   choices?: Choice[];
   /** 日记纸等特殊版式 */
   skin?: "default" | "journal";
+  /** 限时抉择：毫秒，超时自动走第一个选项或扣分 */
+  timeLimitMs?: number;
 };
 export type ChatBubble = { from: "partner" | "player"; text: string; delayMs?: number };
 
@@ -47,6 +49,8 @@ export type ScenePhone = SceneBase & {
   kind: "phone";
   messages: ChatBubble[];
   choices: Choice[];
+  /** 限时抉择 */
+  timeLimitMs?: number;
 };
 
 export type SceneInterlude = SceneBase & {

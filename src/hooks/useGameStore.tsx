@@ -13,6 +13,7 @@ import { resolvePersonality } from "@/data/personalities";
 import { loadMeta } from "@/data/metaProgress";
 import { DEFAULT_PORTRAIT_FILE } from "@/data/characterArt";
 import { archetypeForPortrait, type Archetype } from "@/data/archetypes";
+import { resolveAmbientEvent, type AmbientEvent } from "@/data/ambientEvents";
 
 const STORAGE_KEY = "faxiado-quiz-v1";
 
@@ -82,6 +83,9 @@ type Ctx = {
   runSeed: number;
   replaySpice: boolean;
   epilogueThisRun: boolean;
+  interruption: AmbientEvent | null;
+  triggerInterruption: () => void;
+  dismissInterruption: () => void;
   goTo: (id: string) => void;
   applyChoice: (next: string, delta?: Partial<Scores>) => void;
   /** 不改变场景，仅叠加分数（专属篇分步用） */
@@ -104,11 +108,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [runSeed, setRunSeed] = useState(persisted.runSeed);
   const [replaySpice, setReplaySpice] = useState(persisted.replaySpice);
   const [epilogueThisRun, setEpilogueThisRun] = useState(persisted.epilogueThisRun);
+  const [interruption, setInterruption] = useState<AmbientEvent | null>(null);
 
   useEffect(() => {
     const sc = SCENES[sceneId];
     if (!sc) return;
     setChapterMax((m) => Math.max(m, sc.chapter));
+    // 每次切换场景，重置中断状态
+    setInterruption(null);
   }, [sceneId]);
 
   useEffect(() => {
@@ -134,6 +141,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
     replaySpice,
     epilogueThisRun,
   ]);
+
+  const archetype = useMemo(() => archetypeForPortrait(portraitFile), [portraitFile]);
+
+  const triggerInterruption = useCallback(() => {
+    const sc = SCENES[sceneId];
+    if (!sc) return;
+    const ev = resolveAmbientEvent(sc, { archetype, partnerName, callYou, runSeed });
+    // 只有带有交互属性的事件才会真正“中断”流程
+    if (ev.isSurprise) {
+      setInterruption(ev);
+    }
+  }, [sceneId, archetype, partnerName, callYou, runSeed]);
+
+  const dismissInterruption = useCallback(() => {
+    setInterruption(null);
+  }, []);
 
   const goTo = useCallback((id: string) => {
     if (!SCENES[id]) return;
@@ -193,9 +216,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setRunSeed(0);
     setReplaySpice(false);
     setEpilogueThisRun(false);
+    setInterruption(null);
   }, []);
-
-  const archetype = useMemo(() => archetypeForPortrait(portraitFile), [portraitFile]);
 
   const personalityId = useMemo(
     () => resolvePersonality(scores, { replaySpice, runSeed }),
@@ -214,6 +236,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       runSeed,
       replaySpice,
       epilogueThisRun,
+      interruption,
+      triggerInterruption,
+      dismissInterruption,
       goTo,
       applyChoice,
       applyDelta,
@@ -232,6 +257,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       runSeed,
       replaySpice,
       epilogueThisRun,
+      interruption,
+      triggerInterruption,
+      dismissInterruption,
       goTo,
       applyChoice,
       applyDelta,

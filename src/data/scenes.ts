@@ -430,6 +430,7 @@ export const SCENES: Record<string, Scene> = {
     chapter: 2,
     title: "深夜热搜预览",
     kind: "phone",
+    timeLimitMs: 5000,
     messages: [
       { from: "partner", text: "在吗", delayMs: 400 },
       { from: "partner", text: "训练室有人拍到了，说我和队友「走太近」。" },
@@ -628,6 +629,7 @@ export const SCENES: Record<string, Scene> = {
     chapter: 3,
     title: "便利店定位",
     kind: "phone",
+    timeLimitMs: 4000,
     messages: [
       { from: "partner", text: "给你丢个定位。", delayMs: 450 },
       { from: "partner", text: "楼下便利店关东煮还剩两串，你要不要？", delayMs: 550 },
@@ -824,6 +826,7 @@ export const SCENES: Record<string, Scene> = {
     chapter: 8,
     title: "化妆间门口三十秒",
     kind: "phone",
+    timeLimitMs: 4500,
     messages: [
       { from: "partner", text: "{{称呼}}，我快上台了。", delayMs: 400 },
       {
