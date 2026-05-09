@@ -91,7 +91,7 @@ export const event_scandal_01: GameEvent = {
   id: 'event-scandal-01',
   type: 'CHOICE',
   title: '深夜炸弹：陈年旧料被搬运',
-  description: '凌晨两点，某匿名论坛突然流出 ${random_char} 练习生时期的模糊合照，带节奏者直指其“私生活混乱”。公关黄金 4 小时正在倒计时。',
+  description: '凌晨两点，某匿名论坛突然流出 ${random_char} 练习生时期的模糊合照，带节奏者直指其“私生活混乱”。公关黄金 4 小时正在倒计时，全网黑粉已就位。',
   choices: (candidates: Character[]) => {
     const target = candidates[0];
     return [
@@ -101,7 +101,7 @@ export const event_scandal_01: GameEvent = {
           const c = chars.find(ch => ch.id === target.id)!;
           if (randomResult(0.6)) {
             c.popularity += 15;
-            return `公关教科书！公司第一时间保护艺人的姿态赢得了极高评价，${c.name} 的粉丝凝聚力因这次风波反而增强了，黑粉被暂时压制。`;
+            return `公关教科书！公司第一时间保护艺人的姿态赢得了极高评价，${c.name} 的粉丝凝聚力因这次风波反而增强了，黑粉被暂时压制。#保护最好的${c.name}# 登顶。`;
           } else {
             c.popularity -= 15;
             return `用力过猛。声明被指责为“恐吓网友”，黑粉挖出了更多真假难辨的细节进行反击，${c.name} 的路人好感度跌至谷底。`;
@@ -115,6 +115,28 @@ export const event_scandal_01: GameEvent = {
           c.popularity += 10;
           return `稳健的策略。粉丝有组织地用安利文案“控评”，路人看到少年挥汗如雨的画面也逐渐散去。一场危机被无形中消解。`;
         } 
+      },
+      {
+        text: `【抓马反击】暗示合照为竞争对手恶意拼接，引导粉圈大混战。`,
+        action: (chars) => {
+          const c = chars.find(ch => ch.id === target.id)!;
+          c.popularity += 20;
+          chars.forEach(char => { if(char.id !== target.id) char.popularity -= 5; });
+          return `场面极其抓马！粉圈彻底炸锅，各家粉丝开启“混战模式”。${c.name} 的热度爆表，虽然口碑两极分化，但流量确实拉满了。`;
+        }
+      },
+      {
+        text: `【网感自黑】让艺人发微博：“是的，我们有个孩子（指猫）”，用幽默解构危机。`,
+        action: (chars) => {
+          const c = chars.find(ch => ch.id === target.id)!;
+          if (randomResult(0.8)) {
+            c.popularity += 25;
+            return `神级公关！这种极具网感的自黑瞬间化解了戾气。网友纷纷表示“这性格我粉了”，${c.name} 喜提“内娱活人”称号。`;
+          } else {
+            c.popularity -= 10;
+            return `弄巧成拙。网友认为这种严肃事件不该开玩笑，吐槽公司“把观众当傻子”。`;
+          }
+        }
       }
     ]
   }
@@ -127,13 +149,15 @@ export const event_variety_duo_01: GameEvent = {
   description: '一档主打“化学反应”的顶流双人综艺发来邀请。在内娱，选对 CP 就等于赢了一半。你决定派谁去收割这波红利？',
   choices: {
     action: (char1: Character, char2: Character) => {
+      // 优化逻辑：大幅提升基础成功率 (从 0.45 提升至 0.7)
       const isGoodMatch = (char1.personality === '喜剧人' && char2.personality === '喜剧人') || 
-                         (char1.personality === '高情商' && char2.personality === '内秀舞担');
-      if (randomResult(isGoodMatch ? 0.8 : 0.45)) {
+                         (char1.personality === '高情商' && char2.personality === '内秀舞担') ||
+                         (char1.personality === 'ACE候补' && char2.personality === 'ACE候补');
+      if (randomResult(isGoodMatch ? 0.95 : 0.7)) {
         char1.popularity += 25; char2.popularity += 25;
         return `节目效果爆炸！${char1.name} 和 ${char2.name} 在节目中的互补感绝了，“这对神仙组合”的切片在短视频平台疯狂刷屏，CP 粉原地过年！`;
       } else {
-        char1.popularity -= 8; char2.popularity -= 8;
+        char1.popularity -= 5; char2.popularity -= 5;
         return `糟糕的营业。两人在节目中显得客气且疏离，尴尬的互动被网友做成了表情包嘲讽，观众评价“完全看不出是队友”。`;
       }
     }
@@ -159,8 +183,8 @@ export const event_brand_deal: GameEvent = {
   id: 'event-brand-deal',
   type: 'CHOICE',
   title: '高奢品牌全球大使试镜',
-  description: '某国际顶奢品牌正在寻找具备“高级感”的面孔。这不仅是时尚资源的飞跃，更是咖位的象征。',
-  choices: (candidates: Character[]) => candidates.slice(0, 3).map(char => ({
+  description: '某国际顶奢品牌正在寻找具备“高级感”的面孔。这不仅是时尚资源的飞跃，更是咖位的象征。全网盯着这块肥肉，稍有不慎就会被嘲“越阶”。',
+  choices: (candidates: Character[]) => candidates.slice(0, 4).map(char => ({
     text: getChoiceText('BRAND', char),
     action: (chars: Character[]) => {
       const target = chars.find(c => c.id === char.id)!;
@@ -180,7 +204,7 @@ export const event_training_injury: GameEvent = {
   id: 'event-training-injury',
   type: 'CHOICE',
   title: '突发：二公排练意外受伤',
-  description: '人气选手 ${random_char} 在练习高难度动作时严重崴脚，距离正式录制仅剩 48 小时。',
+  description: '人气选手 ${random_char} 在练习高难度动作时严重崴脚，距离正式录制仅剩 48 小时。此时唯恐天下不乱的营销号已经开始发通稿暗示“队内排挤”。',
   choices: (candidates: Character[]) => {
     const target = candidates[0];
     return [
@@ -202,6 +226,22 @@ export const event_training_injury: GameEvent = {
         action: (chars) => {
           chars.forEach(c => c.popularity += 10);
           return `虽然舞台观赏性有所下降，但这种“全团共进退”的举动极大增强了团粉的归属感。全员人气稳健上涨。`;
+        }
+      },
+      {
+        text: `【粉圈虐粉】空降粉丝群语音，用沙哑的声音安慰粉丝，收割怜爱。`,
+        action: (chars) => {
+          const c = chars.find(ch => ch.id === target.id)!;
+          c.popularity += 20;
+          return `虐粉神技！${c.name} 的语音被粉丝疯狂转发，路人看了都觉得心疼。粉丝打榜的热情被瞬间点燃，“一定要把他送出道”成了口号。`;
+        }
+      },
+      {
+        text: `【网感营销】在小号发一张“坚强小狗”表情包，并配文：问题不大。`,
+        action: (chars) => {
+          const c = chars.find(ch => ch.id === target.id)!;
+          c.popularity += 15;
+          return `这种轻松幽默的网感姿态极受路人欢迎。不仅辟谣了“队内排挤”，还树立了一个乐观强大的形象，涨粉效果意外地好。`;
         }
       }
     ]
@@ -231,13 +271,13 @@ export const event_live_stream_accident: GameEvent = {
   id: 'event-live-stream-accident',
   type: 'CHOICE',
   title: '惊魂：直播间麦克风未关',
-  description: '直播结束后的 30 秒内，后台收音设备记录下了成员们的私下谈话。此时，5 万名观众还没退出直播间。',
+  description: '直播结束后的 30 秒内，后台收音设备记录下了成员们的私下谈话。此时，5 万名观众还没退出直播间，一段足以改变团队命运的对话正在流出。',
   choices: [
     {
       text: '【真心剖白】内容是成员们对刚才舞台瑕疵的自责和互相打气。',
       action: (chars) => {
         chars.forEach(c => c.popularity += 18);
-        return `这种“意外”流出的真挚情感让路人瞬间破防。全团口碑大幅逆转，粉丝凝聚力达到了前所未有的高度。`;
+        return `这种“意外”流出的真挚情感让路人瞬间破防。全团口碑大幅逆转，粉丝凝聚力达到了前所未有的高度。#团魂炸裂# 屠榜。`;
       }
     },
     {
@@ -245,6 +285,20 @@ export const event_live_stream_accident: GameEvent = {
       action: (chars) => {
         chars.forEach(c => c.popularity += 12);
         return `这种真实的性格魅力让网友直呼“这就是我想看的少年感”。全员喜剧人的人设坐稳了，商业价值上升。`;
+      }
+    },
+    {
+      text: '【抓马反转】对话中透露了某个未公开的“大惊喜”计划，引发全网猜测。',
+      action: (chars) => {
+        chars.forEach(c => c.popularity += 15);
+        return `这波营销绝了！全网都在扒那个惊喜到底是什么，团队的讨论度瞬间拉满，成为了当周最受关注的话题中心。`;
+      }
+    },
+    {
+      text: '【粉圈CP】录到了两名成员极其自然的亲密互动，CP粉原地过年。',
+      action: (chars) => {
+        chars.forEach(c => c.popularity += 20);
+        return `CP粉狂欢！这段“未公开糖点”在短视频平台疯狂刷屏，CP的热度带动了整个团的关注度，吸金能力直线上升。`;
       }
     }
   ]
@@ -254,7 +308,7 @@ export const event_fan_gift_crisis: GameEvent = {
   id: 'event-fan-gift-crisis',
   type: 'CHOICE',
   title: '舆情：应援礼品价值争议',
-  description: '站姐送给 ${random_char} 的昂贵私人物品被曝光，引发了关于艺人收受奢侈礼品的负面讨论。',
+  description: '大粉送给 ${random_char} 的昂贵私人物品被曝光，引发了关于艺人收受奢侈礼品的负面讨论。黑粉趁机带节奏：“这还没出道就开始割韭菜了？”',
   choices: (candidates: Character[]) => {
     const target = candidates[0];
     return [
@@ -273,6 +327,22 @@ export const event_fan_gift_crisis: GameEvent = {
           c.popularity -= 5;
           return `这种做法被黑粉识破并嘲讽为“又立又当”。讨论度虽然降下去了，但 ${c.name} 的信誉度出现了一丝裂痕。`;
         }
+      },
+      {
+        text: `【粉圈反转】暗示该礼品实为艺人自购，站姐只是代购，顺便营销“富二代”人设。`,
+        action: (chars) => {
+          const c = chars.find(ch => ch.id === target.id)!;
+          c.popularity += 25;
+          return `人设站稳了！#某某人间富贵花# 冲上热搜，网友纷纷感叹“果然长了一张不差钱的脸”，这种反差感极具商业吸引力。`;
+        }
+      },
+      {
+        text: `【抓马跨界】将礼品拍卖并全额捐赠公益，邀请大粉共同参与。`,
+        action: (chars) => {
+          const c = chars.find(ch => ch.id === target.id)!;
+          c.popularity += 30;
+          return `公关天花板！不仅化解了危机，还带飞了整个团的国民度。#某某和粉丝一起做公益# 被主流媒体转发点赞，格局瞬间拉满。`;
+        }
       }
     ]
   }
@@ -282,8 +352,8 @@ export const event_variety_guest: GameEvent = {
   id: 'event-variety-guest',
   type: 'CHOICE',
   title: '单兵作战：热门慢综艺常驻邀请',
-  description: '某档高口碑慢综艺需要一名常驻嘉宾，这对提升路人缘和国民度极其关键。',
-  choices: (candidates: Character[]) => candidates.slice(0, 3).map(char => ({
+  description: '某档高口碑慢综艺需要一名常驻嘉宾，这对提升路人缘和国民度极其关键。各家粉丝已经在工作室评论区“开撕”，要求公司公平对待。',
+  choices: (candidates: Character[]) => candidates.slice(0, 4).map(char => ({
     text: getChoiceText('VARIETY', char),
     action: (chars: Character[]) => {
       const target = chars.find(c => c.id === char.id)!;
@@ -307,7 +377,8 @@ export const event_airport_fashion: GameEvent = {
   choices: {
     action: (char1: Character, char2: Character) => {
       const isFashionable = char1.personality === '佛系贵公子' || char2.personality === '懵懂门面';
-      if (randomResult(isFashionable ? 0.8 : 0.45)) {
+      // 提升基础成功率 (从 0.45 提升至 0.75)
+      if (randomResult(isFashionable ? 0.95 : 0.75)) {
         char1.popularity += 18; char2.popularity += 18;
         return `生图出圈！#某某机场私服# 瞬间霸占时尚广场，大牌公关纷纷开始询问两人的合作档期。`;
       } else {
@@ -356,8 +427,8 @@ export const event_audition_chance: GameEvent = {
   id: 'event-audition-chance',
   type: 'CHOICE',
   title: '跨界：知名导演的古装剧试镜',
-  description: '一个热门古装 IP 正在寻找男配。虽然只是客串，但这是进入影视圈的最佳跳板。',
-  choices: (candidates: Character[]) => candidates.slice(0, 3).map(char => ({
+  description: '一个热门古装 IP 正在寻找男配。虽然只是客串，但这是进入影视圈的最佳跳板。粉丝已经在超话疯狂安利自家的“神颜”，希望能被导演看中。',
+  choices: (candidates: Character[]) => candidates.slice(0, 4).map(char => ({
     text: `押注颜值优势，派 ${char.name} 去导演组试戏。`,
     action: (chars: Character[]) => {
       const target = chars.find(c => c.id === char.id)!;
@@ -377,7 +448,7 @@ export const event_training_vlog_accident: GameEvent = {
   id: 'event-training-vlog-accident',
   type: 'CHOICE',
   title: '突发：练习室争吵画面误入 Vlog',
-  description: '在最新的 Vlog 中，剪辑师疏忽，剪进了 ${random_char} 与队友激烈争论舞蹈细节的画面。',
+  description: '在最新的 Vlog 中，剪辑师疏忽，剪进了 ${random_char} 与队友激烈争论舞蹈细节的画面。这段视频在 10 分钟内播放量破百万，全网都在讨论“皇族霸凌”。',
   choices: [
     {
       text: '【大方回应】发布完整片段，展现成员对舞台的高要求和真实磨合过程。',
@@ -392,6 +463,20 @@ export const event_training_vlog_accident: GameEvent = {
         chars.forEach(c => c.popularity -= 8);
         return `这种心虚的做法引发了更多猜测。黑粉开始带节奏说“内部霸凌”，路人观感下降，粉丝之间也开始产生裂痕。`;
       }
+    },
+    {
+      text: '【抓马营销】趁机推出“成员真心话”特别专题，将冲突转化为团魂。',
+      action: (chars) => {
+        chars.forEach(c => c.popularity += 25);
+        return `神级反转！节目组顺势推出的深度访谈，让观众看到了少年们为了梦想的执着。原本的冲突变成了加分项，粉丝粘性大增。`;
+      }
+    },
+    {
+      text: '【网感公关】买通大 V 联动，将争吵解读为“业务讨论的良性内卷”，树立全员 ACE 形象。',
+      action: (chars) => {
+        chars.forEach(c => c.popularity += 20);
+        return `这波网感营销极佳。不仅洗清了“霸凌”嫌疑，还让全网记住了这个团“实力强、肯拼命”的标签，路人盘迅速扩大。`;
+      }
     }
   ]
 };
@@ -400,8 +485,8 @@ export const event_solo_cover: GameEvent = {
   id: 'event-solo-cover',
   type: 'CHOICE',
   title: '机遇：首支个人翻唱作品发布',
-  description: '为了展现成员个人特色，你决定在 B 站发布一支高质量的翻唱视频。',
-  choices: (candidates: Character[]) => candidates.slice(0, 3).map(char => ({
+  description: '为了展现成员个人特色，你决定在 B 站发布一支高质量的翻唱视频。这种垂直领域的展示是圈内“吸粉”的神器。',
+  choices: (candidates: Character[]) => candidates.slice(0, 4).map(char => ({
     text: getChoiceText('VOCAL', char),
     action: (chars: Character[]) => {
       const target = chars.find(c => c.id === char.id)!;
@@ -421,7 +506,7 @@ export const event_fan_project: GameEvent = {
   id: 'event-fan-project',
   type: 'CHOICE',
   title: '应援：站姐组织的无人机灯光秀',
-  description: '核心成员 ${random_char} 的站姐斥巨资在市中心组织了无人机应援。这种排场极具话题度，但也容易引发“铺张浪费”的争议。',
+  description: '核心成员 ${random_char} 的站姐斥巨资在市中心组织了无人机应援。这种排场极具话题度，但也容易引发“铺张浪费”的争议。黑粉已经开始在官媒下举报“非法集资”。',
   choices: (candidates: Character[]) => {
     const target = candidates[0];
     return [
@@ -440,6 +525,21 @@ export const event_fan_project: GameEvent = {
           c.popularity += 10;
           return `这种正能量的引导获得了主流媒体的点赞。虽然排面少了点，但 ${c.name} 的路人缘和国民度得到了扎实的提升。`;
         }
+      },
+      {
+        text: `【粉圈联动】组织全团成员一起观看，营销“神仙友谊”。`,
+        action: (chars) => {
+          chars.forEach(c => c.popularity += 12);
+          return `这波抓马营销绝了！全团在灯光秀下的合照瞬间刷屏，不仅平息了“唯粉独美”的争议，还吸了一大波团粉。`;
+        }
+      },
+      {
+        text: `【网感解构】发布无人机排练的各种“沙雕”废片，用幽默消解豪横感。`,
+        action: (chars) => {
+          const c = chars.find(ch => ch.id === target.id)!;
+          c.popularity += 18;
+          return `极具网感的公关！网友纷纷表示“这应援也太可爱了”，原本的“土豪”争议变成了“有趣”的谈资，路人缘爆棚。`;
+        }
       }
     ]
   }
@@ -453,7 +553,8 @@ export const event_variety_clash: GameEvent = {
   choices: {
     action: (char1: Character, char2: Character) => {
       const hasHighEQ = char1.personality === '高情商' || char2.personality === '高情商';
-      if (randomResult(hasHighEQ ? 0.9 : 0.4)) {
+      // 提升基础成功率 (从 0.4 提升至 0.7)
+      if (randomResult(hasHighEQ ? 0.98 : 0.7)) {
         char1.popularity += 12; char2.popularity += 12;
         return `危机公关成功！多亏了其中一人的高情商斡旋，不仅化解了尴尬，还赢得了前辈的赞赏。这段互动成了节目的神来之笔。`;
       } else {
@@ -482,7 +583,7 @@ export const event_debut_countdown: GameEvent = {
   id: 'event-debut-countdown',
   type: 'CHOICE',
   title: '最终期：出道夜预热方案',
-  description: '出道夜就在眼前。作为制作人，你决定将最后的宣传资源投放在哪个方向？',
+  description: '出道夜就在眼前，成败在此一举。作为制作人，你决定将最后的宣传资源投放在哪个方向？各家站姐已经开始在场外疯狂圈地，气氛紧张到了极点。',
   choices: [
     {
       text: '【极致情怀】发布练习生时期的成长纪录片，主打“初心”。',
@@ -497,6 +598,20 @@ export const event_debut_countdown: GameEvent = {
         chars.forEach(c => c.popularity += 20);
         return `太燃了！这种超越新人的业务水平让所有人感到震撼。全网都在期待出道夜的正式爆发，团队期待值被拉到了历史最高点。`;
       }
+    },
+    {
+      text: '【抓马反转】放出一段“出道位归属”的悬念预告，引导粉圈大乱斗。',
+      action: (chars) => {
+        chars.forEach(c => c.popularity += 25);
+        return `这波营销极其抓马！各家粉丝为了保住自家偶像的出道位，打榜力度翻了三倍。热度爆表，但粉丝之间的火药味也达到了顶点。`;
+      }
+    },
+    {
+      text: '【网感直播】全员素颜开启深夜吃播，与粉丝进行“活人”互动。',
+      action: (chars) => {
+        chars.forEach(c => c.popularity += 18);
+        return `这种极具网感的接地气方式大获好评。路人纷纷感叹“这团好真实”，国民好感度大幅提升，成功在出道前完成破圈。`;
+      }
     }
   ]
 };
@@ -505,7 +620,7 @@ export const event_variety_drama: GameEvent = {
   id: 'event-variety-drama',
   type: 'CHOICE',
   title: '抓马：综艺剪辑恶意带节奏',
-  description: '最新一期综艺播出后，剪辑师为了热度，故意放大了 ${random_char} 的一个疲惫表情，引导网友认为其“耍大牌”。',
+  description: '最新一期综艺播出后，剪辑师为了热度，故意放大了 ${random_char} 的一个疲惫表情，引导网友认为其“耍大牌”。粉圈大粉已经开始带节奏要“撕碎”节目组。',
   choices: (candidates: Character[]) => {
     const target = candidates[0];
     return [
@@ -529,6 +644,27 @@ export const event_variety_drama: GameEvent = {
           c.popularity += 8;
           return `稳健的处理方式。路人缘虽然受损，但核心粉丝群通过大规模的安利成功对冲了负面影响。`;
         }
+      },
+      {
+        text: `【抓马联动】让 ${target.name} 与剪辑师在直播中“世纪和解”，博取同情分。`,
+        action: (chars) => {
+          const c = chars.find(ch => ch.id === target.id)!;
+          c.popularity += 15;
+          return `这波抓马操作惊呆了网友。虽然被指责“戏多”，但成功将负面转化为正面关注，${c.name} 的大度形象深入人心。`;
+        }
+      },
+      {
+        text: `【网感玩梗】艺人发微博：“是的，我当时确实在想中午吃什么”，用网感化解“耍大牌”指控。`,
+        action: (chars) => {
+          const c = chars.find(ch => ch.id === target.id)!;
+          if (randomResult(0.85)) {
+            c.popularity += 22;
+            return `神级公关！网友纷纷表示“这就是我本人”，原本的负面标签被幽默感彻底消解，${c.name} 喜提“内娱真实活人”称号。`;
+          } else {
+            c.popularity -= 5;
+            return `反响一般。部分严厉的网友仍认为其工作态度有问题，但大规模的攻击已经停止。`;
+          }
+        }
       }
     ]
   }
@@ -542,7 +678,8 @@ export const event_award_ceremony: GameEvent = {
   choices: {
     action: (char1: Character, char2: Character) => {
       const hasLeader = char1.name === '张桂源' || char2.name === '张桂源';
-      if (randomResult(hasLeader ? 0.9 : 0.6)) {
+      // 提升基础成功率 (从 0.6 提升至 0.8)
+      if (randomResult(hasLeader ? 0.98 : 0.8)) {
         char1.popularity += 22; char2.popularity += 22;
         return `得体大方！两人的发言既谦逊又有力量，#某某领奖感言# 霸屏热搜。作为制作人，你这次的人选安排被业界盛赞。`;
       } else {

@@ -1,11 +1,11 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'PingFang SC', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light;
-  color: #333;
-  background-color: #fdf6f8; /* 一个非常淡的粉色背景 */
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #020617; /* 深蓝黑色背景，更高级 */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -16,6 +16,8 @@
 body {
   margin: 0;
   padding: 0;
+  background-color: #020617;
+  color: #f8fafc;
 }
 
 #app {
@@ -23,7 +25,26 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* 从顶部开始对齐 */
-  padding-top: 4rem; /* 顶部留出一些空间 */
+  align-items: flex-start;
+  padding: 0;
   box-sizing: border-box;
 }
+
+/* Custom Scrollbar for Premium Feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
