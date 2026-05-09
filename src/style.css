@@ -4,8 +4,8 @@
   font-weight: 400;
 
   color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #020617; /* 深蓝黑色背景，更高级 */
+  color: rgba(255, 255, 255, 0.95);
+  background: radial-gradient(circle at 50% -20%, #312e81 0%, #1e1b4b 40%, #0f172a 100%) fixed; /* 更有层次感的深蓝紫色渐变 */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -16,8 +16,9 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #020617;
+  background: #0f172a;
   color: #f8fafc;
+  overflow-x: hidden;
 }
 
 #app {

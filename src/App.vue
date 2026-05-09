@@ -590,6 +590,7 @@ const producerMedals = computed(() => {
       <div class="ambient-bg">
         <div class="glow-sphere glow-1"></div>
         <div class="glow-sphere glow-2"></div>
+        <div class="glow-sphere glow-3"></div>
         <div class="mesh-grid"></div>
       </div>
 
@@ -679,20 +680,39 @@ const producerMedals = computed(() => {
       <!-- Animated Background Decorations -->
       <div class="roster-bg-decor circle-top"></div>
       <div class="roster-bg-decor circle-bottom"></div>
+      <div class="mesh-grid"></div>
       
-      <div class="roster-hero-section-compact">
-        <div class="hero-text-mini">
-          <h1 class="hero-title-mini">制作人操盘中心</h1>
-          <p class="hero-desc-mini">成员按姓名首字母排序。人气高低将决定后续环节</p>
+      <div class="roster-header-container">
+        <div class="roster-hero-section-compact">
+          <div class="hero-text-mini">
+            <h1 class="hero-title-mini">制作人操盘中心</h1>
+            <p class="hero-desc-mini">成员按姓名首字母排序。人气高低将决定后续环节</p>
+          </div>
+          
+          <div class="hero-actions-mini">
+            <button @click="randomizePopularity" class="mini-btn secondary">
+              🎲 随机人气
+            </button>
+            <button @click="startGame" class="mini-btn primary">
+              🎬 开始录制
+            </button>
+          </div>
         </div>
-        
-        <div class="hero-actions-mini">
-          <button @click="randomizePopularity" class="mini-btn secondary">
-            🎲 随机人气
-          </button>
-          <button @click="startGame" class="mini-btn primary">
-            🎬 开始录制
-          </button>
+
+        <!-- Stats Bar -->
+        <div class="roster-stats-bar">
+          <div class="stat-item">
+            <span class="stat-label">总成员</span>
+            <span class="stat-value">{{ characters.length }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">平均人气</span>
+            <span class="stat-value">{{ Math.round(characters.reduce((acc, c) => acc + c.popularity, 0) / characters.length) }}%</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">制作状态</span>
+            <span class="stat-value pulse">READY</span>
+          </div>
         </div>
       </div>
 
@@ -739,6 +759,9 @@ const producerMedals = computed(() => {
 
     <!-- 2. Event Screen -->
     <div v-if="gameState === 'event' && currentEvent" class="game-view">
+      <div class="ambient-bg-event">
+        <div class="glow-sphere-event"></div>
+      </div>
       <div class="producer-status-line">
         <span class="status-indicator">直播中</span>
         <span class="status-text">当前环节: {{ currentEvent.title }}</span>
@@ -897,6 +920,22 @@ const producerMedals = computed(() => {
 
         <div class="event-main">
           <div class="event-container" :class="{ 'breaking-news-border': isBreakingNews, 'glitch-anim': isBreakingNews }">
+            <!-- Glass Decorative Background -->
+            <div class="event-glass-bg"></div>
+            <div class="event-scanline"></div>
+            
+            <!-- Technical Data Overlays -->
+            <div class="tech-data top-left-data">REC AUTO</div>
+            <div class="tech-data top-right-data">ISO 400</div>
+            <div class="tech-data bottom-left-data">F2.8 1/60</div>
+            <div class="tech-data bottom-right-data">1080P 60FPS</div>
+            
+            <!-- Viewfinder Decor -->
+            <div class="viewfinder-corner top-left"></div>
+            <div class="viewfinder-corner top-right"></div>
+            <div class="viewfinder-corner bottom-left"></div>
+            <div class="viewfinder-corner bottom-right"></div>
+
             <div v-if="isBreakingNews" class="breaking-news-tag">突发状况 / 紧急舆情</div>
             <div class="progress-bar">
               <div class="progress" :style="{ width: ((currentEventIndex + 1) / gameEvents.length) * 100 + '%' }"></div>
@@ -983,6 +1022,9 @@ const producerMedals = computed(() => {
     <!-- 3. End Screen (Settlement Report) -->
     <div v-if="gameState === 'end'" class="end-screen">
         <div class="settlement-container-refined">
+          <!-- Magazine Grid Texture -->
+          <div class="magazine-texture"></div>
+          
           <!-- Decorative Background Elements -->
           <div class="bg-decoration circle-1"></div>
           <div class="bg-decoration circle-2"></div>
@@ -1001,7 +1043,8 @@ const producerMedals = computed(() => {
           <div class="settlement-header-refined">
             <div class="producer-badge-refined" :style="{ backgroundColor: producerTitle.color }">制作人评估报告</div>
             <h1 class="honor-title-refined">{{ producerTitle.name }}</h1>
-            <p class="honor-subtitle-refined">本期录制综合表现评定报告</p>
+            <p class="honor-subtitle-refined">本期录制综合表现评定报告 / 核心娱乐数据中心出品</p>
+            <div class="report-id">NO. {{ Math.random().toString(36).substr(2, 9).toUpperCase() }}</div>
           </div>
 
           <!-- Medals Row -->
@@ -1102,7 +1145,7 @@ const producerMedals = computed(() => {
 .landing-view-ultimate {
   position: fixed;
   inset: 0;
-  background: #000;
+  background: radial-gradient(circle at 50% -20%, #2e1065 0%, #1e1b4b 50%, #0f172a 100%); /* 深紫色到深蓝色的渐变 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1110,7 +1153,7 @@ const producerMedals = computed(() => {
   overflow: hidden;
   z-index: 10000;
   font-family: 'Inter', -apple-system, sans-serif;
-  color: #fff; /* Explicit base color */
+  color: #fff;
 }
 
 /* Ambient Background */
@@ -1123,26 +1166,45 @@ const producerMedals = computed(() => {
 .glow-sphere {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.4;
-  animation: ambient-float 20s infinite alternate;
+  filter: blur(140px);
+  opacity: 0.6;
+  animation: aurora-flow 30s infinite alternate ease-in-out;
 }
 
 .glow-1 {
-  width: 60vw;
-  height: 60vw;
-  background: radial-gradient(circle, rgba(93, 84, 164, 0.3) 0%, transparent 70%);
-  top: -10%;
-  left: -10%;
+  width: 80vw;
+  height: 80vw;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.3) 0%, transparent 70%);
+  top: -20%;
+  left: -20%;
 }
 
 .glow-2 {
-  width: 50vw;
-  height: 50vw;
-  background: radial-gradient(circle, rgba(255, 0, 85, 0.2) 0%, transparent 70%);
-  bottom: -10%;
-  right: -10%;
+  width: 70vw;
+  height: 70vw;
+  background: radial-gradient(circle, rgba(219, 39, 119, 0.25) 0%, transparent 70%);
+  bottom: -20%;
+  right: -20%;
+  animation-delay: -10s;
+}
+
+.glow-3 {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+  top: 20%;
+  right: 10%;
+  filter: blur(120px);
+  animation: aurora-flow 25s infinite alternate-reverse ease-in-out;
   animation-delay: -5s;
+}
+
+@keyframes aurora-flow {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 0.4; }
+  33% { transform: translate(10%, 5%) scale(1.1) rotate(5deg); opacity: 0.6; }
+  66% { transform: translate(-5%, 15%) scale(0.9) rotate(-5deg); opacity: 0.5; }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 0.4; }
 }
 
 .mesh-grid {
@@ -1276,27 +1338,27 @@ const producerMedals = computed(() => {
 }
 
 .word-main {
-  font-size: 8rem;
+  font-size: 8.5rem;
   font-weight: 950;
-  letter-spacing: -4px;
-  color: #ffffff; /* 改为纯白色 */
+  letter-spacing: -5px;
+  color: #fff;
+  background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
   display: block;
-}
-
-/* Ensure background-clip fallback */
-@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
-  .word-main {
-    color: white;
-    background: none;
-  }
+  filter: drop-shadow(0 0 30px rgba(129, 140, 248, 0.3));
 }
 
 .word-sub {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 800;
-  letter-spacing: 12px;
-  color: #ff0055;
+  letter-spacing: 14px;
+  background: linear-gradient(to right, #fb7185, #f43f5e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   margin-top: -10px;
+  text-transform: uppercase;
 }
 
 .mission-box {
@@ -1304,21 +1366,27 @@ const producerMedals = computed(() => {
 }
 
 .tagline {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-style: italic;
   font-weight: 300;
   margin-bottom: 1.5rem;
-  color: #fff;
+  color: #e2e8f0;
+  letter-spacing: 1px;
 }
 
 .description {
-  font-size: 1.25rem;
-  color: #ffffff;
-  max-width: 700px;
+  font-size: 1.3rem;
+  color: #94a3b8;
+  max-width: 720px;
   margin: 0 auto;
   line-height: 1.8;
-  font-weight: 600;
-  text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+  font-weight: 400;
+}
+
+.description strong {
+  color: #fff;
+  font-weight: 800;
+  text-decoration: underline decoration-indigo-500 underline-offset-4;
 }
 
 .hero-stats-mini {
@@ -1357,19 +1425,21 @@ const producerMedals = computed(() => {
 
 .portal-btn {
   position: relative;
-  background: transparent;
-  border: none;
-  padding: 1.8rem 5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1.5rem 5rem;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
   overflow: hidden;
+  border-radius: 4px;
+  backdrop-filter: blur(10px);
 }
 
 .btn-background {
   position: absolute;
   inset: 0;
-  background: #fff;
-  transform: skewX(-15deg);
+  background: linear-gradient(90deg, #6366f1, #ec4899);
+  opacity: 0;
   transition: all 0.4s ease;
 }
 
@@ -1379,20 +1449,23 @@ const producerMedals = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #000;
+  color: #fff;
+  transition: all 0.4s ease;
 }
 
 .btn-label {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 900;
-  letter-spacing: 2px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
 }
 
 .btn-sub {
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 3px;
-  opacity: 0.5;
+  letter-spacing: 4px;
+  opacity: 0.6;
+  margin-top: 4px;
 }
 
 .btn-shimmer {
@@ -1410,15 +1483,18 @@ const producerMedals = computed(() => {
 }
 
 .portal-btn:hover {
-  transform: scale(1.05) translateY(-5px);
+  transform: scale(1.02) translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
 }
 
 .portal-btn:hover .btn-background {
-  background: #5d54a4;
+  opacity: 1;
 }
 
 .portal-btn:hover .btn-content {
   color: #fff;
+  transform: scale(1.05);
 }
 
 /* Status Footer */
@@ -1480,24 +1556,27 @@ const producerMedals = computed(() => {
    display: flex;
    align-items: center;
    gap: 15px;
-   margin-bottom: 1rem;
-   padding: 6px 16px;
-   background: rgba(255, 0, 85, 0.1);
-   border-radius: 4px;
-   border: 1px solid rgba(255, 0, 85, 0.2);
-   max-width: 1100px;
+   margin-bottom: 1.5rem;
+   padding: 10px 24px;
+   background: linear-gradient(90deg, rgba(79, 70, 229, 0.9), rgba(124, 58, 237, 0.8)); /* 鲜艳的靛蓝到紫色渐变 */
+   border-radius: 50px; /* 胶囊形状 */
+   border: 1px solid rgba(255, 255, 255, 0.3);
+   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+   max-width: 850px;
    margin-left: auto;
    margin-right: auto;
  }
  
  .container {
-   max-width: 1600px;
-   margin: 0 auto;
-   padding: 2rem;
-   font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-   color: #f8fafc;
-   min-height: 100vh;
- }
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  color: #f8fafc;
+  min-height: 100vh;
+  position: relative;
+}
+
 .status-indicator {
   font-size: 0.6rem;
   font-weight: 900;
@@ -1506,17 +1585,11 @@ const producerMedals = computed(() => {
   animation: pulse 1.5s infinite;
 }
 .status-text {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 900;
   color: #ffffff;
   letter-spacing: 1.5px;
-  /* 强力文字描边效果 */
-  text-shadow: 
-    -1px -1px 0 #000,  
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000,
-     0 2px 10px rgba(0,0,0,1);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 h1 {
@@ -1576,13 +1649,14 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6rem 1.2rem; /* 进一步压缩内边距 */
-  background: #020617; 
-  border-radius: 10px;
-  border: 2px solid #ffffff; 
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-  margin-bottom: 1.2rem;
-  max-width: 720px; /* 进一步缩减宽度 */
+  padding: 1.2rem 2.5rem;
+  background: linear-gradient(135deg, rgba(67, 56, 202, 0.95), rgba(79, 70, 229, 0.9)); /* 鲜艳的靛蓝色渐变背景 */
+  backdrop-filter: blur(15px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  margin-bottom: 2rem;
+  max-width: 850px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1595,40 +1669,36 @@ h1 {
 }
 @keyframes pulse-red { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.5; } }
 .rec-text { 
-  font-size: 0.9rem; 
+  font-size: 1rem; 
   font-weight: 950; 
   color: #ff0055; 
   letter-spacing: 2px;
-  text-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+  text-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
 }
 
 .episode-tag {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 950;
-  color: #ffffff;
-  letter-spacing: 1.5px;
-  text-shadow: 
-    -1px -1px 0 #000,  
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000,
-     0 3px 15px rgba(0,0,0,0.8);
+  color: #fff;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .budget-display { display: flex; flex-direction: column; align-items: flex-end; }
 .budget-label { 
   font-size: 0.85rem; 
-  color: #ffffff; 
-  font-weight: 950; 
+  color: rgba(255, 255, 255, 0.7); /* 在蓝色背景下提高标签亮度 */
+  font-weight: 800; 
   text-transform: uppercase; 
-  letter-spacing: 1.5px;
-  text-shadow: 
-    -1px -1px 0 #000,  
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000;
+  letter-spacing: 1px;
 }
-.budget-value { font-family: 'Monaco', monospace; font-weight: 900; color: #10b981; font-size: 1.4rem; text-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+.budget-value { 
+  font-family: 'Monaco', monospace; 
+  font-weight: 900; 
+  color: #10b981; 
+  font-size: 1.5rem; 
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+}
 .budget-low .budget-value { color: #ff0055; text-shadow: 0 0 15px rgba(255, 0, 85, 0.4); }
 
 .toggle-button {
@@ -1770,17 +1840,17 @@ h1 {
 }
 
 .side-dashboard {
-  width: 360px; /* 缩减宽度 */
+  width: 380px;
   height: 100%;
-  background: rgba(15, 23, 42, 0.98);
-  backdrop-filter: blur(30px);
-  padding: 2rem; /* 减小内边距 */
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(40px);
+  padding: 2rem;
   box-shadow: -20px 0 60px rgba(0,0,0,0.5);
   overflow-y: auto;
   position: relative;
   display: flex;
   flex-direction: column;
-  border-left: 2px solid #ffffff;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dashboard-header {
@@ -1903,63 +1973,159 @@ h1 {
   width: 100%;
 }
 
+.ambient-bg-event {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.glow-sphere-event {
+  position: absolute;
+  width: 100vw;
+  height: 100vw;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(244, 63, 94, 0.05) 50%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(120px);
+  animation: pulse-glow 12s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-glow {
+  from { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0.6; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+/* Technical Data Overlays */
+.tech-data {
+  position: absolute;
+  font-family: 'Monaco', monospace;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  z-index: 5;
+  letter-spacing: 1px;
+}
+
+.top-left-data { top: 10px; left: 40px; }
+.top-right-data { top: 10px; right: 40px; }
+.bottom-left-data { bottom: 10px; left: 40px; }
+.bottom-right-data { bottom: 10px; right: 40px; }
+
+/* Viewfinder Corners */
+.viewfinder-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  z-index: 5;
+}
+
+.top-left { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+.top-right { top: 15px; right: 15px; border-left: none; border-bottom: none; }
+.bottom-left { bottom: 15px; left: 15px; border-right: none; border-top: none; }
+.bottom-right { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+
 .event-container {
-  background: #000000; 
-  padding: 1.2rem; /* 再次减小内边距 */
-  border-radius: 10px;
-  border: 2px solid #ffffff; 
-  box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(67, 56, 202, 0.8), rgba(124, 58, 237, 0.7)); /* 鲜艳的靛蓝到紫色渐变，彻底告别黑色 */
+  backdrop-filter: blur(20px);
+  padding: 4rem 3rem 3rem;
+  border-radius: 30px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 40px 100px -20px rgba(0, 0, 0, 0.5),
+    inset 0 0 40px rgba(255, 255, 255, 0.2);
   position: relative;
-  max-width: 720px; /* 进一步缩减宽度 */
+  max-width: 850px;
   margin: 0 auto;
+  overflow: hidden;
+}
+
+.breaking-news-border {
+  border: 4px solid #ff0055 !important;
+  box-shadow: 0 0 50px rgba(255, 0, 85, 0.5) !important;
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.8), rgba(159, 18, 57, 0.7)) !important;
+}
+
+.event-glass-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+  z-index: -1;
+}
+
+.event-glass-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
+  opacity: 0.5;
+}
+
+.event-scanline {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(255, 255, 255, 0.05) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.3;
 }
 .event-container h2 { 
-  font-size: 1.3rem; /* 进一步减小标题字号 */
-  color: #ffffff; 
-  margin-bottom: 0.8rem; 
-  text-align: center; 
-  font-weight: 950; 
-  letter-spacing: 0.5px; 
-  text-shadow: 
-    -1.2px -1.2px 0 #000,  
-     1.2px -1.2px 0 #000,
-    -1.2px  1.2px 0 #000,
-     1.2px  1.2px 0 #000,
-     0 2px 8px rgba(0,0,0,0.8);
-}
-.event-description { 
-  font-size: 0.95rem; /* 进一步减小描述字号 */
-  line-height: 1.4; 
+  font-size: 1.5rem;
   color: #ffffff; 
   margin-bottom: 1.2rem; 
   text-align: center; 
-  font-weight: 700; 
-  text-shadow: 
-    -1px -1px 0 #000,  
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000;
+  font-weight: 950; 
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.event-description { 
+  font-size: 1.1rem;
+  line-height: 1.6; 
+  color: #e2e8f0; 
+  margin-bottom: 1.5rem; 
+  text-align: center; 
+  font-weight: 500; 
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 .candidate-hint { 
-  font-size: 0.8rem; /* 进一步减小提示字号 */
-  color: #ffffff; 
-  margin-bottom: 1rem; 
+  font-size: 0.9rem;
+  color: #fff; 
+  margin-bottom: 2rem; 
   text-align: center; 
-  letter-spacing: 0.5px; 
-  font-weight: 800;
-  background: rgba(0, 0, 0, 0.7); 
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-shadow: 1px 1px 2px #000;
+  letter-spacing: 1px; 
+  font-weight: 700;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.4), rgba(244, 63, 94, 0.4)); 
+  backdrop-filter: blur(10px);
+  padding: 8px 24px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  display: inline-block;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 /* --- Refined Roster Styles --- */
 .roster-view-refined {
   position: relative;
   min-height: 100vh;
-  padding: 3rem 1.5rem; /* Reduced from 6rem 2rem */
-  background: #020617;
+  padding: 3rem 1.5rem;
+  background: radial-gradient(circle at 0% 0%, #312e81 0%, transparent 50%),
+              radial-gradient(circle at 100% 100%, #4c1d95 0%, transparent 50%),
+              radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
   overflow-x: hidden;
 }
 
@@ -1971,28 +2137,74 @@ h1 {
   pointer-events: none;
 }
 .circle-top {
-  width: 600px; height: 600px; background: #5d54a4;
+  width: 600px; height: 600px; background: radial-gradient(circle, #5d54a4 0%, transparent 70%);
   top: -200px; right: -100px;
   animation: float 15s infinite alternate;
+  opacity: 0.2;
 }
 .circle-bottom {
-  width: 500px; height: 500px; background: #ff0055;
+  width: 500px; height: 500px; background: radial-gradient(circle, #ff0055 0%, transparent 70%);
   bottom: -150px; left: -100px;
   animation: float 18s infinite alternate-reverse;
+  opacity: 0.15;
+}
+
+.roster-header-container {
+  max-width: 900px;
+  margin: 0 auto 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.roster-stats-bar {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.stat-item {
+  flex: 1;
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.8rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 0.6rem;
+  color: #94a3b8;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #fff;
+  font-family: 'Monaco', monospace;
+}
+
+.stat-value.pulse {
+  color: #22c55e;
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+  animation: pulse 2s infinite;
 }
 
 .roster-hero-section-compact {
   position: relative;
-  z-index: 10;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.8rem 1.2rem;
+  padding: 1.2rem 1.8rem;
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  margin-bottom: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
 }
 
 .hero-title-mini {
@@ -2049,8 +2261,8 @@ h1 {
 }
 
 .char-card-premium {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(10px);
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(12px);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -2058,15 +2270,15 @@ h1 {
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 0.6rem 1.2rem;
+  padding: 0.8rem 1.5rem;
   position: relative;
 }
 
 .char-card-premium:hover {
-  border-color: #ff0055;
-  box-shadow: 0 0 20px rgba(255, 0, 85, 0.2);
+  border-color: #6366f1;
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.2);
   transform: translateX(5px);
-  background: rgba(15, 23, 42, 0.8);
+  background: linear-gradient(90deg, rgba(30, 41, 59, 0.8) 0%, rgba(99, 102, 241, 0.1) 100%);
 }
 
 .char-frame {
@@ -2074,9 +2286,9 @@ h1 {
   height: 64px;
   flex-shrink: 0;
   border-radius: 10px;
-  background: #000;
+  background: #1e1b4b;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s;
   margin-right: 1.5rem;
 }
@@ -2267,6 +2479,7 @@ h1 {
 .mini-selectable.selected {
   border: 2px solid #ff0055;
   box-shadow: 0 0 25px rgba(255, 0, 85, 0.5);
+  background: rgba(255, 0, 85, 0.15) !important; /* 给选中红框部分增加淡红色背景 */
 }
 
 .selection-indicator {
@@ -2295,27 +2508,27 @@ h1 {
 
 .choices-grid { display: grid; gap: 1.2rem; }
 .choice-button {
-  background: #111827; 
-  border: 2px solid #ffffff; 
-  padding: 0.8rem 1.2rem; /* 进一步减小内边距 */
-  border-radius: 6px; 
-  font-size: 0.95rem; /* 进一步减小字号 */
-  font-weight: 900; 
-  color: #ffffff;
-  text-align: left; 
-  cursor: pointer; 
-  transition: all 0.2s;
-  display: flex; 
-  justify-content: space-between; 
+  background: rgba(255, 255, 255, 0.12); /* 显著提高选项按钮亮度 */
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 1.2rem 1.8rem;
+  border-radius: 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  text-shadow: 
-    -1.2px -1.2px 0 #000,  
-     1.2px -1.2px 0 #000,
-    -1.2px  1.2px 0 #000,
-     1.2px  1.2px 0 #000,
-     0 2px 8px #000;
 }
-.choice-button:hover { background: #5d54a4; border-color: transparent; transform: translateX(10px); }
+.choice-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #fff;
+  transform: translateX(10px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.15);
+}
 .choice-button::after { content: "→"; opacity: 0; transform: translateX(-10px); transition: all 0.2s; }
 .choice-button:hover::after { opacity: 1; transform: translateX(0); }
 
@@ -2353,12 +2566,24 @@ h1 {
 
 /* --- Toast --- */
 .toast-hint {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-  background: #000000; 
-  padding: 1.2rem 2rem; /* 减小内边距 */
-  border-radius: 10px;
-  box-shadow: 0 0 50px rgba(255, 255, 255, 0.2); display: flex; align-items: center;
-  gap: 1.2rem; z-index: 2000; border: 3px solid #ffffff; border-left-width: 10px; border-left-color: #ff0055; width: 90%; max-width: 550px; /* 缩减宽度 */
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(20px);
+  padding: 1.2rem 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 2000;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 6px solid #6366f1;
+  width: auto;
+  min-width: 400px;
+  max-width: 80%;
 }
 .toast-icon { font-size: 2.2rem; }
 .toast-title { 
@@ -2381,14 +2606,31 @@ h1 {
 /* --- Settlement Refined Styles --- */
 .end-screen {
   padding: 2rem;
-  background: #020617;
+  background: radial-gradient(circle at 100% 0%, #4c1d95 0%, #1e1b4b 50%, #0f172a 100%);
   min-height: 100vh;
+}
+
+.magazine-texture {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.report-id {
+  font-family: 'Monaco', monospace;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 1rem;
+  letter-spacing: 2px;
 }
 
 .settlement-container-refined {
   max-width: 1250px;
   margin: 0 auto;
-  background: rgba(15, 23, 42, 0.6);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
   backdrop-filter: blur(20px);
   border-radius: 16px;
   padding: 4rem 3.5rem;
@@ -2452,8 +2694,8 @@ h1 {
 
 .medal-icon { font-size: 1.5rem; }
 .medal-info { display: flex; flex-direction: column; text-align: left; }
-.medal-title { font-size: 0.85rem; font-weight: 900; color: #1e293b; }
-.medal-desc { font-size: 0.65rem; color: #64748b; font-weight: 600; }
+.medal-title { font-size: 0.85rem; font-weight: 900; color: #fff; }
+.medal-desc { font-size: 0.65rem; color: #94a3b8; font-weight: 600; }
 
 .final-rank-header {
   display: flex;
