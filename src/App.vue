@@ -3,6 +3,34 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { characters as initialCharacters, Character } from './data/characters';
 import { openingEvent, eventPool, GameEvent, Choice } from './data/events';
 import draggable from 'vuedraggable';
+import type { SBondPair } from './baseLib/serviceLib/type/SBondPair';
+import type { SFanFactionState } from './baseLib/serviceLib/type/SFanFactionState';
+import type { SOperationCard } from './baseLib/serviceLib/type/SOperationCard';
+import type { SStudioLedger } from './baseLib/serviceLib/type/SStudioLedger';
+import {
+  SApplyBondBonus,
+  SApplyFactionReaction,
+  SClampFanFactions,
+  SCreateCardHand,
+  SDownloadSharePoster,
+  SGetFanFactionSummary,
+  SGetPairKey,
+  SGetTopBond,
+  SResetFanFactions,
+  SUpdateBondMap,
+} from './baseLib/serviceLib/SGameFeatures';
+import {
+  SCreateStudioLedger,
+  SGetStudioClosure,
+  SGetTotalSpend,
+  SRecordBondProject,
+  SRecordFanProgram,
+  SRecordFanSupport,
+  SRecordOperationCard,
+  SRecordRecordingRun,
+  SRecordReportAction,
+  SResetStudioLedger,
+} from './baseLib/serviceLib/SStudioLedger';
 
 onMounted(() => {
   console.log('Draggable component:', draggable);
@@ -29,9 +57,47 @@ const qteType = ref<'MASH' | 'HOLD' | 'TIMING' | null>(null);
 const qteValue = ref(0);
 const qteTarget = ref(0);
 const qteResult = ref<string | null>(null);
+const qteSuccessCount = ref(0);
 const lastInterruptionIndex = ref(-1);
 const showDanmaku = ref(true);
 const isHistoryExpanded = ref(false);
+const fanFactions = reactive<SFanFactionState>({
+  groupFans: 62,
+  soloFans: 48,
+  cpFans: 36,
+  publicFans: 52,
+  antiFans: 24,
+});
+const bondMap = reactive<Record<string, SBondPair>>({});
+const operationCards = ref<SOperationCard[]>([]);
+const usedCardIds = ref<Set<string>>(new Set());
+const cardFeedback = ref('');
+const isGeneratingPoster = ref(false);
+const studioLedger = reactive<SStudioLedger>(SCreateStudioLedger());
+type StudioPage = 'recording' | 'fans' | 'bonds' | 'report';
+const activeStudioPage = ref<StudioPage>('recording');
+const selectedBondIds = ref<string[]>([]);
+type RecordingMode = 'BALANCE' | 'FOCUS' | 'DRAMA';
+const recordingMode = ref<RecordingMode>('BALANCE');
+const focusCharacterId = ref('');
+const executionIntensity = ref(2);
+const fanOperationIntensity = ref(2);
+const bondProjectIntensity = ref(2);
+const MAX_OPERATION_LEVEL = 4;
+const RECORDING_INTENSITY_COST = 2500;
+const HEART_SUPPORT_COST = 5000;
+const FAN_PROGRAM_BASE_COST = {
+  GROUP: 6000,
+  SOLO: 4500,
+  CP: 5000,
+  PUBLIC: 7500,
+  ANTI: 9000,
+} as const;
+const BOND_PROJECT_BASE_COST = {
+  STAGE: 8000,
+  LIVE: 5500,
+  VLOG: 5500,
+} as const;
 
 interface QTEScenario {
   title: string;
@@ -130,6 +196,75 @@ const sortedCharacters = computed(() => {
 const isAnyTrending = computed(() => {
   return trendingQueue.value.length > 0;
 });
+
+const topBond = computed(() => SGetTopBond(bondMap));
+
+const fanFactionSummary = computed(() => SGetFanFactionSummary(fanFactions));
+
+const selectedPairBond = computed(() => {
+  if (selectedPair.value.length !== 2) return null;
+  const [char1, char2] = selectedPair.value;
+  return bondMap[[char1.id, char2.id].sort().join('__')] || null;
+});
+
+const selectedBondCharacters = computed(() => {
+  return selectedBondIds.value.map(id => characters.find(char => char.id === id)).filter(Boolean) as Character[];
+});
+
+const bondCandidateList = computed(() => {
+  return [...characters].sort((a, b) => b.popularity - a.popularity).slice(0, 8);
+});
+
+const averagePopularity = computed(() => {
+  return Math.round(characters.reduce((sum, char) => sum + char.popularity, 0) / characters.length);
+});
+
+const focusCharacter = computed(() => {
+  return characters.find(char => char.id === focusCharacterId.value) || sortedCharacters.value[0];
+});
+
+const studioClosure = computed(() => {
+  return SGetStudioClosure(studioLedger, averagePopularity.value, fanFactionSummary.value, topBond.value);
+});
+
+const studioTotalSpend = computed(() => {
+  return SGetTotalSpend(studioLedger);
+});
+
+function changeExecutionIntensity(delta: number) {
+  executionIntensity.value = clampLevel(executionIntensity.value + delta);
+}
+
+function changeFanOperationIntensity(delta: number) {
+  fanOperationIntensity.value = clampLevel(fanOperationIntensity.value + delta);
+}
+
+function changeBondProjectIntensity(delta: number) {
+  bondProjectIntensity.value = clampLevel(bondProjectIntensity.value + delta);
+}
+
+function clampLevel(value: number) {
+  return Math.max(1, Math.min(MAX_OPERATION_LEVEL, value));
+}
+
+const directiveTypes = ['稳盘控场', '高光押注', '舆情反打', '粉圈运营'];
+const directiveTargets = ['路人盘', '团粉盘', '唯粉盘', 'CP粉'];
+
+function getDirectiveType(index: number) {
+  return directiveTypes[index % directiveTypes.length];
+}
+
+function getDirectiveCost(index: number) {
+  return [8000, 16000, 24000, 12000][index % 4];
+}
+
+function getDirectiveRisk(index: number) {
+  return [28, 62, 84, 45][index % 4];
+}
+
+function getDirectiveTarget(index: number) {
+  return directiveTargets[index % directiveTargets.length];
+}
 
 // --- Danmaku Logic ---
 function addDanmaku(text: string) {
@@ -248,7 +383,7 @@ function handleIgnoreTrending(topicId: string) {
 }
 
 function handleHeartClick(char: Character) {
-  const cost = 5000;
+  const cost = HEART_SUPPORT_COST;
   if (budget.value < cost) {
     toastMessage.value = `❌ 预算不足！应援需要 ¥${cost.toLocaleString()}`;
     showToast.value = true;
@@ -257,9 +392,67 @@ function handleHeartClick(char: Character) {
   }
   
   budget.value -= cost;
+  SRecordFanSupport(studioLedger, cost, char.name);
   char.popularity += 2;
+  fanFactions.soloFans += 2;
+  fanFactions.antiFans += 1;
+  SClampFanFactions(fanFactions);
   clampPopularity();
   addDanmaku(`💖 粉丝豪掷金金！为 ${char.name} 疯狂应援！`);
+}
+
+function handleUseCard(card: SOperationCard) {
+  if (usedCardIds.value.has(card.id) || budget.value < card.cost) return;
+  budget.value -= card.cost;
+  SRecordOperationCard(studioLedger, card.cost, card.name);
+  cardFeedback.value = card.apply(characters, fanFactions);
+  usedCardIds.value = new Set([...usedCardIds.value, card.id]);
+  SClampFanFactions(fanFactions);
+  clampPopularity();
+  addDanmaku(`🃏 制作人打出「${card.name}」：${cardFeedback.value}`);
+}
+
+function spendBudget(cost: number) {
+  if (budget.value < cost) return false;
+  budget.value -= cost;
+  return true;
+}
+
+function showStudioFeedback(message: string) {
+  toastMessage.value = message;
+  showToast.value = true;
+  addDanmaku(`📡 工作台更新：${message}`);
+  setTimeout(() => showToast.value = false, 1800);
+}
+
+function handleFanProgram(type: 'GROUP' | 'SOLO' | 'CP' | 'PUBLIC' | 'ANTI') {
+  const cost = FAN_PROGRAM_BASE_COST[type] * fanOperationIntensity.value;
+  if (!spendBudget(cost)) return showStudioFeedback('预算不够，粉丝运营方案暂时搁置。');
+  SRecordFanProgram(studioLedger, type, cost);
+  applyFanProgram(type);
+  SClampFanFactions(fanFactions);
+  clampPopularity();
+}
+
+function applyFanProgram(type: 'GROUP' | 'SOLO' | 'CP' | 'PUBLIC' | 'ANTI') {
+  const messages = {
+    GROUP: '团建物料上线，团粉盘 +10，全员人气 +2。',
+    SOLO: '单人直拍投放，唯粉盘 +9，TOP 成员人气 +5。',
+    CP: '双人花絮释出，CP 粉 +11，但黑粉声量 +2。',
+    PUBLIC: '路人向切片铺开，路人盘 +12，低位成员人气 +3。',
+    ANTI: '反黑组联动，黑粉声量 -12，公关口碑回稳。',
+  };
+  runFanEffect(type);
+  showStudioFeedback(messages[type]);
+}
+
+function runFanEffect(type: 'GROUP' | 'SOLO' | 'CP' | 'PUBLIC' | 'ANTI') {
+  const power = fanOperationIntensity.value;
+  if (type === 'GROUP') { fanFactions.groupFans += 5 * power; characters.forEach(char => char.popularity += power); }
+  if (type === 'SOLO') { fanFactions.soloFans += 5 * power; sortedCharacters.value[0].popularity += 3 * power; }
+  if (type === 'CP') { fanFactions.cpFans += 6 * power; fanFactions.antiFans += power; }
+  if (type === 'PUBLIC') { fanFactions.publicFans += 6 * power; characters.filter(char => char.popularity < 78).forEach(char => char.popularity += power); }
+  if (type === 'ANTI') { fanFactions.antiFans -= 6 * power; fanFactions.publicFans += power; }
 }
 
 // --- Game Flow Methods ---
@@ -282,7 +475,19 @@ function startGame() {
   currentEventIndex.value = 0;
   eventHistory.length = 0;
   gameState.value = 'event';
+  activeStudioPage.value = 'recording';
+  selectedBondIds.value = [];
+  recordingMode.value = 'BALANCE';
+  executionIntensity.value = 2;
   budget.value = 100000; // 重置预算
+  qteSuccessCount.value = 0;
+  operationCards.value = SCreateCardHand();
+  usedCardIds.value = new Set();
+  cardFeedback.value = '';
+  SResetStudioLedger(studioLedger);
+  Object.keys(bondMap).forEach(key => delete bondMap[key]);
+  SResetFanFactions(fanFactions);
+  focusCharacterId.value = sortedCharacters.value[0]?.id || '';
   
   triggerEventDanmaku();
   prepareEvent();
@@ -302,11 +507,12 @@ function prepareEvent() {
   }
 
   // 逻辑穿插：确保紧急事件不会扎堆，至少间隔 2 个普通事件
-  const canTriggerInterruption = false; // 禁用突发事件
-  const isSudden = false; // 禁用突发事件
+  const canTriggerInterruption = currentEventIndex.value - lastInterruptionIndex.value >= 3;
+  const isSudden = currentEventIndex.value > 1 && canTriggerInterruption && Math.random() < 0.32;
 
   if (isSudden) {
     lastInterruptionIndex.value = currentEventIndex.value;
+    isBreakingNews.value = true;
     startQTE();
   }
   
@@ -392,14 +598,20 @@ function completeQTE(success: boolean) {
   if (success) {
     const bonus = scenario.type === 'TIMING' ? 8 : 5;
     characters.forEach(c => c.popularity += bonus);
+    fanFactions.groupFans += 5;
+    fanFactions.publicFans += 4;
+    qteSuccessCount.value++;
     qteResult.value = scenario.successText;
     addDanmaku("这就是制作人的实力吗？瑞思拜！");
   } else {
     const penalty = 3;
     characters.forEach(c => c.popularity -= penalty);
+    fanFactions.antiFans += 6;
     qteResult.value = scenario.failText;
     addDanmaku("救命，刚才那段真的好尬...");
   }
+  SClampFanFactions(fanFactions);
+  clampPopularity();
 }
 
 function nextEvent() {
@@ -422,13 +634,19 @@ function clampPopularity() {
 }
 
 function triggerFeedback(result: string) {
+  const bond = SUpdateBondMap(bondMap, selectedPair.value);
+  const bondBonus = SApplyBondBonus(selectedPair.value, bond);
+  const finalResult = bondBonus ? `${result} ${bondBonus}` : result;
+  SApplyFactionReaction(fanFactions, finalResult, currentEvent.value);
+  clampPopularity();
+
   // 记录历史
-  eventHistory.push({ event: currentEvent.value!, result });
+  eventHistory.push({ event: currentEvent.value!, result: finalResult });
   
   // 识别受影响的成员 (通过简单的文本匹配或当前选中的成员)
   const affectedIds = new Set<string>();
   characters.forEach(c => {
-    if (result.includes(c.name)) {
+    if (finalResult.includes(c.name)) {
       affectedIds.add(c.id);
     }
   });
@@ -438,12 +656,12 @@ function triggerFeedback(result: string) {
   }
 
   // 显示提示和高亮
-  toastMessage.value = result;
+  toastMessage.value = finalResult;
   showToast.value = true;
   highlightedCharIds.value = affectedIds;
 
   // 增加即时反馈弹幕
-  addDanmaku(`🔥 现场热报：${result.slice(0, 20)}...`);
+  addDanmaku(`🔥 现场热报：${finalResult.slice(0, 20)}...`);
 
   // 缩短至 1.5s
   setTimeout(() => {
@@ -455,8 +673,40 @@ function triggerFeedback(result: string) {
 
 function handleChoice(choice: Choice) {
   const result = choice.action(characters);
+  const controlResult = applyRecordingControls();
   clampPopularity();
-  triggerFeedback(result);
+  triggerFeedback(controlResult ? `${result} ${controlResult}` : result);
+}
+
+function applyRecordingControls() {
+  const cost = executionIntensity.value * RECORDING_INTENSITY_COST;
+  if (!spendBudget(cost)) return '录制参数预算不足，本轮只执行事件方案。';
+  const focus = focusCharacter.value;
+  SRecordRecordingRun(studioLedger, recordingMode.value, cost, focus.name);
+  if (recordingMode.value === 'BALANCE') return applyBalanceMode();
+  if (recordingMode.value === 'FOCUS') return applyFocusMode(focus);
+  return applyDramaMode(focus);
+}
+
+function applyBalanceMode() {
+  characters.filter(char => char.popularity < averagePopularity.value).forEach(char => char.popularity += executionIntensity.value);
+  fanFactions.groupFans += executionIntensity.value;
+  return `录制模式「群像平衡」生效，低位成员获得补镜头。`;
+}
+
+function applyFocusMode(focus: Character) {
+  focus.popularity += executionIntensity.value * 2;
+  fanFactions.soloFans += executionIntensity.value;
+  highlightedCharIds.value = new Set([focus.id]);
+  return `镜头焦点锁定 ${focus.name}，个人高光额外放大。`;
+}
+
+function applyDramaMode(focus: Character) {
+  focus.popularity += executionIntensity.value * 3;
+  fanFactions.publicFans += executionIntensity.value * 2;
+  fanFactions.antiFans += Math.max(1, executionIntensity.value - 1);
+  highlightedCharIds.value = new Set([focus.id]);
+  return `抓马剪辑拉满，${focus.name} 讨论度暴涨，但黑粉也被引来。`;
 }
 
 function handlePickTwo() {
@@ -488,6 +738,63 @@ function toggleSelection(character: Character) {
 
 function isSelected(character: Character) {
   return selectedPair.value.some(c => c.id === character.id);
+}
+
+function toggleBondCandidate(character: Character) {
+  if (selectedBondIds.value.includes(character.id)) {
+    selectedBondIds.value = selectedBondIds.value.filter(id => id !== character.id);
+    return;
+  }
+  selectedBondIds.value = [...selectedBondIds.value, character.id].slice(-2);
+}
+
+function getBondValue(char1: Character, char2: Character) {
+  return bondMap[SGetPairKey(char1, char2)]?.value || 0;
+}
+
+function handleBondProject(type: 'STAGE' | 'LIVE' | 'VLOG') {
+  if (selectedBondCharacters.value.length !== 2) return showStudioFeedback('先选两位成员，再开双人企划。');
+  const cost = BOND_PROJECT_BASE_COST[type] * bondProjectIntensity.value;
+  if (!spendBudget(cost)) return showStudioFeedback('预算不够，双人企划排不上日程。');
+  SRecordBondProject(studioLedger, type, cost, selectedBondCharacters.value.map(char => char.name).join(' × '));
+  applyBondProject(type, selectedBondCharacters.value);
+}
+
+function applyBondProject(type: 'STAGE' | 'LIVE' | 'VLOG', pair: Character[]) {
+  const bond = SUpdateBondMap(bondMap, pair);
+  const bonus = (type === 'STAGE' ? 3 : 2) * bondProjectIntensity.value;
+  pair.forEach(char => char.popularity += bonus);
+  fanFactions.cpFans += (type === 'LIVE' ? 5 : 3) * bondProjectIntensity.value;
+  SClampFanFactions(fanFactions);
+  showStudioFeedback(`${pair[0].name} × ${pair[1].name} 企划推进，羁绊升至 ${bond?.value || 0}。`);
+}
+
+function handleReportAction(type: 'BALANCE' | 'TOP' | 'CLEAN') {
+  const cost = type === 'TOP' ? 14000 : 10000;
+  if (!spendBudget(cost)) return showStudioFeedback('预算不够，策略会先暂停。');
+  SRecordReportAction(studioLedger, type, cost);
+  applyReportAction(type);
+  SClampFanFactions(fanFactions);
+  clampPopularity();
+}
+
+function applyReportAction(type: 'BALANCE' | 'TOP' | 'CLEAN') {
+  if (type === 'BALANCE') characters.filter(char => char.popularity < averagePopularity.value).forEach(char => char.popularity += 4);
+  if (type === 'TOP') sortedCharacters.value.slice(0, 3).forEach(char => char.popularity += 4);
+  if (type === 'CLEAN') fanFactions.antiFans -= 8;
+  showStudioFeedback(type === 'BALANCE' ? '补短板会议完成，低位成员获得额外镜头。' : type === 'TOP' ? 'TOP 资源包加码，前三人气继续冲高。' : '舆情复盘完成，黑粉声量下降。');
+}
+
+function handleSharePoster() {
+  isGeneratingPoster.value = true;
+  SDownloadSharePoster({
+    title: producerTitle.value.name,
+    grade: producerTitle.value.grade,
+    topCharacters: sortedCharacters.value,
+    factions: fanFactions,
+    topBond: topBond.value,
+  });
+  setTimeout(() => isGeneratingPoster.value = false, 400);
 }
 
 // --- Settlement Logic ---
@@ -559,6 +866,12 @@ const producerAnalysis = computed(() => {
     analysis.push({ label: "国民认可", value: "垂直圈地", detail: "目前的人气仍集中在核心粉丝圈。你需要更多破圈级的抓马事件或跨界合作来打破壁垒。" });
   }
 
+  analysis.push({ label: "粉丝生态", value: fanFactionSummary.value, detail: `本局最强势的讨论盘是「${fanFactionSummary.value}」。团粉 ${fanFactions.groupFans}，唯粉 ${fanFactions.soloFans}，CP 粉 ${fanFactions.cpFans}，路人盘 ${fanFactions.publicFans}，黑粉声量 ${fanFactions.antiFans}。` });
+
+  if (topBond.value) {
+    analysis.push({ label: "化学反应", value: topBond.value.names, detail: `这组羁绊值达到 ${topBond.value.value}，已经具备衍生双人舞台、CP 向物料或综艺搭档的潜力。` });
+  }
+
   return analysis;
 });
 
@@ -574,8 +887,11 @@ const producerMedals = computed(() => {
   const totalGrowth = characters.reduce((acc, c) => acc + (c.popularity - initialPopularityMap[c.id]), 0);
   if (totalGrowth > 50) medals.push({ icon: '📈', title: '人气推手', desc: '成员大幅增粉' });
   
-  const qteSuccesses = eventHistory.filter(h => h.result.includes("✅")).length;
-  if (qteSuccesses >= 3) medals.push({ icon: '⚡', title: '临场专家', desc: 'QTE无失误' });
+  if (qteSuccessCount.value >= 3) medals.push({ icon: '⚡', title: '临场专家', desc: 'QTE无失误' });
+  if (fanFactions.groupFans > 80) medals.push({ icon: '🤝', title: '团魂操盘手', desc: '团粉盘大爆发' });
+  if (fanFactions.cpFans > 70) medals.push({ icon: '💞', title: '化学反应大师', desc: 'CP讨论破圈' });
+  if (topBond.value?.value && topBond.value.value > 70) medals.push({ icon: '🎬', title: '双人叙事导演', desc: '羁绊线拉满' });
+  if (studioClosure.value.every(item => item.actions > 0)) medals.push({ icon: '🧩', title: '全链路制作人', desc: '四个工作台都形成闭环' });
 
   return medals;
 });
@@ -842,6 +1158,140 @@ const producerMedals = computed(() => {
         </div>
       </div>
 
+      <nav class="studio-nav" aria-label="制作人工作台">
+        <button @click="activeStudioPage = 'recording'" :class="{ active: activeStudioPage === 'recording' }">录制现场</button>
+        <button @click="activeStudioPage = 'fans'" :class="{ active: activeStudioPage === 'fans' }">粉丝运营</button>
+        <button @click="activeStudioPage = 'bonds'" :class="{ active: activeStudioPage === 'bonds' }">羁绊企划</button>
+        <button @click="activeStudioPage = 'report'" :class="{ active: activeStudioPage === 'report' }">数据报告</button>
+      </nav>
+
+      <section v-if="activeStudioPage === 'fans'" class="workspace-panel fans-workspace">
+        <div class="workspace-head">
+          <span class="workspace-kicker">FAN OPS</span>
+          <h2>粉丝运营中心</h2>
+          <p>选择不同运营方案，粉圈结构会真实改变，不再只是旁边的数字。</p>
+        </div>
+        <div class="faction-grid-large">
+          <div class="faction-card group"><span>团粉盘</span><strong>{{ fanFactions.groupFans }}</strong></div>
+          <div class="faction-card solo"><span>唯粉盘</span><strong>{{ fanFactions.soloFans }}</strong></div>
+          <div class="faction-card cp"><span>CP 粉</span><strong>{{ fanFactions.cpFans }}</strong></div>
+          <div class="faction-card public"><span>路人盘</span><strong>{{ fanFactions.publicFans }}</strong></div>
+          <div class="faction-card anti"><span>黑粉声量</span><strong>{{ fanFactions.antiFans }}</strong></div>
+        </div>
+        <label class="workspace-slider">
+          <span>投放强度 {{ fanOperationIntensity }} 档</span>
+          <div class="range-stepper">
+            <button type="button" @click="changeFanOperationIntensity(-1)">-</button>
+            <input v-model.number="fanOperationIntensity" type="range" min="1" max="4" step="1" />
+            <button type="button" @click="changeFanOperationIntensity(1)">+</button>
+          </div>
+        </label>
+        <div class="workspace-actions">
+          <button @click="handleFanProgram('GROUP')">团建物料 ¥{{ (FAN_PROGRAM_BASE_COST.GROUP * fanOperationIntensity).toLocaleString() }}</button>
+          <button @click="handleFanProgram('SOLO')">单人直拍 ¥{{ (FAN_PROGRAM_BASE_COST.SOLO * fanOperationIntensity).toLocaleString() }}</button>
+          <button @click="handleFanProgram('CP')">双人花絮 ¥{{ (FAN_PROGRAM_BASE_COST.CP * fanOperationIntensity).toLocaleString() }}</button>
+          <button @click="handleFanProgram('PUBLIC')">路人切片 ¥{{ (FAN_PROGRAM_BASE_COST.PUBLIC * fanOperationIntensity).toLocaleString() }}</button>
+          <button @click="handleFanProgram('ANTI')">反黑联动 ¥{{ (FAN_PROGRAM_BASE_COST.ANTI * fanOperationIntensity).toLocaleString() }}</button>
+        </div>
+        <div class="card-hand workspace-card-hand" aria-label="运营卡牌">
+          <button
+            v-for="card in operationCards"
+            :key="card.id"
+            class="operation-card"
+            :class="[card.kind.toLowerCase(), { used: usedCardIds.has(card.id), locked: budget < card.cost }]"
+            :disabled="usedCardIds.has(card.id) || budget < card.cost"
+            @click="handleUseCard(card)"
+          >
+            <span class="card-name">{{ card.name }}</span>
+            <span class="card-desc">{{ card.desc }}</span>
+            <span class="card-cost">¥{{ card.cost.toLocaleString() }}</span>
+          </button>
+        </div>
+        <p v-if="cardFeedback" class="card-feedback">{{ cardFeedback }}</p>
+      </section>
+
+      <section v-if="activeStudioPage === 'bonds'" class="workspace-panel bonds-workspace">
+        <div class="workspace-head">
+          <span class="workspace-kicker">PAIR PLAN</span>
+          <h2>羁绊企划室</h2>
+          <p>先选两位成员，再安排舞台、直播或 Vlog。羁绊会成长，并反过来影响双人事件。</p>
+        </div>
+        <div class="bond-candidate-grid">
+          <button
+            v-for="character in bondCandidateList"
+            :key="character.id"
+            class="bond-candidate"
+            :class="{ selected: selectedBondIds.includes(character.id) }"
+            @click="toggleBondCandidate(character)"
+          >
+            <img :src="getImageUrl(character.image)" :alt="character.name" />
+            <span>{{ character.name }}</span>
+            <small>{{ character.personality }}</small>
+          </button>
+        </div>
+        <div class="bond-stage">
+          <div class="bond-stage-title">
+            {{ selectedBondCharacters.length === 2 ? `${selectedBondCharacters[0].name} × ${selectedBondCharacters[1].name}` : '请选择两位成员' }}
+          </div>
+          <div class="bond-score">
+            当前羁绊 {{ selectedBondCharacters.length === 2 ? getBondValue(selectedBondCharacters[0], selectedBondCharacters[1]) : 0 }}
+          </div>
+          <label class="workspace-slider">
+            <span>企划规格 {{ bondProjectIntensity }} 档</span>
+            <div class="range-stepper">
+              <button type="button" @click="changeBondProjectIntensity(-1)">-</button>
+              <input v-model.number="bondProjectIntensity" type="range" min="1" max="4" step="1" />
+              <button type="button" @click="changeBondProjectIntensity(1)">+</button>
+            </div>
+          </label>
+          <div class="workspace-actions">
+            <button @click="handleBondProject('STAGE')">合作舞台 ¥{{ (BOND_PROJECT_BASE_COST.STAGE * bondProjectIntensity).toLocaleString() }}</button>
+            <button @click="handleBondProject('LIVE')">双人直播 ¥{{ (BOND_PROJECT_BASE_COST.LIVE * bondProjectIntensity).toLocaleString() }}</button>
+            <button @click="handleBondProject('VLOG')">宿舍 Vlog ¥{{ (BOND_PROJECT_BASE_COST.VLOG * bondProjectIntensity).toLocaleString() }}</button>
+          </div>
+        </div>
+        <p v-if="topBond" class="bond-ticker">当前最强羁绊：{{ topBond.names }} / {{ topBond.value }}</p>
+      </section>
+
+      <section v-if="activeStudioPage === 'report'" class="workspace-panel report-workspace">
+        <div class="workspace-head">
+          <span class="workspace-kicker">DATA ROOM</span>
+          <h2>运营报告台</h2>
+          <p>根据当前局势开策略会，直接修正队伍结构、资源分配和舆情风险。</p>
+        </div>
+        <div class="report-metrics">
+          <div><span>平均人气</span><strong>{{ averagePopularity }}</strong></div>
+          <div><span>最强粉圈</span><strong>{{ fanFactionSummary }}</strong></div>
+          <div><span>剩余预算</span><strong>¥{{ budget.toLocaleString() }}</strong></div>
+          <div><span>最强羁绊</span><strong>{{ topBond?.names || '未形成' }}</strong></div>
+          <div><span>工作台投入</span><strong>¥{{ studioTotalSpend.toLocaleString() }}</strong></div>
+        </div>
+        <div class="closure-board compact">
+          <div v-for="item in studioClosure" :key="item.key" class="closure-card" :class="item.key">
+            <span>{{ item.title }}</span>
+            <strong>{{ item.actions }} 次</strong>
+            <small>¥{{ item.spend.toLocaleString() }} / {{ item.result }}</small>
+          </div>
+        </div>
+        <div class="workspace-actions">
+          <button @click="handleReportAction('BALANCE')">补短板会议 ¥10,000</button>
+          <button @click="handleReportAction('TOP')">TOP 加码 ¥14,000</button>
+          <button @click="handleReportAction('CLEAN')">舆情复盘 ¥10,000</button>
+        </div>
+        <p class="formula-note">
+          计算口径：强度 1-4 档按基础成本和基础收益线性放大，成本越高越可控，但预算风险也更明显。
+        </p>
+        <div v-if="studioLedger.highlights.length" class="ledger-feed">
+          <span v-for="item in studioLedger.highlights" :key="item">{{ item }}</span>
+        </div>
+        <div class="mini-ranking-board">
+          <div v-for="(char, index) in sortedCharacters.slice(0, 6)" :key="char.id">
+            <span>{{ index + 1 }}. {{ char.name }}</span>
+            <strong>{{ char.popularity }}</strong>
+          </div>
+        </div>
+      </section>
+
       <!-- Trending Management Panel -->
       <div v-if="trendingQueue.length > 0" class="trending-manager">
         <p class="manager-hint">📢 发现热搜！请及时处理舆情</p>
@@ -865,7 +1315,7 @@ const producerMedals = computed(() => {
         </div>
       </div>
 
-      <div class="event-layout">
+      <div v-if="activeStudioPage === 'recording'" class="event-layout">
         <!-- Side Dashboard: Real-time Popularity -->
         <Transition name="slide-fade">
           <div v-if="showPopularityDashboard" class="side-dashboard-overlay" @click.self="showPopularityDashboard = false">
@@ -918,6 +1368,57 @@ const producerMedals = computed(() => {
           </div>
         </Transition>
 
+        <aside class="live-cockpit">
+          <div class="monitor-panel">
+            <div class="monitor-topline">
+              <span>LIVE MONITOR</span>
+              <strong>{{ recordingMode }}</strong>
+            </div>
+            <div class="focus-preview">
+              <img :src="getImageUrl(focusCharacter.image)" :alt="focusCharacter.name" />
+              <div>
+                <span>当前镜头焦点</span>
+                <strong>{{ focusCharacter.name }}</strong>
+                <small>{{ focusCharacter.personality }} / 人气 {{ focusCharacter.popularity }}</small>
+              </div>
+            </div>
+            <div class="camera-lanes">
+              <button
+                v-for="char in eventCandidates"
+                :key="char.id"
+                class="camera-lane"
+                :class="{ active: focusCharacterId === char.id }"
+                @click="focusCharacterId = char.id"
+              >
+                <img :src="getImageUrl(char.image)" :alt="char.name" />
+                <span>{{ char.name }}</span>
+                <strong>{{ char.popularity }}</strong>
+              </button>
+            </div>
+          </div>
+
+          <div class="control-deck">
+            <div class="control-deck-title">录制参数</div>
+            <div class="mode-switcher">
+              <button @click="recordingMode = 'BALANCE'" :class="{ active: recordingMode === 'BALANCE' }">群像</button>
+              <button @click="recordingMode = 'FOCUS'" :class="{ active: recordingMode === 'FOCUS' }">单推</button>
+              <button @click="recordingMode = 'DRAMA'" :class="{ active: recordingMode === 'DRAMA' }">抓马</button>
+            </div>
+            <label class="intensity-control">
+              <span>执行强度 {{ executionIntensity }}</span>
+              <div class="range-stepper compact">
+                <button type="button" @click="changeExecutionIntensity(-1)">-</button>
+                <input v-model.number="executionIntensity" type="range" min="1" max="4" step="1" />
+                <button type="button" @click="changeExecutionIntensity(1)">+</button>
+              </div>
+            </label>
+            <div class="control-impact">
+              <span>预计消耗</span>
+              <strong>¥{{ (executionIntensity * RECORDING_INTENSITY_COST).toLocaleString() }}</strong>
+            </div>
+          </div>
+        </aside>
+
         <div class="event-main">
           <div class="event-container" :class="{ 'breaking-news-border': isBreakingNews, 'glitch-anim': isBreakingNews }">
             <!-- Glass Decorative Background -->
@@ -945,20 +1446,39 @@ const producerMedals = computed(() => {
             <p class="candidate-hint">💡 候选人说明：当前人气前 5 名成员</p>
 
             <!-- CHOICE Event Type -->
-            <div v-if="currentEvent.type === 'CHOICE'" class="choices-grid">
+            <div v-if="currentEvent.type === 'CHOICE'" class="director-board">
+              <div class="director-board-header">
+                <span class="board-kicker">导播台 / 方案调度</span>
+                <span class="board-hint">选择一套执行方案，系统会即时结算舆情与人气</span>
+              </div>
               <button 
                 v-for="(choice, index) in (typeof currentEvent.choices === 'function' ? currentEvent.choices(eventCandidates) : currentEvent.choices)" 
                 :key="index" 
                 @click="handleChoice(choice)" 
-                class="choice-button"
+                class="directive-card"
               >
-                {{ choice.text }}
+                <span class="directive-topline">
+                  <span class="directive-type">{{ getDirectiveType(index) }}</span>
+                  <span class="directive-cost">预算预估 ¥{{ getDirectiveCost(index).toLocaleString() }}</span>
+                </span>
+                <span class="directive-copy">{{ choice.text }}</span>
+                <span class="directive-meta">
+                  <span>影响：{{ getDirectiveTarget(index) }}</span>
+                  <span>风险 {{ getDirectiveRisk(index) }}%</span>
+                </span>
+                <span class="risk-meter">
+                  <span class="risk-fill" :style="{ width: getDirectiveRisk(index) + '%' }"></span>
+                </span>
               </button>
             </div>
 
             <!-- PICK_TWO Event Type -->
         <div v-if="currentEvent.type === 'PICK_TWO'">
           <p class="pick-two-hint">请从人气最高的前五名中选择两位 (已选 {{ selectedPair.length }} / 2)</p>
+          <p v-if="selectedPair.length === 2" class="bond-preview">
+            {{ selectedPair[0].name }} × {{ selectedPair[1].name }}
+            当前羁绊：{{ selectedPairBond?.value || 0 }}
+          </p>
           <div class="roster mini">
             <div 
               v-for="character in rankingList" 
@@ -1058,6 +1578,18 @@ const producerMedals = computed(() => {
             </div>
           </div>
 
+          <div class="settlement-closure-section">
+            <h3 class="section-title-refined">制作闭环复盘</h3>
+            <div class="closure-board">
+              <div v-for="item in studioClosure" :key="item.key" class="closure-card" :class="item.key">
+                <span>{{ item.title }}</span>
+                <strong>{{ item.actions }} 次 / ¥{{ item.spend.toLocaleString() }}</strong>
+                <p>{{ item.result }}</p>
+                <small>{{ item.detail }}</small>
+              </div>
+            </div>
+          </div>
+
           <!-- Producer Analysis Section -->
           <div class="analysis-grid-refined">
             <div v-for="(item, index) in producerAnalysis" :key="index" class="analysis-card-refined" :style="{ animationDelay: (index * 0.1) + 's' }">
@@ -1067,6 +1599,8 @@ const producerMedals = computed(() => {
                   <template v-else-if="item.label === '风险偏好'">🎲</template>
                   <template v-else-if="item.label === '公关投入'">💰</template>
                   <template v-else-if="item.label === '国民认可'">🌍</template>
+                  <template v-else-if="item.label === '粉丝生态'">🧭</template>
+                  <template v-else-if="item.label === '化学反应'">🔗</template>
                 </span>
                 <span class="analysis-card-label">{{ item.label }}</span>
               </div>
@@ -1128,6 +1662,9 @@ const producerMedals = computed(() => {
           </div>
 
           <div class="settlement-footer">
+            <button @click="handleSharePoster" class="secondary-button poster-btn" :disabled="isGeneratingPoster">
+              {{ isGeneratingPoster ? '生成中...' : '下载战报海报' }}
+            </button>
             <button @click="gameState = 'roster'" class="start-button restart-btn-refined">开启下一期运营计划</button>
             <p class="footer-disclaimer">模拟数据仅供娱乐</p>
           </div>
@@ -1593,11 +2130,11 @@ const producerMedals = computed(() => {
 }
 
 h1 {
-  font-size: 2.2rem;
-  font-weight: 900;
+  font-size: 1.7rem;
+  font-weight: 850;
   color: #fff;
   margin-bottom: 0.25rem;
-  text-align: center;
+  text-align: left;
 }
 
 /* Apply transparent fill only to elements with background-clip gradients */
@@ -1649,14 +2186,14 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.2rem 2.5rem;
-  background: linear-gradient(135deg, rgba(67, 56, 202, 0.95), rgba(79, 70, 229, 0.9)); /* 鲜艳的靛蓝色渐变背景 */
-  backdrop-filter: blur(15px);
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-  margin-bottom: 2rem;
-  max-width: 850px;
+  padding: 0.85rem 1rem;
+  background: rgba(2, 6, 23, 0.84);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+  margin-bottom: 1rem;
+  max-width: 1180px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1669,16 +2206,16 @@ h1 {
 }
 @keyframes pulse-red { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.5; } }
 .rec-text { 
-  font-size: 1rem; 
-  font-weight: 950; 
-  color: #ff0055; 
-  letter-spacing: 2px;
-  text-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+  font-size: 0.78rem; 
+  font-weight: 850; 
+  color: #f87171; 
+  letter-spacing: 0;
+  text-shadow: none;
 }
 
 .episode-tag {
-  font-size: 1.2rem;
-  font-weight: 950;
+  font-size: 0.9rem;
+  font-weight: 850;
   color: #fff;
   letter-spacing: 1px;
   text-shadow: 0 2px 10px rgba(0,0,0,0.2);
@@ -1686,7 +2223,7 @@ h1 {
 
 .budget-display { display: flex; flex-direction: column; align-items: flex-end; }
 .budget-label { 
-  font-size: 0.85rem; 
+  font-size: 0.72rem; 
   color: rgba(255, 255, 255, 0.7); /* 在蓝色背景下提高标签亮度 */
   font-weight: 800; 
   text-transform: uppercase; 
@@ -1696,18 +2233,503 @@ h1 {
   font-family: 'Monaco', monospace; 
   font-weight: 900; 
   color: #10b981; 
-  font-size: 1.5rem; 
+  font-size: 1.1rem; 
   text-shadow: 0 2px 10px rgba(0,0,0,0.2); 
 }
 .budget-low .budget-value { color: #ff0055; text-shadow: 0 0 15px rgba(255, 0, 85, 0.4); }
 
 .toggle-button {
+  min-height: 48px;
   background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.6rem 1.2rem;
   border-radius: 8px; font-weight: 700; color: #e2e8f0; cursor: pointer;
   transition: all 0.2s;
 }
 .toggle-button:hover { background: rgba(255, 255, 255, 0.1); color: white; }
 .toggle-button.off { opacity: 0.5; }
+
+/* --- Studio Workspaces --- */
+.studio-nav {
+  max-width: 980px;
+  margin: -0.8rem auto 1.4rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.studio-nav button {
+  min-height: 48px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.studio-nav button:hover,
+.studio-nav button.active {
+  color: #0f172a;
+  background: #facc15;
+  border-color: #fde68a;
+  transform: translateY(-2px);
+}
+
+.workspace-panel {
+  position: relative;
+  z-index: 3;
+  max-width: 1100px;
+  margin: 0 auto 2rem;
+  padding: 1.4rem;
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+}
+
+.workspace-head {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1.2rem;
+}
+
+.workspace-kicker {
+  color: #67e8f9;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.workspace-head h2 {
+  color: #ffffff;
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.workspace-head p {
+  color: #cbd5e1;
+  margin: 0;
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+
+.faction-grid-large,
+.report-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.faction-card,
+.report-metrics div {
+  min-height: 96px;
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.faction-card span,
+.report-metrics span {
+  color: #94a3b8;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.faction-card strong,
+.report-metrics strong {
+  color: #ffffff;
+  font-family: Monaco, monospace;
+  font-size: 1.25rem;
+}
+
+.faction-card.group { border-color: rgba(34, 197, 94, 0.45); }
+.faction-card.solo { border-color: rgba(96, 165, 250, 0.45); }
+.faction-card.cp { border-color: rgba(244, 114, 182, 0.45); }
+.faction-card.public { border-color: rgba(250, 204, 21, 0.45); }
+.faction-card.anti { border-color: rgba(248, 113, 113, 0.5); }
+
+.workspace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.workspace-actions button {
+  min-height: 48px;
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  background: #e0f2fe;
+  color: #082f49;
+  font-weight: 950;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.workspace-actions button:hover {
+  background: #bae6fd;
+  transform: translateY(-2px);
+}
+
+.workspace-slider {
+  display: grid;
+  gap: 0.55rem;
+  margin: 1rem 0;
+  color: #e2e8f0;
+  font-weight: 900;
+}
+
+.workspace-slider input {
+  width: 100%;
+  accent-color: #facc15;
+}
+
+.range-stepper {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.range-stepper button {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 9px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.range-stepper input[type="range"] {
+  appearance: none;
+  width: 100%;
+  min-height: 44px;
+  background: transparent;
+  cursor: grab;
+  touch-action: pan-y;
+  pointer-events: auto;
+}
+
+.range-stepper input[type="range"]:active {
+  cursor: grabbing;
+}
+
+.range-stepper input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #334155;
+}
+
+.range-stepper input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  margin-top: -9px;
+  border-radius: 50%;
+  border: 3px solid #020617;
+  background: #facc15;
+  box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.18);
+}
+
+.range-stepper input[type="range"]::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #334155;
+}
+
+.range-stepper input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid #020617;
+  background: #facc15;
+}
+
+.workspace-card-hand {
+  margin-top: 1rem;
+}
+
+.bond-candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.bond-candidate {
+  min-height: 132px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.78);
+  color: #ffffff;
+  cursor: pointer;
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.bond-candidate.selected {
+  border-color: #facc15;
+  background: rgba(250, 204, 21, 0.18);
+}
+
+.bond-candidate img {
+  width: 58px;
+  height: 58px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.bond-candidate span {
+  font-weight: 950;
+}
+
+.bond-candidate small {
+  color: #cbd5e1;
+  font-weight: 800;
+}
+
+.bond-stage {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(244, 114, 182, 0.14));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.bond-stage-title {
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 950;
+}
+
+.bond-score {
+  color: #fde68a;
+  font-family: Monaco, monospace;
+  font-weight: 900;
+  margin-top: 0.4rem;
+}
+
+.mini-ranking-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.mini-ranking-board div {
+  min-height: 46px;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.76);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mini-ranking-board span {
+  color: #e2e8f0;
+  font-weight: 850;
+}
+
+.mini-ranking-board strong {
+  color: #facc15;
+  font-family: Monaco, monospace;
+}
+
+.formula-note {
+  margin: 0 0 1rem;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  font-weight: 750;
+}
+
+.closure-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0 1.4rem;
+}
+
+.closure-board.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.closure-card {
+  min-height: 120px;
+  padding: 0.9rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+
+.closure-card span {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.closure-card strong {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.closure-card p,
+.closure-card small {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.closure-card.recording { border-color: rgba(34, 197, 94, 0.42); }
+.closure-card.fans { border-color: rgba(96, 165, 250, 0.42); }
+.closure-card.bonds { border-color: rgba(244, 114, 182, 0.42); }
+.closure-card.report { border-color: rgba(250, 204, 21, 0.42); }
+
+.ledger-feed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.ledger-feed span {
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(250, 204, 21, 0.12);
+  color: #fde68a;
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+/* --- Strategy Console --- */
+.strategy-console {
+  max-width: 980px;
+  margin: -0.8rem auto 1.8rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.faction-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(96px, 1fr));
+  gap: 0.6rem;
+}
+
+.faction-chip {
+  min-height: 56px;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.faction-chip span {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  font-weight: 800;
+}
+
+.faction-chip strong {
+  font-family: Monaco, monospace;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.faction-chip.group { border-color: rgba(34, 197, 94, 0.35); }
+.faction-chip.solo { border-color: rgba(96, 165, 250, 0.35); }
+.faction-chip.cp { border-color: rgba(244, 114, 182, 0.35); }
+.faction-chip.public { border-color: rgba(250, 204, 21, 0.35); }
+.faction-chip.anti { border-color: rgba(248, 113, 113, 0.45); }
+
+.card-hand {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.operation-card {
+  min-height: 118px;
+  text-align: left;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(30, 41, 59, 0.82);
+  border-radius: 12px;
+  padding: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.operation-card:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.operation-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.operation-card.buff { box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.24); }
+.operation-card.pr { box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.24); }
+.operation-card.cp { box-shadow: inset 0 0 0 1px rgba(244, 114, 182, 0.24); }
+.operation-card.balance { box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.24); }
+
+.card-name {
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.card-desc {
+  flex: 1;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.card-cost {
+  font-family: Monaco, monospace;
+  font-size: 0.78rem;
+  color: #86efac;
+  font-weight: 900;
+}
+
+.card-feedback,
+.bond-ticker,
+.bond-preview {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.bond-preview {
+  color: #f9a8d4;
+  margin-bottom: 1rem;
+}
 
 /* --- Trending Manager --- */
 .trending-manager {
@@ -1763,6 +2785,7 @@ h1 {
 .op-btn-group { display: flex; gap: 8px; }
 .topic-cost { font-size: 0.75rem; font-weight: 700; color: #64748b; }
 .op-btn {
+  min-height: 40px;
   background: white; color: black; border: none; padding: 6px 14px;
   border-radius: 4px; font-size: 0.75rem; font-weight: 900; cursor: pointer;
   transition: all 0.2s;
@@ -1777,6 +2800,7 @@ h1 {
 
 /* Top Dashboard Button */
 .top-dash-btn {
+  min-height: 48px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.6rem 1.2rem;
@@ -1809,9 +2833,164 @@ h1 {
 .event-layout { 
   position: relative; 
   width: 100%; 
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   gap: 1.5rem;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.live-cockpit {
+  display: grid;
+  gap: 1rem;
+  align-self: start;
+  position: sticky;
+  top: 1rem;
+  z-index: 3;
+}
+
+.monitor-panel,
+.control-deck {
+  border-radius: 14px;
+  background: #020617;
+  border: 1px solid #334155;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+  padding: 1rem;
+}
+
+.monitor-topline,
+.control-impact {
+  display: flex;
+  justify-content: space-between;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.monitor-topline strong,
+.control-impact strong {
+  color: #22c55e;
+  font-family: Monaco, monospace;
+}
+
+.focus-preview {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.focus-preview img {
+  width: 82px;
+  height: 82px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid #22c55e;
+}
+
+.focus-preview div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.focus-preview span,
+.focus-preview small {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.focus-preview strong {
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 950;
+}
+
+.camera-lanes {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.camera-lane {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 0.45rem 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.camera-lane.active,
+.camera-lane:hover {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.camera-lane img {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.camera-lane span {
+  font-weight: 900;
+}
+
+.camera-lane strong {
+  color: #facc15;
+  font-family: Monaco, monospace;
+}
+
+.control-deck-title {
+  color: #ffffff;
+  font-weight: 950;
+  margin-bottom: 0.8rem;
+}
+
+.mode-switcher {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.mode-switcher button {
+  min-height: 48px;
+  border-radius: 9px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.9);
+  color: #cbd5e1;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mode-switcher button.active,
+.mode-switcher button:hover {
+  background: #22c55e;
+  color: #052e16;
+  border-color: #86efac;
+}
+
+.intensity-control {
+  display: grid;
+  gap: 0.6rem;
+  color: #e2e8f0;
+  font-weight: 900;
+  margin-bottom: 1rem;
+}
+
+.intensity-control input {
+  width: 100%;
+  accent-color: #22c55e;
 }
 
 .btn-icon { font-size: 1.1rem; }
@@ -1956,6 +3135,8 @@ h1 {
 .dash-pop-progress { height: 100%; background: linear-gradient(90deg, #ff9a9e, #fecfef); border-radius: 2px; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .dash-ops { display: flex; align-items: center; gap: 8px; }
 .heart-btn {
+  min-width: 44px;
+  min-height: 44px;
   background: none; border: none; font-size: 1.2rem; cursor: pointer;
   padding: 4px; border-radius: 50%; transition: all 0.2s;
   line-height: 1;
@@ -1971,6 +3152,8 @@ h1 {
 
 .event-main { 
   width: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 .ambient-bg-event {
@@ -2028,14 +3211,12 @@ h1 {
 .bottom-right { bottom: 15px; right: 15px; border-left: none; border-top: none; }
 
 .event-container {
-  background: linear-gradient(135deg, rgba(67, 56, 202, 0.8), rgba(124, 58, 237, 0.7)); /* 鲜艳的靛蓝到紫色渐变，彻底告别黑色 */
-  backdrop-filter: blur(20px);
-  padding: 4rem 3rem 3rem;
-  border-radius: 30px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 40px 100px -20px rgba(0, 0, 0, 0.5),
-    inset 0 0 40px rgba(255, 255, 255, 0.2);
+  background: #020617;
+  backdrop-filter: blur(12px);
+  padding: 2rem;
+  border-radius: 14px;
+  border: 1px solid #334155;
+  box-shadow: 0 22px 58px rgba(0, 0, 0, 0.34);
   position: relative;
   max-width: 850px;
   margin: 0 auto;
@@ -2051,7 +3232,7 @@ h1 {
 .event-glass-bg {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+  background: radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.12) 0%, transparent 48%);
   z-index: -1;
 }
 
@@ -2079,30 +3260,30 @@ h1 {
   opacity: 0.3;
 }
 .event-container h2 { 
-  font-size: 1.5rem;
+  font-size: 1.12rem;
   color: #ffffff; 
-  margin-bottom: 1.2rem; 
-  text-align: center; 
-  font-weight: 950; 
-  letter-spacing: 1px;
+  margin-bottom: 0.85rem; 
+  text-align: left; 
+  font-weight: 850; 
+  letter-spacing: 0;
   position: relative;
   z-index: 2;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  text-shadow: none;
 }
 .event-description { 
-  font-size: 1.1rem;
+  font-size: 0.92rem;
   line-height: 1.6; 
   color: #e2e8f0; 
-  margin-bottom: 1.5rem; 
-  text-align: center; 
-  font-weight: 500; 
+  margin-bottom: 1.2rem; 
+  text-align: left; 
+  font-weight: 500;
   position: relative;
   z-index: 2;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  text-shadow: none;
 }
 .candidate-hint { 
-  font-size: 0.9rem;
-  color: #fff; 
+  font-size: 0.76rem;
+  color: #94a3b8; 
   margin-bottom: 2rem; 
   text-align: center; 
   letter-spacing: 1px; 
@@ -2506,31 +3687,101 @@ h1 {
   margin: 0 auto 2rem;
 }
 
-.choices-grid { display: grid; gap: 1.2rem; }
-.choice-button {
-  background: rgba(255, 255, 255, 0.12); /* 显著提高选项按钮亮度 */
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 1.2rem 1.8rem;
-  border-radius: 16px;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #fff;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.director-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.director-board-header {
+  grid-column: 1 / -1;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
-.choice-button:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: #fff;
-  transform: translateX(10px) scale(1.02);
-  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.15);
+
+.board-kicker {
+  color: #ffffff;
+  font-weight: 850;
 }
-.choice-button::after { content: "→"; opacity: 0; transform: translateX(-10px); transition: all 0.2s; }
-.choice-button:hover::after { opacity: 1; transform: translateX(0); }
+
+.board-hint {
+  color: #cbd5e1;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.directive-card {
+  min-height: 148px;
+  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 12px;
+  color: #ffffff;
+  padding: 1rem;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.directive-card:hover {
+  transform: translateY(-2px);
+  border-color: #22c55e;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+}
+
+.directive-topline,
+.directive-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.directive-type {
+  color: #0f172a;
+  background: #facc15;
+  padding: 0.24rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.directive-cost,
+.directive-meta {
+  color: #cbd5e1;
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+.directive-copy {
+  flex: 1;
+  color: #ffffff;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+.risk-meter {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.risk-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e, #facc15, #ff0055);
+}
 
 .drag-list { display: flex; flex-direction: column; gap: 1rem; }
 .drag-item {
@@ -2801,6 +4052,19 @@ h1 {
   margin-bottom: 3rem;
 }
 
+.settlement-closure-section {
+  margin: 0 0 2.4rem;
+}
+
+.settlement-closure-section .section-title-refined {
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.settlement-closure-section .closure-card {
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .analysis-card-refined {
   background: rgba(255, 255, 255, 0.03);
   padding: 1.5rem;
@@ -2990,6 +4254,11 @@ h1 {
   margin-top: 4rem;
   padding-top: 2rem;
   border-top: 1px solid #f1f5f9;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .restart-btn-refined {
@@ -2998,7 +4267,13 @@ h1 {
   box-shadow: 0 15px 30px rgba(93, 84, 164, 0.2);
 }
 
+.poster-btn {
+  min-height: 54px;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
 .footer-disclaimer {
+  width: 100%;
   font-size: 0.75rem;
   color: #cbd5e1;
   margin-top: 1.5rem;
@@ -3022,20 +4297,40 @@ h1 {
   justify-content: center; z-index: 1000;
 }
 .qte-modal, .qte-result-modal {
-  background: white; padding: 3rem; border-radius: 40px;
+  background: linear-gradient(145deg, #111827, #312e81);
+  color: #f8fafc;
+  padding: 2rem;
+  border-radius: 16px;
   width: 90%; max-width: 450px; text-align: center;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
-.qte-icon { font-size: 5rem; margin-bottom: 1.5rem; animation: pulse-icon 1.5s infinite; }
+.qte-icon { font-size: 3.2rem; margin-bottom: 1rem; animation: pulse-icon 1.5s infinite; }
 @keyframes pulse-icon { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
 .qte-area {
-  margin-top: 2.5rem; padding: 3rem; border: 3px dashed #e2e8f0;
-  border-radius: 24px; cursor: pointer; transition: all 0.2s;
+  margin-top: 1.6rem;
+  padding: 2rem;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 3px dashed #94a3b8;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.qte-area:active { transform: scale(0.98); background: #f8fafc; }
+.qte-area:active { transform: scale(0.98); background: #e0f2fe; }
 .qte-progress-bg { height: 16px; background: #f1f5f9; border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
 .qte-progress-fill { height: 100%; background: linear-gradient(90deg, #5d54a4, #ff9a9e); transition: width 0.1s linear; }
+.qte-modal h2,
+.qte-modal p,
+.qte-result-text {
+  color: #f8fafc;
+}
+
+.qte-hint {
+  color: #1e293b;
+  font-weight: 950;
+}
 
 /* Timing Bar Styles */
 .timing-bar-container {
@@ -3068,13 +4363,14 @@ h1 {
 .timing-mode {
   border-color: #5d54a4 !important;
   background: #fdfbff !important;
+  color: #1e1b4b;
 }
 
 /* --- Global Buttons --- */
 .start-button {
   background: linear-gradient(135deg, #5d54a4 0%, #7d73d1 100%);
-  color: white; border: none; padding: 1.2rem 3.5rem; font-size: 1.25rem;
-  font-weight: 900; border-radius: 50px; cursor: pointer; transition: all 0.3s;
+  color: white; border: none; padding: 0.85rem 1.6rem; font-size: 0.95rem;
+  font-weight: 850; border-radius: 12px; cursor: pointer; transition: all 0.3s;
   box-shadow: 0 10px 25px rgba(93, 84, 164, 0.3); display: block; margin: 0 auto;
 }
 .start-button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(93, 84, 164, 0.4); }
@@ -3095,7 +4391,14 @@ h1 {
 @media (max-width: 768px) {
   /* Global Adjustments */
   .container {
-    padding: 1rem;
+    padding: 0.8rem;
+    padding-bottom: calc(94px + env(safe-area-inset-bottom));
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .game-view {
+    max-width: 100%;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
 
   /* Landing Page */
@@ -3145,28 +4448,151 @@ h1 {
 
   /* Control Bar */
   .control-bar {
-    flex-wrap: wrap;
-    gap: 0.8rem;
-    padding: 0.8rem !important;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.65rem;
+    padding: 0.75rem !important;
+    align-items: center;
+    border-radius: 12px;
   }
   .rec-indicator { order: 1; }
-  .episode-tag { order: 2; font-size: 0.9rem !important; }
-  .budget-display { order: 3; width: 100%; align-items: center !important; margin: 0.4rem 0; }
-  .control-actions { order: 4; width: 100%; justify-content: center; }
-  .top-dash-btn, .toggle-button { padding: 0.5rem 0.8rem !important; font-size: 0.75rem !important; }
+  .episode-tag { order: 2; font-size: 0.82rem !important; justify-self: end; }
+  .budget-display { order: 3; align-items: flex-start !important; margin: 0; }
+  .control-actions {
+    order: 4;
+    width: 100%;
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .top-dash-btn, .toggle-button {
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.55rem 0.7rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .studio-nav {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    z-index: 900;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0.45rem;
+    max-width: none;
+    border-radius: 14px;
+    background: rgba(2, 6, 23, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(18px);
+  }
+  .studio-nav button {
+    min-height: 54px;
+    padding: 0.2rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+  .workspace-panel {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+  }
+  .faction-grid-large,
+  .report-metrics,
+  .closure-board,
+  .closure-board.compact,
+  .bond-candidate-grid,
+  .mini-ranking-board {
+    grid-template-columns: 1fr;
+  }
+  .workspace-actions button {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .strategy-console {
+    margin: -0.4rem 0 1.2rem;
+  }
+  .faction-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .card-hand {
+    grid-template-columns: 1fr;
+  }
+  .operation-card {
+    min-height: 96px;
+  }
 
   /* Event Container */
   .event-container {
     padding: 1rem !important;
     border-width: 2px !important;
   }
+  .event-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+  .live-cockpit {
+    position: static;
+    order: 2;
+  }
+  .event-main {
+    order: 1;
+  }
   .event-container h2 { font-size: 1.2rem !important; }
   .event-description { font-size: 0.9rem !important; }
   .candidate-hint { font-size: 0.75rem !important; padding: 6px !important; }
-  .choice-button {
-    padding: 0.8rem 1rem !important;
-    font-size: 0.85rem !important;
+  .focus-preview img {
+    width: 58px;
+    height: 58px;
+  }
+  .focus-preview strong {
+    font-size: 1rem;
+  }
+  .camera-lanes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .camera-lane {
+    min-height: 58px;
+    grid-template-columns: 34px 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  .camera-lane img {
+    width: 34px;
+    height: 34px;
+  }
+  .camera-lane strong {
+    grid-column: 2;
+    justify-self: start;
+    font-size: 0.76rem;
+  }
+  .mode-switcher button,
+  .range-stepper button {
+    min-height: 48px;
+  }
+  .range-stepper {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+  }
+  .director-board {
+    grid-template-columns: 1fr !important;
+  }
+  .director-board-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .directive-card {
+    min-height: auto;
+    padding: 0.85rem !important;
+    border-radius: 10px;
+  }
+  .directive-copy {
+    font-size: 0.86rem !important;
   }
 
   /* Mini Selection Grid (PICK_TWO) */
@@ -3178,20 +4604,43 @@ h1 {
   /* Trending Manager */
   .trending-manager {
     top: auto;
-    bottom: 20px;
+    bottom: calc(88px + env(safe-area-inset-bottom));
     right: 1rem;
     left: 1rem;
     width: auto;
+    gap: 0.65rem;
+  }
+  .topic-ops {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .op-btn-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   /* Side Dashboard */
   .side-dashboard {
-    width: 90% !important;
-    padding: 1.5rem !important;
+    width: 100% !important;
+    padding: 1rem !important;
   }
-  .dashboard-item { padding: 0.5rem !important; border-radius: 12px !important; }
+  .dashboard-item { padding: 0.55rem !important; border-radius: 12px !important; }
   .dash-img { width: 32px !important; height: 32px !important; }
   .dash-name { font-size: 0.75rem !important; }
+  .toast-hint {
+    top: calc(10px + env(safe-area-inset-top));
+    left: 12px;
+    right: 12px;
+    min-width: 0;
+    max-width: none;
+    transform: none;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    gap: 0.8rem;
+  }
+  .toast-icon { font-size: 1.4rem; }
+  .toast-text { font-size: 0.92rem; }
 
   /* End Screen */
   .settlement-container-refined {
@@ -3219,6 +4668,21 @@ h1 {
   .char-role-mini { font-size: 0.5rem !important; }
   .roster.mini {
     grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .studio-nav {
+    left: 6px;
+    right: 6px;
+    gap: 0.25rem;
+  }
+  .studio-nav button {
+    min-height: 50px;
+    font-size: 0.66rem;
+  }
+  .camera-lanes {
+    grid-template-columns: 1fr;
+  }
+  .control-actions {
+    grid-template-columns: 1fr;
   }
 }
 </style>
