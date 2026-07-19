@@ -21,7 +21,7 @@ export const characters: Character[] = [
   { id: 'wang-lujie', name: '王橹杰', personality: '喜剧人', image: '/images/王橹杰.png', popularity: 78, description: '行走的快乐源泉，独具魅力的舞台喜剧人。' },
   { id: 'wang-shuoran', name: '王烁然', image: '/images/王烁然.png', personality: '潜力新星', popularity: 74, description: '低调努力的潜力股，准备惊艳所有人。' },
   { id: 'nie-weichen', name: '聂玮辰', image: '/images/聂玮辰.png', personality: '探索者', popularity: 73, description: '家境优越的阳光男孩，正在寻找自己独特的舞台风格。' },
-  { id: 'chen-junming', name: '陈俊铭', image: '/images/陈俊铭.png', personality: '潜力新星', popularity: 76, description: '人气不错的忙内担当，未来可期。' },
+  { id: 'chen-junming', name: '陈浚铭', image: '/images/陈浚铭.png', personality: '潜力新星', popularity: 76, description: '人气不错的忙内担当，未来可期。' },
   { id: 'chen-yiheng', name: '陈奕恒', image: '/images/陈奕恒.png', personality: '话题中心', popularity: 80, description: '综艺感极强，话题与热度并存，是天生的镜头焦点。' },
   { id: 'chen-sihan', name: '陈思罕', image: '/images/陈思罕.png', personality: '潜力新星', popularity: 74, description: '低调努力的潜力股，准备惊艳所有人。' },
   { id: 'wei-zichen', name: '魏子宸', image: '/images/魏子宸.png', personality: '探索者', popularity: 72, description: '安静内敛的少年，拥有不为人知的坚定内心。' },
