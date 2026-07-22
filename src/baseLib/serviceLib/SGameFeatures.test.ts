@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { characters as characterSource, type Character } from '../../data/characters';
 import type { GameEvent } from '../../data/events';
 import {
+  SApplyBondBonus,
   SApplyFactionReaction,
   SClampFanFactions,
   SGetResultEffectTags,
@@ -10,19 +12,17 @@ import type { SFanFactionState } from './type/SFanFactionState';
 const choiceEvent: GameEvent = {
   id: 'event-test',
   type: 'CHOICE',
-  title: '测试事件',
-  description: '测试',
+  title: 'test event',
+  description: 'test',
   choices: [],
 };
 
 function createFactions(): SFanFactionState {
-  return {
-    groupFans: 50,
-    soloFans: 50,
-    cpFans: 50,
-    publicFans: 50,
-    antiFans: 50,
-  };
+  return { groupFans: 50, soloFans: 50, cpFans: 50, publicFans: 50, antiFans: 50 };
+}
+
+function createCharacter(id: string): Character {
+  return { id, name: id, image: '', personality: characterSource[0].personality, popularity: 70, description: '' };
 }
 
 describe('SGameFeatures', () => {
@@ -40,13 +40,29 @@ describe('SGameFeatures', () => {
   it('applies structured effect tags without reading result text', () => {
     const factions = createFactions();
 
-    SApplyFactionReaction(factions, '普通结果', choiceEvent, ['GROUP_BOOST', 'ANTI_RISK']);
+    SApplyFactionReaction(factions, 'plain result', choiceEvent, ['GROUP_BOOST', 'ANTI_RISK']);
 
     expect(factions.groupFans).toBe(57);
     expect(factions.antiFans).toBe(56);
   });
 
-  it('derives fallback tags for legacy result text', () => {
-    expect(SGetResultEffectTags('全员高光但也有负面争议')).toEqual(['GROUP_BOOST', 'ANTI_RISK']);
+  it('does not derive fallback tags from unrelated result text', () => {
+    expect(SGetResultEffectTags('plain result')).toEqual([]);
+  });
+
+  it('applies bond bonus only after the bond threshold', () => {
+    const pair = [createCharacter('a'), createCharacter('b')];
+
+    SApplyBondBonus(pair, { key: 'a__b', names: 'a x b', value: 36 });
+
+    expect(pair.map(char => char.popularity)).toEqual([74, 74]);
+  });
+
+  it('uses the higher bond bonus at the second threshold', () => {
+    const pair = [createCharacter('a'), createCharacter('b')];
+
+    SApplyBondBonus(pair, { key: 'a__b', names: 'a x b', value: 72 });
+
+    expect(pair.map(char => char.popularity)).toEqual([78, 78]);
   });
 });
