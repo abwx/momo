@@ -6,21 +6,20 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "vue-tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^6.0.6",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "vue": "^3.5.34",
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
     "typescript": "~5.6.2",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vitest": "^4.1.10",
+    "vue-tsc": "^3.3.7"
   }
 }

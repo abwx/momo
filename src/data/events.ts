@@ -1,19 +1,6 @@
 import type { Character } from './characters';
-
-export type GameEventType = 'CHOICE' | 'PICK_TWO' | 'RANKING';
-
-export interface GameEvent {
-  id: string;
-  type: GameEventType;
-  title: string;
-  description: string;
-  choices: any;
-}
-
-export interface Choice {
-  text: string;
-  action: (characters: Character[]) => string;
-}
+import type { GameEvent } from './type/GameEvent';
+export type { Choice, GameEffectTag, GameEvent, GameEventType } from './type/GameEvent';
 
 const randomResult = (successChance: number) => Math.random() < successChance;
 

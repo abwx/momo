@@ -1,8 +1,9 @@
 import type { Character } from '../../data/characters';
-import type { GameEvent } from '../../data/events';
+import type { GameEffectTag, GameEvent } from '../../data/events';
 import type { SBondPair } from './type/SBondPair';
 import type { SFanFactionState } from './type/SFanFactionState';
 import type { SOperationCard } from './type/SOperationCard';
+import { shuffleList } from '../../utils/random';
 
 const FAN_MIN_VALUE = 0;
 const FAN_MAX_VALUE = 100;
@@ -82,7 +83,7 @@ export function SClampFanFactions(factions: SFanFactionState) {
 }
 
 export function SCreateCardHand() {
-  return [...S_OPERATION_CARD_POOL].sort(() => Math.random() - 0.5).slice(0, 3);
+  return shuffleList(S_OPERATION_CARD_POOL).slice(0, 3);
 }
 
 export function SGetPairKey(char1: Character, char2: Character) {
@@ -104,14 +105,32 @@ export function SApplyBondBonus(pair: Character[], bond: SBondPair | null) {
   return `羁绊加成触发：${bond.names} 化学反应升温，双方人气额外 +${bonus}。`;
 }
 
-export function SApplyFactionReaction(factions: SFanFactionState, result: string, event: GameEvent | null) {
+export function SApplyFactionReaction(
+  factions: SFanFactionState,
+  result: string,
+  event: GameEvent | null,
+  effectTags: GameEffectTag[] = []
+) {
   if (!event) return;
+  const tags = effectTags.length ? effectTags : SGetResultEffectTags(result);
   if (event.type === 'PICK_TWO') factions.cpFans += 5;
   if (event.type === 'RANKING') factions.soloFans += 4;
-  if (result.includes('全员') || result.includes('团魂')) factions.groupFans += 7;
-  if (result.includes('翻车') || result.includes('失败') || result.includes('负面')) factions.antiFans += 6;
-  if (result.includes('路人') || result.includes('国民')) factions.publicFans += 5;
+  if (tags.includes('GROUP_BOOST')) factions.groupFans += 7;
+  if (tags.includes('ANTI_RISK')) factions.antiFans += 6;
+  if (tags.includes('PUBLIC_BOOST')) factions.publicFans += 5;
   SClampFanFactions(factions);
+}
+
+export function SGetResultEffectTags(result: string): GameEffectTag[] {
+  return [
+    ...(SHasAnyText(result, ['全员', '团魂']) ? ['GROUP_BOOST' as const] : []),
+    ...(SHasAnyText(result, ['翻车', '失败', '负面']) ? ['ANTI_RISK' as const] : []),
+    ...(SHasAnyText(result, ['路人', '国民']) ? ['PUBLIC_BOOST' as const] : []),
+  ];
+}
+
+function SHasAnyText(text: string, tokens: string[]) {
+  return tokens.some(token => text.includes(token));
 }
 
 export function SGetTopBond(bondMap: Record<string, SBondPair>) {
@@ -126,7 +145,7 @@ export function SGetFanFactionSummary(factions: SFanFactionState) {
     ['路人盘', factions.publicFans],
     ['黑粉声量', factions.antiFans],
   ] as const;
-  return entries.sort((a, b) => b[1] - a[1])[0][0];
+  return [...entries].sort((a, b) => b[1] - a[1])[0][0];
 }
 
 export function SDownloadSharePoster(options: {

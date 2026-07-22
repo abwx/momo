@@ -1,10 +1,10 @@
 {
-  "name": "发小出道前夜 · 校园篇",
-  "short_name": "发小前夜",
-  "description": "青春校园风互动心理小测：选角、分支剧情与恋爱人格倾向，仅供娱乐自察。",
+  "name": "镜头法则：首席制作人",
+  "short_name": "镜头法则",
+  "description": "偶像综艺录制与粉丝运营模拟器",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#e8f4ef",
-  "theme_color": "#e8f4ef",
+  "background_color": "#020617",
+  "theme_color": "#22c55e",
   "lang": "zh-CN"
 }
