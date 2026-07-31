@@ -1,99 +1,111 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import type { Character } from '../../data/characters';
-import { SGetCharacterTraits } from '../../baseLib/serviceLib/SCharacterTraits';
 import { getImageUrl } from '../../utils/imageUrl';
 
-defineProps<{
+const props = defineProps<{
   characters: Character[];
   averagePopularity: number;
 }>();
 
 const emit = defineEmits<{
-  randomizePopularity: [];
-  startGame: [];
+  startGame: [characterId: string];
   adjustPopularity: [characterId: string, delta: number];
 }>();
 
+const selectedBiasId = ref(props.characters[0]?.id || '');
+const selectedBiasCharacter = computed(() =>
+  props.characters.find((char) => char.id === selectedBiasId.value)
+);
+
+function selectBias(characterId: string) {
+  selectedBiasId.value = characterId;
+}
+
+function startWithBias() {
+  emit('startGame', selectedBiasId.value);
+}
+
+function onAdjust(characterId: string, delta: number, event: Event) {
+  event.stopPropagation();
+  emit('adjustPopularity', characterId, delta);
+}
 </script>
 
 <template>
-  <div class="roster-view-refined">
-    <div class="roster-bg-decor circle-top"></div>
-    <div class="roster-bg-decor circle-bottom"></div>
-    <div class="mesh-grid"></div>
-
-    <div class="roster-header-container">
-      <div class="roster-hero-section-compact">
-        <div class="hero-text-mini">
-          <h1 class="hero-title-mini">制作人操盘中心</h1>
-          <p class="hero-desc-mini">先校准初始人气，再进入录制。成员状态会影响后续事件候选与结算。</p>
-        </div>
-
-        <div class="hero-actions-mini">
-          <button @click="emit('randomizePopularity')" class="mini-btn secondary">随机人气</button>
-          <button @click="emit('startGame')" class="mini-btn primary">开始录制</button>
-        </div>
+  <div class="roster-view">
+    <header class="roster-header">
+      <div class="roster-hero">
+        <h1>选本命，调开局热度</h1>
+        <p>热度每局会轻微浮动，也可用 +/- 自定义；本命是开录默认机位焦点。</p>
       </div>
-
-      <div class="roster-stats-bar">
-        <div class="stat-item">
-          <span class="stat-label">总成员</span>
-          <span class="stat-value">{{ characters.length }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">平均人气</span>
-          <span class="stat-value">{{ averagePopularity }}%</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">制作状态</span>
-          <span class="stat-value pulse">READY</span>
-        </div>
+      <div class="roster-stats" aria-label="排班概览">
+        <div><span>成员</span><strong>{{ characters.length }}</strong></div>
+        <div><span>均热</span><strong>{{ averagePopularity }}%</strong></div>
+        <div><span>本命</span><strong class="ready">{{ selectedBiasCharacter?.name || '未选' }}</strong></div>
       </div>
+    </header>
+
+    <div class="roster-list">
+      <article
+        v-for="character in characters"
+        :key="character.id"
+        class="char-row"
+        :class="{ selected: selectedBiasId === character.id }"
+        role="button"
+        tabindex="0"
+        :aria-pressed="selectedBiasId === character.id"
+        @click="selectBias(character.id)"
+        @keydown.enter.prevent="selectBias(character.id)"
+        @keydown.space.prevent="selectBias(character.id)"
+      >
+        <div class="char-avatar">
+          <img
+            :src="getImageUrl(character.image)"
+            :alt="character.name"
+            loading="lazy"
+            decoding="async"
+          />
+          <span v-if="selectedBiasId === character.id" class="bias-badge">本命</span>
+        </div>
+        <div class="char-meta">
+          <strong>{{ character.name }}</strong>
+          <span>{{ character.personality }}</span>
+        </div>
+        <div
+          class="pop-adjuster"
+          :aria-label="`${character.name} 开局热度`"
+          @click.stop
+        >
+          <button
+            class="adjust-btn"
+            type="button"
+            :disabled="character.popularity <= 50"
+            :aria-label="`降低 ${character.name} 热度`"
+            @click="onAdjust(character.id, -2, $event)"
+          >
+            −
+          </button>
+          <span class="pop-value">{{ character.popularity }}</span>
+          <button
+            class="adjust-btn"
+            type="button"
+            :disabled="character.popularity >= 95"
+            :aria-label="`提高 ${character.name} 热度`"
+            @click="onAdjust(character.id, 2, $event)"
+          >
+            +
+          </button>
+        </div>
+      </article>
     </div>
 
-    <div class="roster-grid-section">
-      <div class="roster-grid-refined">
-        <div v-for="character in characters" :key="character.id" class="char-card-premium">
-          <div class="char-frame">
-            <div class="image-container">
-              <img :src="getImageUrl(character.image)" :alt="character.name" class="main-img-fit" loading="lazy" decoding="async" />
-              <div class="vignette-overlay"></div>
-            </div>
-          </div>
-
-          <div class="char-info-overlay">
-            <div class="char-name-premium">{{ character.name }}</div>
-            <div class="char-role-mini">{{ character.personality }}</div>
-            <div class="trait-row">
-              <span v-for="trait in SGetCharacterTraits(character.id)" :key="trait.key" class="trait-chip">
-                {{ trait.name }}
-              </span>
-            </div>
-          </div>
-
-          <div class="char-controls-premium">
-            <div class="pop-metrics">
-              <span class="m-label">调节人气</span>
-              <span class="m-value">{{ character.popularity }}%</span>
-            </div>
-            <div class="pop-adjuster-premium">
-              <button @click="emit('adjustPopularity', character.id, -1)" class="adjust-btn minus">
-                <span class="icon">-</span>
-              </button>
-              <div class="progress-mini-track">
-                <div class="progress-mini-fill" :style="{ width: character.popularity + '%' }"></div>
-              </div>
-              <button @click="emit('adjustPopularity', character.id, 1)" class="adjust-btn plus">
-                <span class="icon">+</span>
-              </button>
-            </div>
-          </div>
-        </div>
+    <div class="roster-dock">
+      <div>
+        <span>本期本命</span>
+        <strong>{{ selectedBiasCharacter?.name || '未选择' }}</strong>
       </div>
-    </div>
-
-    <div class="roster-footer-refined">
-      <p>© 2026 偶像制作人模拟器 / 数据仅供娱乐模拟</p>
+      <button type="button" @click="startWithBias">带本命开录</button>
     </div>
   </div>
 </template>

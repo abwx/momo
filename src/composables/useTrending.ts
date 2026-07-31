@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue';
 import type { TrendingTopic } from '../data/type/TrendingTopic';
+import { getRandomValue } from '../utils/random';
 
 export interface UseTrendingOptions {
   isActive: () => boolean;
@@ -43,9 +44,9 @@ export function useTrending(options: UseTrendingOptions) {
   }
 
   function createTrendingTopic(name: string): TrendingTopic {
-    const isPositive = Math.random() > 0.4;
+    const isPositive = getRandomValue() > 0.4;
     return {
-      id: Math.random().toString(36).slice(2, 11),
+      id: Math.floor(getRandomValue() * 36 ** 9).toString(36).padStart(9, '0'),
       name,
       type: isPositive ? 'POSITIVE' : 'NEGATIVE',
       cost: isPositive ? 20000 : 35000,

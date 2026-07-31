@@ -8,8 +8,7 @@ const completeContext: GameAchievementContext = {
   topBondValue: 82,
   qteSuccessCount: 3,
   budget: 40000,
-  completedWorkspaces: 4,
-  followUpEventCount: 2,
+  completedEpisodeCount: 4,
 };
 
 describe('SGameAchievements', () => {
@@ -26,6 +25,6 @@ describe('SGameAchievements', () => {
   });
 
   it('reports the configured achievement count', () => {
-    expect(SGetTotalAchievementCount()).toBe(7);
+    expect(SGetTotalAchievementCount()).toBe(6);
   });
 });

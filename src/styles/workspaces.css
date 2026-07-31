@@ -1,0 +1,326 @@
+/* Workspaces — fan / CP / report */
+
+.workspace-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.workspace-head h2 {
+  margin: 0 0 0.3rem;
+  font-size: clamp(1.2rem, 5vw, 1.35rem);
+  letter-spacing: -0.03em;
+}
+
+.workspace-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.fan-loop-card {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid rgba(225, 29, 72, 0.4);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.18), rgba(255, 250, 247, 0.04));
+  box-shadow: 0 8px 20px rgba(225, 29, 72, 0.12);
+}
+
+.fan-loop-card span {
+  color: var(--rose);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.fan-loop-card strong {
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fan-loop-card small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.faction-grid,
+.closure-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.faction-card,
+.closure-card {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.75rem;
+  border: 1.5px solid var(--soft-line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.faction-card span,
+.closure-card span,
+.closure-card small {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.faction-card strong,
+.closure-card strong {
+  font-size: 1.12rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.faction-card.anti {
+  border-color: color-mix(in srgb, var(--red) 35%, var(--soft-line));
+  background: rgba(225, 29, 72, 0.1);
+}
+
+.faction-card.anti strong {
+  color: var(--red);
+}
+
+.workspace-actions {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.workspace-actions button {
+  min-height: var(--touch);
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  text-align: left;
+  font-weight: 800;
+  font-size: 0.9rem;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease), transform 0.15s var(--ease);
+}
+
+.workspace-actions button:active {
+  border-color: var(--red);
+  background: rgba(225, 29, 72, 0.12);
+  transform: translate(1px, 1px);
+}
+
+.formula-note,
+.bond-ticker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.bond-candidate-grid {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.bond-candidate {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 52px;
+  padding: 0.3rem 0.45rem 0.3rem 0.3rem;
+  border: 1.5px solid var(--soft-line);
+  border-radius: 11px;
+  background: var(--surface-strong);
+  text-align: left;
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
+}
+
+.bond-candidate.selected {
+  border-color: var(--red);
+  background: rgba(225, 29, 72, 0.1);
+  box-shadow: 0 8px 18px rgba(225, 29, 72, 0.22);
+}
+
+.bond-candidate img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  object-position: center 12%;
+}
+
+.bond-meta {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.bond-meta strong {
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bond-meta small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bond-stage {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 250, 247, 0.05) 0%, rgba(255, 250, 247, 0.03) 100%);
+  box-shadow: var(--elev);
+}
+
+.bond-stage-title {
+  font-weight: 800;
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+}
+
+.bond-score {
+  color: var(--blue);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-feed {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.class-report {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.15rem;
+}
+
+.class-report-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.class-report-head strong {
+  font-size: 0.98rem;
+}
+
+.class-report-head small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.class-roster-grid,
+.assessment-rank-list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.class-roster {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--soft-line);
+  border-left: 3px solid #24855a;
+  background: rgba(15, 122, 90, 0.16);
+}
+
+.class-roster.class2 {
+  border-left-color: var(--blue);
+  background: rgba(91, 143, 222, 0.16);
+}
+
+.class-roster strong {
+  font-size: 0.8rem;
+}
+
+.class-roster span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.assessment-rank-list {
+  max-height: 24rem;
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.assessment-rank {
+  display: grid;
+  grid-template-columns: 1.7rem minmax(0, 1fr) auto auto;
+  gap: 0.4rem;
+  align-items: center;
+  min-height: 2.3rem;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--soft-line);
+  font-size: 0.8rem;
+}
+
+.assessment-rank > span,
+.assessment-rank b {
+  font-variant-numeric: tabular-nums;
+}
+
+.assessment-rank > span,
+.assessment-rank em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.assessment-rank em.CLASS1 {
+  color: #176746;
+}
+
+.assessment-rank em.CLASS2 {
+  color: var(--blue);
+}
+
+.ledger-feed span {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--soft-line);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.82rem;
+}
+
+.closure-board.compact {
+  grid-template-columns: 1fr;
+}
+
+.closure-card {
+  gap: 0.18rem;
+}
+
+.fans-workspace .faction-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fans-workspace .faction-card.anti {
+  grid-column: span 2;
+}
+
+@media (max-width: 380px) {
+  .fans-workspace .faction-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fans-workspace .faction-card.anti {
+    grid-column: span 1;
+  }
+}

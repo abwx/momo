@@ -4,8 +4,7 @@ export interface GameAchievementContext {
   topBondValue: number;
   qteSuccessCount: number;
   budget: number;
-  completedWorkspaces: number;
-  followUpEventCount: number;
+  completedEpisodeCount: number;
 }
 
 export interface GameAchievement {

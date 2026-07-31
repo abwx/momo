@@ -2,8 +2,8 @@
 import type { Character } from '../../data/characters';
 import type { SBondPair } from '../../baseLib/serviceLib/type/SBondPair';
 import type { SBondProjectKey } from '../../baseLib/serviceLib/type/SStudioLedger';
-import { SGetCharacterTraitNames } from '../../baseLib/serviceLib/SCharacterTraits';
 import { getImageUrl } from '../../utils/imageUrl';
+import VcRangeStepper from './VcRangeStepper.vue';
 
 defineProps<{
   bondCandidateList: Character[];
@@ -21,19 +21,13 @@ const emit = defineEmits<{
   setIntensity: [value: number];
   startProject: [type: SBondProjectKey];
 }>();
-
-function emitRangeValue(event: Event) {
-  const input = event.target as HTMLInputElement;
-  emit('setIntensity', Number(input.value));
-}
 </script>
 
 <template>
   <section class="workspace-panel bonds-workspace">
     <div class="workspace-head">
-      <span class="workspace-kicker">PAIR PLAN</span>
-      <h2>羁绊企划室</h2>
-      <p>选择两位成员安排舞台、直播或 Vlog。羁绊会成长，并影响双人事件收益。</p>
+      <h2>开嗑营业室</h2>
+      <p>锁两位成员，再砸同框/营业/宿舍糖。</p>
     </div>
     <div class="bond-candidate-grid">
       <button
@@ -44,30 +38,46 @@ function emitRangeValue(event: Event) {
         @click="emit('toggleCandidate', character)"
       >
         <img :src="getImageUrl(character.image)" :alt="character.name" loading="lazy" decoding="async" />
-        <span>{{ character.name }}</span>
-        <small>{{ character.personality }}</small>
-        <small>{{ SGetCharacterTraitNames(character.id) }}</small>
+        <span class="bond-meta">
+          <strong>{{ character.name }}</strong>
+          <small>{{ character.personality }}</small>
+        </span>
       </button>
     </div>
     <div class="bond-stage">
       <div class="bond-stage-title">
-        {{ selectedBondCharacters.length === 2 ? `${selectedBondCharacters[0].name} × ${selectedBondCharacters[1].name}` : '请选择两位成员' }}
+        {{
+          selectedBondCharacters.length === 2
+            ? `${selectedBondCharacters[0].name} × ${selectedBondCharacters[1].name}`
+            : '先锁两位再开嗑'
+        }}
       </div>
-      <div class="bond-score">当前羁绊 {{ selectedBondCharacters.length === 2 ? selectedBondValue : 0 }}</div>
+      <div class="bond-score">
+        当前嗑点 {{ selectedBondCharacters.length === 2 ? selectedBondValue : 0 }}
+      </div>
+      <p class="formula-note">每次营业都会给这两位成员增加考核分，也会抬高双人内容的成片表现。</p>
       <label class="workspace-slider">
-        <span>企划规格 {{ bondProjectIntensity }} 档</span>
-        <div class="range-stepper">
-          <button type="button" @click="emit('changeIntensity', -1)">-</button>
-          <input :value="bondProjectIntensity" @input="emitRangeValue" type="range" min="1" max="4" step="1" />
-          <button type="button" @click="emit('changeIntensity', 1)">+</button>
-        </div>
+        <span>营业强度 {{ bondProjectIntensity }} 档</span>
+        <VcRangeStepper
+          :model-value="bondProjectIntensity"
+          @update:model-value="emit('setIntensity', $event)"
+          @change="emit('changeIntensity', $event)"
+        />
       </label>
       <div class="workspace-actions">
-        <button @click="emit('startProject', 'STAGE')">合作舞台 ¥{{ (bondProjectBaseCost.STAGE * bondProjectIntensity).toLocaleString() }}</button>
-        <button @click="emit('startProject', 'LIVE')">双人直播 ¥{{ (bondProjectBaseCost.LIVE * bondProjectIntensity).toLocaleString() }}</button>
-        <button @click="emit('startProject', 'VLOG')">宿舍 Vlog ¥{{ (bondProjectBaseCost.VLOG * bondProjectIntensity).toLocaleString() }}</button>
+        <button @click="emit('startProject', 'STAGE')">
+          同框舞台 ¥{{ (bondProjectBaseCost.STAGE * bondProjectIntensity).toLocaleString() }}
+        </button>
+        <button @click="emit('startProject', 'LIVE')">
+          双人营业 ¥{{ (bondProjectBaseCost.LIVE * bondProjectIntensity).toLocaleString() }}
+        </button>
+        <button @click="emit('startProject', 'VLOG')">
+          宿舍糖点 ¥{{ (bondProjectBaseCost.VLOG * bondProjectIntensity).toLocaleString() }}
+        </button>
       </div>
     </div>
-    <p v-if="topBond" class="bond-ticker">当前最强羁绊: {{ topBond.names }} / {{ topBond.value }}</p>
+    <p v-if="topBond" class="bond-ticker">
+      本季最强 CP：{{ topBond.names }} / 嗑点 {{ topBond.value }}
+    </p>
   </section>
 </template>

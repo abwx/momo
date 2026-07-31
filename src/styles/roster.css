@@ -1,0 +1,234 @@
+/* Roster ------------------------------------------------------------------ */
+
+.roster-view {
+  min-height: 100dvh;
+  max-width: 100%;
+  padding: 0.75rem 0.7rem calc(5.6rem + var(--safe-b));
+  overflow-x: clip;
+  background:
+    radial-gradient(ellipse 70% 35% at 100% 0%, rgba(225, 29, 72, 0.18), transparent 50%),
+    var(--bg);
+}
+
+.roster-header {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 0.6rem;
+}
+
+.roster-hero {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.roster-hero h1 {
+  margin: 0 0 0.18rem;
+  font-size: clamp(1.22rem, 5vw, 1.42rem);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.roster-hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.roster-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  overflow: hidden;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--line);
+  box-shadow: var(--elev);
+}
+
+.roster-stats > div {
+  display: grid;
+  gap: 0.08rem;
+  padding: 0.45rem 0.3rem;
+  background: var(--card);
+  text-align: center;
+}
+
+.roster-stats span {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+
+.roster-stats strong {
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-stats .ready {
+  color: var(--red);
+}
+
+.roster-list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.char-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 64px;
+  padding: 0.32rem 0.4rem 0.32rem 0.32rem;
+  border: 1.5px solid var(--soft-line);
+  border-radius: 11px;
+  background: var(--card);
+  box-shadow: var(--elev);
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
+}
+
+.char-row.selected {
+  border-color: var(--red);
+  background: rgba(225, 29, 72, 0.1);
+  box-shadow: 0 8px 18px rgba(225, 29, 72, 0.22);
+}
+
+.char-avatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #1c1412;
+}
+
+.char-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 12%;
+}
+
+.bias-badge {
+  position: absolute;
+  left: 0.25rem;
+  bottom: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.08rem 0.3rem;
+  border-radius: 999px;
+  color: #fffaf7;
+  background: var(--red);
+  font-size: 0.55rem;
+  font-weight: 700;
+}
+
+.char-meta {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.char-meta strong {
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.char-meta span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pop-adjuster {
+  display: grid;
+  grid-template-columns: 32px 2.4rem 32px;
+  gap: 0.15rem;
+  align-items: center;
+}
+
+.adjust-btn {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-weight: 800;
+  line-height: 1;
+  font-size: 0.95rem;
+}
+
+.adjust-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pop-value {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--blue);
+}
+
+.roster-dock {
+  position: fixed;
+  z-index: var(--z-dock);
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: max(0.55rem, var(--safe-b));
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.6rem 0.7rem;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--elev-strong);
+}
+
+.roster-dock span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.roster-dock strong {
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+}
+
+.roster-dock button {
+  min-width: 7.2rem;
+  min-height: 44px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #ff4d6d, var(--red));
+  box-shadow: var(--elev);
+  font-weight: 800;
+}
+
+@media (min-width: 640px) {
+  .roster-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

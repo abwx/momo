@@ -9,13 +9,10 @@ defineProps<{
   topCharacter: Character;
   highlightedCharIds: Set<string>;
   trendingQueue: TrendingTopic[];
-  budget: number;
-  supportCost: number;
 }>();
 
 const emit = defineEmits<{
   close: [];
-  supportCharacter: [character: Character];
 }>();
 
 function isTrending(character: Character, trendingQueue: TrendingTopic[]) {
@@ -30,7 +27,7 @@ function isTrending(character: Character, trendingQueue: TrendingTopic[]) {
         <div class="dashboard-header">
           <div class="header-main">
             <h3>实时人气看板</h3>
-            <p class="dashboard-instruction">点击应援可消耗 ¥{{ supportCost.toLocaleString() }} 提升成员人气。</p>
+            <p class="dashboard-instruction">实时查看镜头高光和热搜对成员人气的影响。</p>
           </div>
           <button @click="emit('close')" class="close-dash-btn">关闭</button>
         </div>
@@ -56,17 +53,7 @@ function isTrending(character: Character, trendingQueue: TrendingTopic[]) {
                 <div class="dash-pop-progress" :style="{ width: Math.min(char.popularity, 120) + '%' }"></div>
               </div>
             </div>
-            <div class="dash-ops">
-              <button
-                @click.stop="emit('supportCharacter', char)"
-                class="heart-btn"
-                :class="{ insufficient: budget < supportCost }"
-                :title="`应援提升人气 (¥${supportCost.toLocaleString()})`"
-              >
-                应援
-              </button>
-              <div class="dash-num">{{ char.popularity }}</div>
-            </div>
+            <div class="dash-num">{{ char.popularity }}</div>
           </div>
         </div>
       </div>

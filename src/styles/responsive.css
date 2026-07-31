@@ -1,0 +1,230 @@
+﻿/* Wider phones / tablets -------------------------------------------------- */
+
+@media (min-width: 640px) {
+  .landing-panel {
+    max-width: 520px;
+    padding: 1.7rem 1.5rem calc(1.7rem + var(--safe-b));
+  }
+
+  .landing-brand {
+    font-size: clamp(3.6rem, 10vw, 4.8rem);
+  }
+
+  .spotlight-cast {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .spotlight-card {
+    border-radius: 12px;
+  }
+
+  .cast-name {
+    font-size: 0.88rem;
+  }
+
+  .camera-lanes {
+    grid-template-columns: 1fr;
+  }
+
+  .episode-map {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .roster-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .faction-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bond-candidate-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .landing-view {
+    display: grid;
+    grid-template-columns: minmax(400px, 0.92fr) minmax(440px, 1.08fr);
+    align-items: stretch;
+    padding: 1.25rem;
+    gap: 1.1rem;
+    background:
+      radial-gradient(ellipse at 12% 10%, rgba(225, 29, 72, 0.22), transparent 36%),
+      #0a0608;
+  }
+
+  .landing-cast {
+    position: relative;
+    inset: auto;
+    order: 2;
+    height: calc(100dvh - 2.5rem);
+    padding: 0;
+    gap: 0.55rem;
+  }
+
+  .landing-scrim {
+    display: none;
+  }
+
+  .landing-panel {
+    order: 1;
+    justify-content: center;
+    max-width: none;
+    gap: 0.85rem;
+    padding: 2.2rem 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    background: rgba(12, 7, 10, 0.78);
+    backdrop-filter: blur(18px) saturate(1.15);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.1) inset,
+      0 28px 80px rgba(0, 0, 0, 0.35);
+  }
+
+  .landing-actions {
+    max-width: 360px;
+  }
+
+  .producer-hub {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.35rem 1.25rem 2rem;
+  }
+
+  .season-poster {
+    padding: 1.45rem;
+  }
+
+  .season-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .roster-view,
+  .game-view,
+  .end-screen {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .roster-hero {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .roster-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .roster-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .roster-dock {
+    position: static;
+    margin-top: 1rem;
+    backdrop-filter: none;
+  }
+
+  .control-bar {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .control-actions {
+    width: auto;
+  }
+
+  .icon-btn .btn-text {
+    display: inline;
+  }
+
+  .studio-nav {
+    width: min(560px, calc(100% - 2rem));
+  }
+
+  .live-cockpit {
+    position: static;
+  }
+
+  .settlement-dual-layout {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+
+  .season-story {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 1.1rem;
+  }
+
+  .season-story > header,
+  .story-route,
+  .story-choice {
+    grid-column: 1 / -1;
+  }
+
+  .analysis-grid-refined,
+  .medals-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .landing-brand {
+    font-size: 2.85rem;
+  }
+
+  .producer-hub {
+    padding-inline: 0.6rem;
+    gap: 0.65rem;
+  }
+
+  .season-poster {
+    padding: 0.85rem 0.8rem 0.9rem;
+  }
+
+  .season-poster h1 {
+    font-size: 1.45rem;
+  }
+
+  .spotlight-cast {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .cast-name {
+    bottom: 1.1rem;
+    font-size: 0.7rem;
+  }
+
+  .camera-lanes {
+    grid-template-columns: 1fr;
+  }
+
+  .hub-panel-tabs button {
+    font-size: 0.78rem;
+    gap: 0.15rem;
+  }
+
+  .roster-grid,
+  .bond-candidate-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .icon-btn .btn-text {
+    display: none;
+  }
+
+  .control-bar-main {
+    gap: 0.28rem;
+  }
+
+  .episode-resources > span {
+    padding-inline: 0.25rem;
+  }
+
+  .episode-resources strong {
+    font-size: 0.8rem;
+  }
+}

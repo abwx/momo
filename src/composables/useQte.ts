@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import type { QTEScenario, QTEType } from '../data/type/QTEScenario';
+import { getRandomValue } from '../utils/random';
 
 export interface UseQteOptions {
   scenarios: QTEScenario[];
@@ -29,7 +30,7 @@ export function useQte(options: UseQteOptions) {
   }
 
   function startQTE() {
-    const scenario = options.scenarios[Math.floor(Math.random() * options.scenarios.length)];
+    const scenario = options.scenarios[Math.floor(getRandomValue() * options.scenarios.length)];
     currentQTEScenario.value = scenario;
     qteType.value = scenario.type;
     qteActive.value = true;

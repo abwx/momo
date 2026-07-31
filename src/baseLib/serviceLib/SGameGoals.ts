@@ -2,25 +2,31 @@ import { GAME_GOALS } from '../../data/gameGoals';
 import type { GameGoal, GameGoalContext, GameGoalResult } from '../../data/type/GameGoal';
 import { shuffleList } from '../../utils/random';
 
-export function SCreateGameGoalIds(count = 3): string[] {
+export function SCreateGameGoalIds(count = 4): string[] {
   return shuffleList(GAME_GOALS).slice(0, count).map(goal => goal.id);
 }
 
-export function SGetGameGoalResults(ids: string[], context: GameGoalContext): GameGoalResult[] {
-  return ids.map(id => SCreateGameGoalResult(id, context)).filter(Boolean) as GameGoalResult[];
+export function SGetGameGoalResults(ids: string[], context: GameGoalContext, completedGoalIds = new Set<string>()): GameGoalResult[] {
+  return ids.map(id => SCreateGameGoalResult(id, context, completedGoalIds)).filter(Boolean) as GameGoalResult[];
 }
 
 export function SGetCompletedGameGoalCount(results: GameGoalResult[]): number {
   return results.filter(result => result.isComplete).length;
 }
 
-function SCreateGameGoalResult(id: string, context: GameGoalContext): GameGoalResult | null {
+function SCreateGameGoalResult(id: string, context: GameGoalContext, completedGoalIds: Set<string>): GameGoalResult | null {
   const goal = GAME_GOALS.find(item => item.id === id);
   if (!goal) return null;
-  return SBuildGameGoalResult(goal, Math.max(0, goal.getValue(context)));
+  return SBuildGameGoalResult(goal, Math.max(0, goal.getValue(context)), context, completedGoalIds);
 }
 
-function SBuildGameGoalResult(goal: GameGoal, value: number): GameGoalResult {
-  const progress = Math.min(100, Math.round((value / goal.target) * 100));
-  return { ...goal, value, progress, isComplete: value >= goal.target, valueText: goal.formatValue(value) };
+function SBuildGameGoalResult(goal: GameGoal, value: number, context: GameGoalContext, completedGoalIds: Set<string>): GameGoalResult {
+  const isLockedComplete = completedGoalIds.has(goal.id);
+  const isComplete = isLockedComplete || value >= goal.target && SCanCompleteGoal(goal, context);
+  const progress = isComplete ? 100 : Math.min(100, Math.round((value / goal.target) * 100));
+  return { ...goal, value, progress, isComplete, isLockedComplete, valueText: goal.formatValue(value) };
+}
+
+function SCanCompleteGoal(goal: GameGoal, context: GameGoalContext): boolean {
+  return !goal.isEndOnly || context.isSeasonComplete;
 }

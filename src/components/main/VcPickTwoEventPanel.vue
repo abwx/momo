@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { Character } from '../../data/characters';
+import type { PickTwoRole } from '../../data/type/GameEvent';
 import { getImageUrl } from '../../utils/imageUrl';
 
-defineProps<{
+const props = defineProps<{
   candidates: Character[];
   selectedPair: Character[];
   selectedPairBondValue: number;
+  pairRole?: PickTwoRole;
 }>();
 
 const emit = defineEmits<{
@@ -14,37 +17,42 @@ const emit = defineEmits<{
 }>();
 
 function isSelected(character: Character, selectedPair: Character[]) {
-  return selectedPair.some(item => item.id === character.id);
+  return selectedPair.some((item) => item.id === character.id);
 }
+
+const pairMetricLabel = computed(() => props.pairRole === 'TEAM' ? '默契值' : '嗑点');
 </script>
 
 <template>
-  <div>
-    <p class="pick-two-hint">请从人气最高的前五名中选择两位成员（已选 {{ selectedPair.length }} / 2）</p>
-    <p v-if="selectedPair.length === 2" class="bond-preview">
-      {{ selectedPair[0].name }} × {{ selectedPair[1].name }}
-      当前羁绊：{{ selectedPairBondValue }}
+  <div class="pick-two-board">
+    <p class="pick-two-hint">
+      从人气前五中选两人（已选 {{ selectedPair.length }} / 2）
     </p>
-    <div class="roster mini">
-      <div
+    <p v-if="selectedPair.length === 2" class="bond-preview">
+      {{ selectedPair[0].name }} × {{ selectedPair[1].name }} · {{ pairMetricLabel }} {{ selectedPairBondValue }}
+    </p>
+    <div class="pick-two-grid">
+      <button
         v-for="character in candidates"
         :key="character.id"
-        class="char-card-premium mini-selectable"
+        type="button"
+        class="pick-card"
         :class="{ selected: isSelected(character, selectedPair) }"
         @click="emit('toggleSelection', character)"
       >
-        <div class="char-frame">
-          <div class="image-container">
-            <img :src="getImageUrl(character.image)" :alt="character.name" class="main-img-fit" loading="lazy" decoding="async" />
-            <div class="vignette-overlay"></div>
-          </div>
-          <div v-if="isSelected(character, selectedPair)" class="selection-indicator">已选择</div>
-        </div>
-        <div class="char-info-overlay mini">
-          <div class="char-name-premium mini">{{ character.name }}</div>
-        </div>
-      </div>
+        <img :src="getImageUrl(character.image)" :alt="character.name" loading="lazy" decoding="async" />
+        <span class="pick-meta">
+          <strong>{{ character.name }}</strong>
+          <small>{{ character.personality }} · {{ character.popularity }} 热度</small>
+        </span>
+      </button>
     </div>
-    <button @click="emit('submit')" :disabled="selectedPair.length !== 2" class="start-button centered">确认人选</button>
+    <button
+      class="primary-btn"
+      :disabled="selectedPair.length !== 2"
+      @click="emit('submit')"
+    >
+      确认人选
+    </button>
   </div>
 </template>

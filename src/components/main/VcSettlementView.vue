@@ -1,176 +1,92 @@
 <script setup lang="ts">
-import type { Character } from '../../data/characters';
-import type {
-  EventHistoryItem,
-  ProducerAnalysisItem,
-  ProducerMedal,
-  ProducerTitle,
-} from '../../data/type/SettlementReport';
-import type { GameGoalResult } from '../../data/type/GameGoal';
-import type { GameAchievementResult } from '../../data/type/GameAchievement';
-import type { SStudioClosure } from '../../baseLib/serviceLib/type/SStudioLedger';
-import { getImageUrl } from '../../utils/imageUrl';
+import { Download, RotateCcw } from 'lucide-vue-next';
+import type { ProducerTitle } from '../../data/type/SettlementReport';
+import type { SProducerIdentity } from '../../baseLib/serviceLib/SGameNarrative';
+import type { SSeasonRecap } from '../../baseLib/serviceLib/type/SSeasonRecap';
 
-defineProps<{
+const props = defineProps<{
   producerTitle: ProducerTitle;
-  settlementReportId: string;
-  producerMedals: ProducerMedal[];
-  studioClosure: SStudioClosure[];
-  producerAnalysis: ProducerAnalysisItem[];
-  eventHistory: EventHistoryItem[];
-  isHistoryExpanded: boolean;
-  sortedCharacters: Character[];
-  initialPopularityMap: Record<string, number>;
   isGeneratingPoster: boolean;
-  gameGoals: GameGoalResult[];
-  achievements: GameAchievementResult[];
+  producerIdentity: SProducerIdentity;
+  seasonRecap: SSeasonRecap;
+  biasName: string;
+  biasBreakthrough: boolean;
+  finalClassLabel: string;
 }>();
 
-const emit = defineEmits<{
-  toggleHistory: [];
-  sharePoster: [];
-  restart: [];
-}>();
-
+const emit = defineEmits<{ sharePoster: []; restart: [] }>();
 </script>
 
 <template>
-  <div class="end-screen">
-    <div class="settlement-container-refined">
-      <div class="magazine-texture"></div>
-      <div class="bg-decoration circle-1"></div>
-      <div class="bg-decoration circle-2"></div>
+  <main class="end-screen" aria-label="赛季结算报告">
+    <div class="settlement-stage">
+      <header class="settlement-stage-head">
+        <span>突围模拟器</span>
+        <span>SEASON COMPLETE</span>
+      </header>
 
-      <div class="grade-section-floating">
-        <div
-          class="grade-circle"
-          :class="{ 'high-grade': producerTitle.grade === 'SSS' || producerTitle.grade === 'S' }"
-          :style="{ borderColor: producerTitle.gradeColor }"
-        >
-          <span class="grade-label">综合评定</span>
-          <span class="grade-value" :style="{ color: producerTitle.gradeColor }">{{ producerTitle.grade }}</span>
-          <div class="grade-stamp">官方认证</div>
+      <section class="settlement-report" aria-labelledby="settlement-title">
+        <div class="report-masthead">
+          <p>四期收官</p>
+          <h1 id="settlement-title">制作评级和本命席位，都有答案</h1>
         </div>
-      </div>
 
-      <div class="settlement-header-refined">
-        <div class="producer-badge-refined" :style="{ backgroundColor: producerTitle.color }">制作人评估报告</div>
-        <h1 class="honor-title-refined">{{ producerTitle.name }}</h1>
-        <p class="honor-subtitle-refined">本期录制综合表现评定报告 / 核心娱乐数据中心出品</p>
-        <div class="report-id">NO. {{ settlementReportId }}</div>
-      </div>
-
-      <div v-if="producerMedals.length > 0" class="medals-row">
-        <div v-for="medal in producerMedals" :key="medal.title" class="medal-card">
-          <span class="medal-icon">{{ medal.icon }}</span>
-          <div class="medal-info">
-            <span class="medal-title">{{ medal.title }}</span>
-            <span class="medal-desc">{{ medal.desc }}</span>
+        <div class="report-hero">
+          <div class="grade-stamp" :style="{ color: producerTitle.gradeColor, borderColor: producerTitle.gradeColor }">
+            <span>综合评级</span>
+            <strong>{{ producerTitle.grade }}</strong>
+            <small>OFFICIAL GRADE</small>
+          </div>
+          <div class="report-identity">
+            <span class="report-kicker">本季制作人</span>
+            <h2>{{ producerTitle.name }}</h2>
+            <p>{{ producerIdentity.detail }}</p>
           </div>
         </div>
-      </div>
 
-      <div v-if="gameGoals.length" class="settlement-goals-section">
-        <h3 class="section-title-refined">本局制作目标</h3>
-        <div class="settlement-goal-board">
-          <div v-for="goal in gameGoals" :key="goal.id" class="settlement-goal-card" :class="{ complete: goal.isComplete }">
-            <span>{{ goal.title }}</span>
-            <strong>{{ goal.isComplete ? '达成' : goal.valueText }}</strong>
-            <p>{{ goal.desc }}</p>
+        <section class="bias-outcome" :class="{ breakthrough: biasBreakthrough }" aria-label="本命突围结果">
+          <span>本命席位</span>
+          <strong>{{ biasBreakthrough ? `${biasName} 突围成功` : `${biasName} 暂未进入一班` }}</strong>
+          <p>赛季收官时位于{{ finalClassLabel }}。{{ biasBreakthrough ? '这一季的镜头和考核都接住了。' : '资源会变少，但下一季仍有升班机会。' }}</p>
+        </section>
+
+        <section class="season-story" aria-label="本季制作叙事">
+          <article class="story-route">
+            <span>{{ seasonRecap.route.label }}</span>
+            <h3>{{ seasonRecap.route.title }}</h3>
+            <p>{{ seasonRecap.route.detail }}</p>
+          </article>
+          <div class="story-consequences">
+            <article class="story-gain">
+              <span>{{ seasonRecap.gain.label }}</span>
+              <strong>{{ seasonRecap.gain.title }}</strong>
+              <p>{{ seasonRecap.gain.detail }}</p>
+            </article>
+            <article class="story-cost">
+              <span>{{ seasonRecap.cost.label }}</span>
+              <strong>{{ seasonRecap.cost.title }}</strong>
+              <p>{{ seasonRecap.cost.detail }}</p>
+            </article>
           </div>
-        </div>
-      </div>
+          <article class="story-choice">
+            <span>{{ seasonRecap.choice.label }}</span>
+            <strong>{{ seasonRecap.choice.title }}</strong>
+            <p>{{ seasonRecap.choice.detail }}</p>
+          </article>
+        </section>
+      </section>
 
-      <div v-if="achievements.length" class="settlement-achievements-section">
-        <h3 class="section-title-refined">制作档案解锁</h3>
-        <div class="settlement-achievement-board">
-          <div v-for="achievement in achievements" :key="achievement.id" class="settlement-achievement-card" :class="{ fresh: achievement.isNew }">
-            <span>{{ achievement.isNew ? 'NEW' : 'ARCHIVE' }}</span>
-            <strong>{{ achievement.title }}</strong>
-            <p>{{ achievement.desc }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="settlement-closure-section">
-        <h3 class="section-title-refined">制作闭环复盘</h3>
-        <div class="closure-board">
-          <div v-for="item in studioClosure" :key="item.key" class="closure-card" :class="item.key">
-            <span>{{ item.title }}</span>
-            <strong>{{ item.actions }} 次 / ¥{{ item.spend.toLocaleString() }}</strong>
-            <p>{{ item.result }}</p>
-            <small>{{ item.detail }}</small>
-          </div>
-        </div>
-      </div>
-
-      <div class="analysis-grid-refined">
-        <div v-for="(item, index) in producerAnalysis" :key="index" class="analysis-card-refined" :style="{ animationDelay: (index * 0.1) + 's' }">
-          <div class="analysis-card-header">
-            <span class="analysis-card-icon">{{ index + 1 }}</span>
-            <span class="analysis-card-label">{{ item.label }}</span>
-          </div>
-          <div class="analysis-card-value">{{ item.value }}</div>
-          <p class="analysis-card-detail">{{ item.detail }}</p>
-        </div>
-      </div>
-
-      <div class="settlement-dual-layout">
-        <div class="history-box-refined">
-          <h3 class="section-title-refined">录制高光时刻回顾</h3>
-          <div class="timeline-container-wrapper" :class="{ 'is-collapsed': !isHistoryExpanded && eventHistory.length > 3 }">
-            <div class="timeline-refined">
-              <div v-for="(item, index) in (isHistoryExpanded ? eventHistory : eventHistory.slice(0, 3))" :key="index" class="timeline-item-refined">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                  <div class="timeline-header">
-                    <span class="timeline-episode">第 {{ index + 1 }} 期</span>
-                    <span class="timeline-title">{{ item.event.title }}</span>
-                  </div>
-                  <p class="timeline-result">{{ item.result }}</p>
-                </div>
-              </div>
-            </div>
-            <div v-if="!isHistoryExpanded && eventHistory.length > 3" class="timeline-fade-mask"></div>
-          </div>
-          <button v-if="eventHistory.length > 3" @click="emit('toggleHistory')" class="expand-toggle-btn">
-            {{ isHistoryExpanded ? '收起回顾' : '展开全部回顾' }}
-          </button>
-        </div>
-
-        <div class="ranking-box-refined">
-          <h3 class="section-title-refined">成员人气最终看板</h3>
-          <div class="final-ranking-list">
-            <div v-for="(char, index) in sortedCharacters" :key="char.id" class="final-rank-item-refined" :style="{ animationDelay: (index * 0.05) + 's' }">
-              <div class="final-rank-num-refined" :class="{ 'top-3': index < 3 }">{{ index + 1 }}</div>
-              <div class="final-rank-frame">
-                <img :src="getImageUrl(char.image)" :alt="char.name" class="final-rank-img-premium" loading="lazy" decoding="async" />
-                <div class="vignette-mini"></div>
-              </div>
-              <div class="final-rank-info-refined">
-                <div class="final-rank-header">
-                  <span class="final-rank-name-refined">{{ char.name }}</span>
-                  <span v-if="char.popularity > initialPopularityMap[char.id]" class="pop-growth-tag">
-                    +{{ char.popularity - initialPopularityMap[char.id] }}
-                  </span>
-                </div>
-                <div class="pop-bar-bg-refined">
-                  <div class="pop-bar-refined" :style="{ width: Math.min(char.popularity, 100) + '%', backgroundColor: index < 3 ? '#ff9a9e' : '#5d54a4' }"></div>
-                </div>
-              </div>
-              <span class="pop-value-refined">{{ char.popularity }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="settlement-footer">
-        <button @click="emit('sharePoster')" class="secondary-button poster-btn" :disabled="isGeneratingPoster">
+      <footer class="settlement-footer">
+        <button class="secondary-button poster-btn" type="button" :disabled="isGeneratingPoster" @click="emit('sharePoster')">
+          <Download :size="18" aria-hidden="true" />
           {{ isGeneratingPoster ? '生成中...' : '下载战报海报' }}
         </button>
-        <button @click="emit('restart')" class="start-button restart-btn-refined">开启下一期运营计划</button>
-        <p class="footer-disclaimer">模拟数据仅供娱乐</p>
-      </div>
+        <button class="start-button restart-btn-refined" type="button" @click="emit('restart')">
+          <RotateCcw :size="19" aria-hidden="true" />
+          开启下一季运营计划
+        </button>
+        <p class="settlement-disclaimer">非官方同人模拟，与时代峰峻及相关艺人、节目无关。内容纯属虚构。</p>
+      </footer>
     </div>
-  </div>
+  </main>
 </template>

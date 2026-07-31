@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, reactive, computed, nextTick, onMounted, onUnmounted, watch } from 'vue';
 import { characters as initialCharacters } from './data/characters';
-import { openingEvent, eventPool } from './data/events';
+import { eventPool } from './data/events';
+import { breakthroughOpeningEvent, groupShowEvents } from './data/groupShowEvents';
+import { groupShowProgram } from './data/groupShowProgram';
 import { followUpEvents } from './data/followUpEvents';
 import { qteScenarios } from './data/qteScenarios';
 import {
   BOND_PROJECT_BASE_COST,
   FAN_PROGRAM_BASE_COST,
-  HEART_SUPPORT_COST,
   INITIAL_BUDGET,
   MAX_OPERATION_LEVEL,
   RECORDING_INTENSITY_COST,
 } from './data/gameConfig';
+import { SCreateProgramSeasonEvents, SJitterStartingPopularity } from './baseLib/serviceLib/SSeasonSetup';
+import { SCreateProgramBranchEvents, SGetEpisodeBranchEvent } from './baseLib/serviceLib/SProgramBranch';
 import VcHomeView from './components/app/VcHomeView.vue';
 import VcProducerHub from './components/app/VcProducerHub.vue';
 import VcBondWorkspace from './components/main/VcBondWorkspace.vue';
@@ -29,54 +32,68 @@ import VcReportWorkspace from './components/main/VcReportWorkspace.vue';
 import VcRosterView from './components/main/VcRosterView.vue';
 import VcSettlementView from './components/main/VcSettlementView.vue';
 import VcStudioNav from './components/main/VcStudioNav.vue';
+import VcResultModal from './components/main/VcResultModal.vue';
 import VcToastHint from './components/main/VcToastHint.vue';
 import VcTopControlBar from './components/main/VcTopControlBar.vue';
 import VcTrendingManager from './components/main/VcTrendingManager.vue';
 import { useDanmaku } from './composables/useDanmaku';
+import { useGamePersistence } from './composables/useGamePersistence';
+import { useGameSaveState } from './composables/useGameSaveState';
+import { useProducerReport } from './composables/useProducerReport';
 import { useQte } from './composables/useQte';
+import { useStudioOperations } from './composables/useStudioOperations';
 import { useTrending } from './composables/useTrending';
 import type { Character } from './data/characters';
 import type { Choice, GameEffectTag, GameEvent } from './data/events';
 import type { QTEScenario } from './data/type/QTEScenario';
 import type {
   EventHistoryItem,
-  ProducerAnalysisItem,
-  ProducerMedal,
-  ProducerTitle,
 } from './data/type/SettlementReport';
+import type { StudioViewKey } from './data/type/StudioView';
 import type { TrendingTopic, TrendingTopicAction } from './data/type/TrendingTopic';
 import type { SBondPair } from './baseLib/serviceLib/type/SBondPair';
 import type { SFanFactionState } from './baseLib/serviceLib/type/SFanFactionState';
-import type { SOperationCard } from './baseLib/serviceLib/type/SOperationCard';
+import type { SGameEffect } from './baseLib/serviceLib/type/SGameEffect';
+import type { SClassTrackState } from './baseLib/serviceLib/type/SClassTrack';
+import type { SSeasonState } from './baseLib/serviceLib/type/SSeasonState';
+import type { SEpisodeResourceCost, SEpisodeResources } from './baseLib/serviceLib/type/SEpisodeResources';
+import type { SNarrativeOutcome, SNarrativeThread } from './baseLib/serviceLib/type/SNarrativeThread';
 import type {
   SBondProjectKey,
   SFanProgramKey,
   SRecordingModeKey,
   SReportActionKey,
-  SStudioLedgerKey,
   SStudioLedger,
 } from './baseLib/serviceLib/type/SStudioLedger';
 import {
-  SApplyBondBonus,
-  SApplyFactionReaction,
-  SClampFanFactions,
-  SCreateCardHand,
-  SDownloadSharePoster,
   SGetFanFactionSummary,
   SGetPairKey,
+  SGetProgramBonus,
   SGetTopBond,
   SResetFanFactions,
-  SUpdateBondMap,
 } from './baseLib/serviceLib/SGameFeatures';
+import {
+  SApplyGameEffect,
+  SCreateEventDraftEffect,
+  SCreateEventFactionEffect,
+  SCreateEventPopularityEffect,
+  SCreateFactionDraftEffect,
+} from './baseLib/serviceLib/SGameEffect';
+import { SCreateSeasonScore } from './baseLib/serviceLib/SGameScore';
+import { SAddAssessmentScores, SApplyEpisodeAssessment, SCreateBiasAssessmentDeltas, SCreateClassPopularityDeltas, SCreateClassTrackState, SCreateEventAssessmentDeltas, SCreateFinaleAssessmentDeltas, SCreatePairAssessmentDeltas, SCreateRecordingAssessmentDeltas, SGetAssessmentStanding, SGetClassRoster, SGetEpisodeAwaitingBranch, SGetFinaleAssessmentDelta, SGetJustCompletedEpisode, SIsBiasInClass1, SMergeAssessmentDeltas, SResetClassTrackState, SReshuffleClasses } from './baseLib/serviceLib/SClassTrack';
+import { SCreateSeasonRecap } from './baseLib/serviceLib/SSeasonRecap';
+import { SGetFanMomentumModifier } from './baseLib/serviceLib/SFanMomentum';
+import { SGetReportAvailability, SShouldTriggerCrisis } from './baseLib/serviceLib/SCrisisManager';
+import { SCreateSeasonState, SResetSeasonState } from './baseLib/serviceLib/SSeasonState';
+import { SCreateGameRandomState, SNextRandom, type SGameRandomState } from './baseLib/serviceLib/SGameRandom';
+import { SCanSpendEpisodeResources, SCreateEpisodeResources, SGetResourceCostText, SResetEpisodeResources, SSpendEpisodeResources } from './baseLib/serviceLib/SGameResources';
+import { SGetNarrativeOutcomes, SGetNarrativeResolutionEffect, SGetNarrativeTagEffect, SGetNarrativeThreads, SGetProducerIdentity } from './baseLib/serviceLib/SGameNarrative';
 import {
   SCreateGameGoalIds,
   SGetCompletedGameGoalCount,
   SGetGameGoalResults,
 } from './baseLib/serviceLib/SGameGoals';
-import {
-  SGetFollowUpEventId,
-  SInsertFollowUpEvent,
-} from './baseLib/serviceLib/SGameEventChain';
+import { SGetClaimableGoalReward } from './baseLib/serviceLib/SGameGoalRewards';
 import {
   SGetGameAchievementResults,
   SGetNewAchievementIds,
@@ -85,31 +102,12 @@ import {
 import {
   SCreateStudioLedger,
   SGetStudioClosure,
-  SGetTotalSpend,
-  SRecordBondProject,
-  SRecordFanProgram,
-  SRecordFanSupport,
-  SRecordOperationCard,
-  SRecordRecordingRun,
-  SRecordReportAction,
   SResetStudioLedger,
 } from './baseLib/serviceLib/SStudioLedger';
-import {
-  SGetBondTraitBonus,
-  SGetDramaAntiReduction,
-  SGetRecordingTraitBonus,
-} from './baseLib/serviceLib/SCharacterTraits';
-import {
-  clearGameSave,
-  createGameSaveData,
-  readGameSave,
-  restoreGameSaveCollections,
-  writeGameSave,
-  type GameSaveData,
-} from './utils/gameSave';
 import { readAchievementIds, writeAchievementIds } from './utils/achievementSave';
 import { cloneData } from './utils/cloneData';
-import { shuffleList } from './utils/random';
+import { getRandomValue, setRandomSource, shuffleList, withRandomModifier } from './utils/random';
+import { downloadSharePoster } from './utils/sharePoster';
 
 // --- Reactive State ---
 type GameState = 'home' | 'hub' | 'roster' | 'event' | 'end';
@@ -121,18 +119,28 @@ const initialPopularityMap = reactive<Record<string, number>>({});
 const eventHistory: EventHistoryItem[] = reactive([]);
 const gameEvents = ref<GameEvent[]>([]);
 const currentEventIndex = ref(0);
-const toastMessage = ref('');
+const showResultModal = ref(false);
+const resultModalMessage = ref('');
+const resultModalTitle = ref('粉圈热报');
+const resultModalMode = ref<'notice' | 'final'>('notice');
 const showToast = ref(false);
-const savedGame = ref<GameSaveData | null>(null);
+const toastMessage = ref('');
+const toastTitle = ref('粉圈热报');
+const toastImpactLines = ref<string[]>([]);
+const activeStudioPage = ref<StudioViewKey>('event');
 const activeGoalIds = ref<string[]>([]);
+const completedGoalIds = ref<Set<string>>(new Set());
+const claimedGoalIds = ref<Set<string>>(new Set());
 const unlockedAchievementIds = ref<Set<string>>(new Set());
 const highlightedCharIds = ref<Set<string>>(new Set());
 const isBreakingNews = ref(false);
 const budget = ref(INITIAL_BUDGET);
-const lastInterruptionIndex = ref(-1);
+const seasonState = reactive<SSeasonState>(SCreateSeasonState());
+const classTrackState = reactive<SClassTrackState>(SCreateClassTrackState(characters));
+const episodeResources = reactive<SEpisodeResources>(SCreateEpisodeResources());
+const randomState = reactive<SGameRandomState>(SCreateGameRandomState());
 const showDanmaku = ref(true);
 const reduceMotion = ref(false);
-const isHistoryExpanded = ref(false);
 const fanFactions = reactive<SFanFactionState>({
   groupFans: 62,
   soloFans: 48,
@@ -141,19 +149,19 @@ const fanFactions = reactive<SFanFactionState>({
   antiFans: 24,
 });
 const bondMap = reactive<Record<string, SBondPair>>({});
-const operationCards = ref<SOperationCard[]>([]);
-const usedCardIds = ref<Set<string>>(new Set());
-const cardFeedback = ref('');
 const isGeneratingPoster = ref(false);
 const settlementReportId = ref(createReportId());
 const studioLedger = reactive<SStudioLedger>(SCreateStudioLedger());
-const activeStudioPage = ref<SStudioLedgerKey>('recording');
 const selectedBondIds = ref<string[]>([]);
 const recordingMode = ref<SRecordingModeKey>('BALANCE');
 const focusCharacterId = ref('');
+const biasCharacterId = ref('');
 const executionIntensity = ref(2);
 const fanOperationIntensity = ref(2);
 const bondProjectIntensity = ref(2);
+let toastTimer: number | null = null;
+
+setRandomSource(() => SNextRandom(randomState));
 
 const {
   trendingQueue,
@@ -199,7 +207,6 @@ const {
   isActive: () => gameState.value === 'event',
   getRandomName: getRandomCharacterName,
 });
-let toastTimer: number | null = null;
 
 // For PICK_TWO event
 const selectedPair = ref<Character[]>([]);
@@ -208,30 +215,59 @@ const selectedPair = ref<Character[]>([]);
 const eventCandidates = computed(() => sortedCharacters.value.slice(0, 5));
 
 // For RANKING event
+const choiceOptions = ref<Choice[]>([]);
+const processedDescription = ref('');
 const rankingList = ref<Character[]>([]);
+const programBranchEvents = SCreateProgramBranchEvents(groupShowProgram);
 
 // --- Computed Properties ---
 const currentEvent = computed(() => gameEvents.value[currentEventIndex.value] || null);
 
-const choiceOptions = computed(() => {
-  const event = currentEvent.value;
-  if (!event || event.type !== 'CHOICE') return [];
-  return typeof event.choices === 'function' ? event.choices(eventCandidates.value) : event.choices;
+const currentProgramEpisode = computed(() => {
+  const eventId = currentEvent.value?.id || '';
+  return groupShowProgram.find(episode => episode.eventIds.includes(eventId) || episode.branchEventIds.includes(eventId)) || null;
 });
 
-const heroCharacters = computed(() => [...characters, ...characters]);
+const biasBreakthrough = computed(() => SIsBiasInClass1(classTrackState, biasCharacterId.value));
+const finalClassLabel = computed(() => biasBreakthrough.value ? '一班' : '二班');
+const classRoster = computed(() => SGetClassRoster(classTrackState, characters));
+const biasAssessmentStanding = computed(() => SGetAssessmentStanding(classTrackState, biasCharacterId.value));
+const biasAssessmentStatus = computed(() => {
+  const standing = biasAssessmentStanding.value;
+  const distance = standing.distanceToClass1;
+  if (standing.rank <= classTrackState.capacityClass1) return `第 ${standing.rank} 名 · 高于一班线 ${distance} 分`;
+  return `第 ${standing.rank} 名 · 距一班线 ${Math.abs(distance)} 分`;
+});
 
-const reversedHeroCharacters = computed(() => [...heroCharacters.value].reverse());
+const heroCharacters = computed(() => sortedCharacters.value);
 
 function createReportId() {
-  return Math.random().toString(36).slice(2, 11).toUpperCase();
+  return Math.floor(getRandomValue() * 36 ** 9).toString(36).padStart(9, '0').toUpperCase();
 }
 
-function notifyToast(message: string, duration = 1500) {
+function notifyToast(message: string, duration = 2200, title = '粉圈热报', impactLines: string[] = []) {
   if (toastTimer) window.clearTimeout(toastTimer);
   toastMessage.value = message;
+  toastTitle.value = title;
+  toastImpactLines.value = impactLines;
   showToast.value = true;
   toastTimer = window.setTimeout(() => showToast.value = false, duration);
+}
+
+function openNoticeModal(message: string, title = '粉圈热报') {
+  resultModalMode.value = 'notice';
+  resultModalTitle.value = title;
+  resultModalMessage.value = message;
+  showResultModal.value = true;
+}
+
+function openFinalClassConfirmation(episodeId: string) {
+  const result = classTrackState.episodeResults.find(item => item.episodeId === episodeId);
+  if (!result) return finishSeason();
+  resultModalMode.value = 'final';
+  resultModalTitle.value = '最终席位确认';
+  resultModalMessage.value = `${getClassResultMessage(result)} 赛季结算即将生成。`;
+  showResultModal.value = true;
 }
 
 function togglePopularityDashboard() {
@@ -242,12 +278,27 @@ function closePopularityDashboard() {
   showPopularityDashboard.value = false;
 }
 
-function toggleHistoryExpanded() {
-  isHistoryExpanded.value = !isHistoryExpanded.value;
-}
-
 function restartToRoster() {
   gameState.value = 'hub';
+}
+
+function resetCharactersForNewSeason() {
+  const next = SJitterStartingPopularity(
+    cloneData(initialCharacters).sort((a: Character, b: Character) => a.name.localeCompare(b.name, 'zh-CN'))
+  );
+  characters.splice(0, characters.length, ...next);
+}
+
+function enterRoster() {
+  resetCharactersForNewSeason();
+  gameState.value = 'roster';
+  resetPageScroll();
+}
+
+function adjustStartingPopularity(characterId: string, delta: number) {
+  const character = characters.find((item) => item.id === characterId);
+  if (!character) return;
+  character.popularity = Math.min(95, Math.max(50, character.popularity + delta));
 }
 
 function toggleDanmaku() {
@@ -258,15 +309,6 @@ function toggleReduceMotion() {
   reduceMotion.value = !reduceMotion.value;
 }
 
-const processedDescription = computed(() => {
-  if (!currentEvent.value) return '';
-  let desc = currentEvent.value.description;
-  if (desc.includes('${random_char}')) {
-    desc = desc.replace('${random_char}', topCharacter.value.name);
-  }
-  return desc;
-});
-
 const sortedCharacters = computed(() => {
   return [...characters].sort((a, b) => b.popularity - a.popularity);
 });
@@ -276,6 +318,20 @@ const topCharacter = computed(() => sortedCharacters.value[0]!);
 const bottomCharacter = computed(() => sortedCharacters.value[sortedCharacters.value.length - 1]!);
 
 const topBond = computed(() => SGetTopBond(bondMap));
+
+const hasNegativeTrending = computed(() => trendingQueue.value.some(topic => topic.type === 'NEGATIVE'));
+
+const crisisContext = computed(() => ({
+  antiFans: fanFactions.antiFans,
+  crisisCount: seasonState.crisisCount,
+  dramaDebt: seasonState.dramaDebt,
+  eventIndex: currentEventIndex.value,
+  hasNegativeTrending: hasNegativeTrending.value,
+  lastCrisisEventIndex: seasonState.lastCrisisEventIndex,
+  popularityGap: topCharacter.value.popularity - bottomCharacter.value.popularity,
+}));
+
+const reportAvailability = computed(() => SGetReportAvailability(crisisContext.value));
 
 const fanFactionSummary = computed(() => SGetFanFactionSummary(fanFactions));
 
@@ -300,36 +356,140 @@ const averagePopularity = computed(() => {
   return Math.round(characters.reduce((sum, char) => sum + char.popularity, 0) / characters.length);
 });
 
+const seasonScore = computed(() => {
+  return SCreateSeasonScore(characters, fanFactions, seasonState, budget.value);
+});
+
+const narrativeThreads = computed<SNarrativeThread[]>(() => SGetNarrativeThreads(seasonState));
+
+const producerIdentity = computed(() => SGetProducerIdentity(seasonState, studioLedger));
+
+const narrativeOutcomes = computed<SNarrativeOutcome[]>(() => {
+  return SGetNarrativeOutcomes(seasonState, eventHistory, topBond.value, getLowRankGrowth());
+});
+
+const seasonRecap = computed(() => SCreateSeasonRecap({
+  eventHistory,
+  fanFactions,
+  narrativeOutcomes: narrativeOutcomes.value,
+  seasonState,
+}));
+
 const focusCharacter = computed(() => {
   return characters.find(char => char.id === focusCharacterId.value) || topCharacter.value;
 });
 
-const studioClosure = computed(() => {
-  return SGetStudioClosure(studioLedger, averagePopularity.value, fanFactionSummary.value, topBond.value);
+const biasCharacter = computed(() => {
+  return characters.find(char => char.id === biasCharacterId.value) || focusCharacter.value;
 });
 
-const studioTotalSpend = computed(() => {
-  return SGetTotalSpend(studioLedger);
+const {
+  applyRecordingControls,
+  handleBondProject,
+  handleFanProgram,
+  handleReportAction,
+  recordingPlanMessage,
+  recordingResourceCost,
+  recordingSuccessModifier,
+} = useStudioOperations({
+  applyEffect: applySimulationEffect,
+  averagePopularity,
+  bondMap,
+  bondProjectIntensity,
+  budget,
+  characters,
+  eventCandidates,
+  executionIntensity,
+  fanOperationIntensity,
+  focusCharacter,
+  biasCharacter,
+  highlightedCharIds,
+  recordingMode,
+  selectedBondCharacters,
+  showFeedback: showStudioFeedback,
+  onBondProjectRecorded: addBondAssessmentScores,
+  onFanProgramRecorded: addFanAssessmentScores,
+  spendBudget,
+  spendResources: spendEpisodeResources,
+  studioLedger,
+  topCharacter,
+});
+
+const fanMomentumModifier = computed(() => SGetFanMomentumModifier({
+  eventType: currentEvent.value?.type || null,
+  fanFactions,
+  recordingMode: recordingMode.value,
+}));
+
+const recordingModeLabels: Record<SRecordingModeKey, string> = {
+  BALANCE: '群像',
+  FOCUS: '高光',
+  DRAMA: '抓马',
+};
+
+const recordingReady = computed(() => {
+  const budgetCost = executionIntensity.value * RECORDING_INTENSITY_COST;
+  return budget.value >= budgetCost && SCanSpendEpisodeResources(episodeResources, recordingResourceCost.value);
+});
+
+const effectiveRecordingModifier = computed(() => (recordingReady.value ? recordingSuccessModifier.value : 0));
+const effectiveEventModifier = computed(() => effectiveRecordingModifier.value + fanMomentumModifier.value);
+
+function formatModifier(modifier: number): string {
+  return `${modifier >= 0 ? '+' : ''}${Math.round(modifier * 100)}%`;
+}
+
+const studioClosure = computed(() => {
+  return SGetStudioClosure(studioLedger, averagePopularity.value, fanFactionSummary.value, topBond.value);
 });
 
 const gameGoalContext = computed(() => {
   return {
     averagePopularity: averagePopularity.value,
     budget: budget.value,
+    isSeasonComplete: gameState.value === 'end',
     antiFans: fanFactions.antiFans,
     topBondValue: topBond.value?.value || 0,
-    completedWorkspaces: studioClosure.value.filter(item => item.actions > 0).length,
     lowRankGrowth: getLowRankGrowth(),
+    cpFans: fanFactions.cpFans,
+    soloFans: fanFactions.soloFans,
+    groupFans: fanFactions.groupFans,
+    publicFans: fanFactions.publicFans,
+    topPopularity: topCharacter.value.popularity,
+    cpHeat: seasonState.cpHeat,
+    qteSuccessCount: qteSuccessCount.value,
+    bondProjectCount: sumLedgerCounts(studioLedger.bondProjects),
+    fanProgramCount: sumLedgerCounts(studioLedger.fanPrograms),
+    focusRecordingCount: studioLedger.recordingModes.FOCUS,
   };
 });
 
-const gameGoalResults = computed(() => {
-  return SGetGameGoalResults(activeGoalIds.value, gameGoalContext.value);
-});
+function sumLedgerCounts(counts: Record<string, number>) {
+  return Object.values(counts).reduce((total, value) => total + value, 0);
+}
+
+const currentGoalResults = computed(() => SGetGameGoalResults(activeGoalIds.value, gameGoalContext.value));
+
+const gameGoalResults = computed(() => SGetGameGoalResults(activeGoalIds.value, gameGoalContext.value, completedGoalIds.value));
 
 const completedGameGoalCount = computed(() => {
   return SGetCompletedGameGoalCount(gameGoalResults.value);
 });
+
+watch(currentGoalResults, results => {
+  const newlyCompleted = results.filter(goal => goal.isComplete && !completedGoalIds.value.has(goal.id));
+  if (!newlyCompleted.length) return;
+  completedGoalIds.value = new Set([...completedGoalIds.value, ...newlyCompleted.map(goal => goal.id)]);
+}, { immediate: true });
+
+function claimGoalReward(goalId: string) {
+  const goal = gameGoalResults.value.find(item => item.id === goalId);
+  const reward = SGetClaimableGoalReward(goal, claimedGoalIds.value);
+  if (!reward) return;
+  claimedGoalIds.value = new Set([...claimedGoalIds.value, goalId]);
+  applySimulationEffect({ budgetDelta: reward.budget, season: { producerReputation: 1 } });
+  showStudioFeedback(`${reward.label}到账，经费 +¥${reward.budget.toLocaleString()}。`);
+}
 
 const achievementContext = computed(() => {
   return {
@@ -338,17 +498,12 @@ const achievementContext = computed(() => {
     topBondValue: topBond.value?.value || 0,
     qteSuccessCount: qteSuccessCount.value,
     budget: budget.value,
-    completedWorkspaces: gameGoalContext.value.completedWorkspaces,
-    followUpEventCount: getFollowUpEventCount(),
+    completedEpisodeCount: getCompletedEpisodeCount(),
   };
 });
 
 const achievementResults = computed(() => {
   return SGetGameAchievementResults(unlockedAchievementIds.value, achievementContext.value);
-});
-
-const settlementAchievements = computed(() => {
-  return achievementResults.value.filter(result => result.isUnlocked);
 });
 
 const achievementCount = computed(() => unlockedAchievementIds.value.size);
@@ -362,105 +517,58 @@ const savedGameLabel = computed(() => {
   return new Date(savedGame.value.savedAt).toLocaleString('zh-CN', { hour12: false });
 });
 
-const saveSnapshot = computed(() => {
-  if (!isSavableGameState(gameState.value)) return null;
-  return createSaveData(gameState.value);
-});
-
 const eventMap = computed(() => {
-  return new Map([openingEvent, ...eventPool, ...followUpEvents].map(event => [event.id, event]));
+  return new Map([breakthroughOpeningEvent, ...eventPool, ...groupShowEvents, ...programBranchEvents, ...followUpEvents].map(event => [event.id, event]));
 });
 
-function isSavableGameState(state: GameState): state is GameSaveData['gameState'] {
-  return state === 'event' || state === 'end';
-}
+const { restoreSaveState, saveSnapshot } = useGameSaveState({
+  activeGoalIds,
+  activeStudioPage,
+  bondMap,
+  bondProjectIntensity,
+  budget,
+  claimedGoalIds,
+  completedGoalIds,
+  characters,
+  classTrackState,
+  currentEventIndex,
+  episodeResources,
+  eventHistory,
+  eventMap,
+  executionIntensity,
+  fanFactions,
+  fanOperationIntensity,
+  focusCharacterId,
+  biasCharacterId,
+  gameEvents,
+  getSavableState: () => gameState.value === 'event' || gameState.value === 'end' ? gameState.value : null,
+  initialPopularityMap,
+  qteSuccessCount,
+  randomState,
+  recordingMode,
+  restoreGameState: state => gameState.value = state,
+  seasonState,
+  settlementReportId,
+  studioLedger,
+});
 
-function createSaveData(state: GameSaveData['gameState']): GameSaveData {
-  return createGameSaveData({
-    gameState: state,
-    currentEventIndex: currentEventIndex.value,
-    gameEvents: gameEvents.value,
-    eventHistory,
-    characters,
-    initialPopularityMap,
-    budget: budget.value,
-    fanFactions,
-    bondMap,
-    studioLedger,
-    qteSuccessCount: qteSuccessCount.value,
-    activeStudioPage: activeStudioPage.value,
-    recordingMode: recordingMode.value,
-    focusCharacterId: focusCharacterId.value,
-    executionIntensity: executionIntensity.value,
-    fanOperationIntensity: fanOperationIntensity.value,
-    bondProjectIntensity: bondProjectIntensity.value,
-    usedCardIds: usedCardIds.value,
-    cardFeedback: cardFeedback.value,
-    settlementReportId: settlementReportId.value,
-    activeGoalIds: activeGoalIds.value,
-  });
-}
-
-function saveCurrentGame() {
-  if (!saveSnapshot.value) return;
-  writeGameSave(saveSnapshot.value);
-  savedGame.value = readGameSave();
-}
-
-function continueSavedGame() {
-  const saveData = savedGame.value;
-  if (!saveData || !restoreSavedGame(saveData)) {
-    discardSavedGame();
-  }
-}
-
-function discardSavedGame() {
-  clearGameSave();
-  savedGame.value = null;
-  notifyToast('本地存档已清除。');
-}
-
-function restoreSavedGame(saveData: GameSaveData) {
-  const restoredEvents = saveData.eventIds.map(id => eventMap.value.get(id));
-  if (restoredEvents.some(event => !event)) return false;
-  gameEvents.value = restoredEvents as GameEvent[];
-  restoreSaveState(saveData);
-  triggerEventDanmaku();
-  prepareEvent();
-  notifyToast('已恢复上次录制进度。');
-  return true;
-}
-
-function restoreSaveState(saveData: GameSaveData) {
-  gameState.value = saveData.gameState;
-  currentEventIndex.value = saveData.currentEventIndex;
-  budget.value = saveData.budget;
-  qteSuccessCount.value = saveData.qteSuccessCount;
-  activeStudioPage.value = saveData.activeStudioPage;
-  recordingMode.value = saveData.recordingMode;
-  focusCharacterId.value = saveData.focusCharacterId;
-  executionIntensity.value = saveData.executionIntensity;
-  fanOperationIntensity.value = saveData.fanOperationIntensity;
-  bondProjectIntensity.value = saveData.bondProjectIntensity;
-  usedCardIds.value = new Set(saveData.usedCardIds);
-  cardFeedback.value = saveData.cardFeedback;
-  settlementReportId.value = saveData.settlementReportId;
-  activeGoalIds.value = saveData.activeGoalIds || SCreateGameGoalIds();
-  operationCards.value = SCreateCardHand();
-  restoreCollections(saveData);
-}
-
-function restoreCollections(saveData: GameSaveData) {
-  restoreGameSaveCollections({
-    characters,
-    initialPopularityMap,
-    bondMap,
-    fanFactions,
-    studioLedger,
-    eventHistory,
-    eventMap: eventMap.value,
-  }, saveData);
-}
+const {
+  continueSavedGame,
+  discardSavedGame,
+  initializeSavedGame,
+  savedGame,
+} = useGamePersistence({
+  eventMap,
+  gameEvents,
+  onDiscard: () => notifyToast('本地存档已清掉。'),
+  onRestore: () => {
+    triggerEventDanmaku();
+    prepareEvent(false, false);
+    notifyToast('已接上上次的录制进度。');
+  },
+  restoreSaveState,
+  saveSnapshot,
+});
 
 function changeExecutionIntensity(delta: number) {
   executionIntensity.value = clampLevel(executionIntensity.value + delta);
@@ -478,8 +586,10 @@ function setRecordingMode(mode: SRecordingModeKey) {
   recordingMode.value = mode;
 }
 
-function setActiveStudioPage(page: SStudioLedgerKey) {
+function setActiveStudioPage(page: StudioViewKey) {
+  if (page === 'report' && !reportAvailability.value.isAvailable) return;
   activeStudioPage.value = page;
+  resetPageScroll();
 }
 
 function changeFanOperationIntensity(delta: number) {
@@ -510,18 +620,34 @@ function getCharacterGrowth(char: Character) {
   return char.popularity - (initialPopularityMap[char.id] || char.popularity);
 }
 
-function getFollowUpEventCount() {
-  return gameEvents.value.filter(event => event.id.startsWith('followup-')).length;
+function getCompletedEpisodeCount() {
+  return classTrackState.episodeResults.length;
+}
+
+function applySimulationEffect(effect: SGameEffect) {
+  const result = SApplyGameEffect({ characters, factions: fanFactions, season: seasonState, bondMap, budget: budget.value }, effect);
+  budget.value = result.budget;
+  return result;
+}
+
+function spendEpisodeResources(cost: SEpisodeResourceCost, action: string): boolean {
+  if (SSpendEpisodeResources(episodeResources, cost)) return true;
+  showStudioFeedback(`${action}还差 ${SGetResourceCostText(cost)}，这期额度不够，先缓一缓。`);
+  return false;
+}
+
+function createPopularityEffect(targets: Character[], value: number): Record<string, number> {
+  return Object.fromEntries(targets.map(character => [character.id, value]));
 }
 
 // --- Hot Search Logic ---
 function getRandomCharacterName() {
-  return characters[Math.floor(Math.random() * characters.length)].name;
+  return characters[Math.floor(getRandomValue() * characters.length)].name;
 }
 
 function handleTrendingExpired(topic: TrendingTopic) {
   const char = characters.find(character => character.name === topic.name);
-  if (char) char.popularity -= 8;
+  if (char) applySimulationEffect({ popularity: { [char.id]: -8 }, factions: { antiFans: 3 }, season: { producerReputation: -4 } });
   addDanmaku(`舆论失控，${topic.name} 的负面话题已扩散。`);
 }
 
@@ -530,20 +656,21 @@ function handleTrending(topicId: string, action: TrendingTopicAction) {
   if (!topic) return;
 
   if (budget.value < topic.cost) {
-    notifyToast(`预算不足，处理该热搜需要 ¥${topic.cost.toLocaleString()}`);
+    notifyToast(`经费紧，压这条热搜还差 ¥${topic.cost.toLocaleString()}`);
     return;
   }
+  if (!spendEpisodeResources({ buzz: 1 }, '上热搜')) return;
 
-  budget.value -= topic.cost;
+  applySimulationEffect({ budgetDelta: -topic.cost });
   const char = characters.find(c => c.name === topic.name);
   
   if (char) {
     if (action === 'BUY' && topic.type === 'POSITIVE') {
-      char.popularity += 15;
+      applySimulationEffect({ ...SCreateEventPopularityEffect(characters, { [char.id]: 15 }), season: { groupHeat: 5, anticipation: 3 } });
       addDanmaku(`${char.name} 喜提热搜高位。`);
     } else if (action === 'KILL' && topic.type === 'NEGATIVE') {
-      char.popularity += 5;
-      addDanmaku(`预算到位，${char.name} 的负面声量被压下。`);
+      applySimulationEffect({ ...SCreateEventPopularityEffect(characters, { [char.id]: 5 }), factions: { antiFans: -5 }, season: { producerReputation: 2 } });
+      addDanmaku(`经费砸到位，${char.name} 的黑词被压下去了。`);
     }
   }
 
@@ -554,171 +681,173 @@ function handleIgnoreTrending(topicId: string) {
   removeTrendingTopic(topicId);
 }
 
-function handleHeartClick(char: Character) {
-  const cost = HEART_SUPPORT_COST;
-  if (budget.value < cost) {
-    notifyToast(`预算不足，应援需要 ¥${cost.toLocaleString()}`);
-    return;
-  }
-  
-  budget.value -= cost;
-  SRecordFanSupport(studioLedger, cost, char.name);
-  char.popularity += 2;
-  fanFactions.soloFans += 2;
-  fanFactions.antiFans += 1;
-  SClampFanFactions(fanFactions);
-  clampPopularity();
-  addDanmaku(`粉丝为 ${char.name} 加码应援。`);
-}
-
-function handleUseCard(card: SOperationCard) {
-  if (usedCardIds.value.has(card.id) || budget.value < card.cost) return;
-  budget.value -= card.cost;
-  SRecordOperationCard(studioLedger, card.cost, card.name);
-  cardFeedback.value = card.apply(characters, fanFactions);
-  usedCardIds.value = new Set([...usedCardIds.value, card.id]);
-  SClampFanFactions(fanFactions);
-  clampPopularity();
-  addDanmaku(`制作人打出「${card.name}」：${cardFeedback.value}`);
-}
-
 function spendBudget(cost: number) {
   if (budget.value < cost) return false;
-  budget.value -= cost;
+  applySimulationEffect({ budgetDelta: -cost });
   return true;
 }
 
 function showStudioFeedback(message: string) {
-  notifyToast(message, 1800);
-  addDanmaku(`工作台更新：${message}`);
-}
-
-function handleFanProgram(type: SFanProgramKey) {
-  const cost = FAN_PROGRAM_BASE_COST[type] * fanOperationIntensity.value;
-  if (!spendBudget(cost)) return showStudioFeedback('预算不足，粉丝运营方案暂时搁置。');
-  SRecordFanProgram(studioLedger, type, cost);
-  applyFanProgram(type);
-  SClampFanFactions(fanFactions);
-  clampPopularity();
-}
-
-function applyFanProgram(type: SFanProgramKey) {
-  const messages = {
-    GROUP: '团建物料上线，团粉盘提升，全员获得曝光。',
-    SOLO: '单人直拍投放，唯粉盘升温，TOP 成员获得额外关注。',
-    CP: '双人花絮释放，CP 粉增长，但争议声量也会抬头。',
-    PUBLIC: '路人向切片铺开，路人盘提升，低位成员获得镜头。',
-    ANTI: '反黑组联动，黑粉声量下降，公关口碑回稳。',
-  };
-  runFanEffect(type);
-  showStudioFeedback(messages[type]);
-}
-
-function runFanEffect(type: SFanProgramKey) {
-  const power = fanOperationIntensity.value;
-  if (type === 'GROUP') { fanFactions.groupFans += 5 * power; characters.forEach(char => char.popularity += power); }
-  if (type === 'SOLO') { fanFactions.soloFans += 5 * power; topCharacter.value.popularity += 3 * power; }
-  if (type === 'CP') { fanFactions.cpFans += 6 * power; fanFactions.antiFans += power; }
-  if (type === 'PUBLIC') { fanFactions.publicFans += 6 * power; characters.filter(char => char.popularity < 78).forEach(char => char.popularity += power); }
-  if (type === 'ANTI') { fanFactions.antiFans -= 6 * power; fanFactions.publicFans += power; }
+  notifyToast(message);
 }
 
 // --- Game Flow Methods ---
-function randomizePopularity() {
-  characters.forEach(c => {
-    c.popularity = Math.floor(Math.random() * 41) + 60; // 60-100 闅忔満
-  });
+function resetPageScroll() {
+  nextTick(() => window.scrollTo({ top: 0, behavior: 'auto' }));
 }
 
-function adjustCharacterPopularity(characterId: string, delta: number) {
-  const character = characters.find(char => char.id === characterId);
-  if (character) character.popularity = Math.max(0, Math.min(100, character.popularity + delta));
-}
-
-function startGame() {
+function startGame(selectedBiasId = '') {
+  Object.assign(randomState, SCreateGameRandomState());
+  SResetSeasonState(seasonState);
   // 记录初始人气，用于结算对比。
   characters.forEach(c => {
     initialPopularityMap[c.id] = c.popularity;
   });
+  SResetClassTrackState(classTrackState, characters);
   
-  // Construct Game Events: Opening + 11 Random (Total 12 events for more depth)
-  const shuffledPool = shuffleList(eventPool);
-  gameEvents.value = [openingEvent, ...shuffledPool.slice(0, 11)];
+  gameEvents.value = SCreateProgramSeasonEvents(breakthroughOpeningEvent, groupShowEvents, groupShowProgram);
   
   currentEventIndex.value = 0;
   eventHistory.length = 0;
   gameState.value = 'event';
-  activeStudioPage.value = 'recording';
+  activeStudioPage.value = 'event';
   selectedBondIds.value = [];
-  recordingMode.value = 'BALANCE';
+  recordingMode.value = 'FOCUS';
   executionIntensity.value = 2;
   budget.value = INITIAL_BUDGET;
   qteSuccessCount.value = 0;
-  operationCards.value = SCreateCardHand();
-  usedCardIds.value = new Set();
-  cardFeedback.value = '';
   activeGoalIds.value = SCreateGameGoalIds();
+  completedGoalIds.value = new Set();
+  claimedGoalIds.value = new Set();
   SResetStudioLedger(studioLedger);
   Object.keys(bondMap).forEach(key => delete bondMap[key]);
   SResetFanFactions(fanFactions);
-  focusCharacterId.value = topCharacter.value?.id || '';
+  biasCharacterId.value = selectedBiasId || topCharacter.value?.id || '';
+  focusCharacterId.value = biasCharacterId.value;
   settlementReportId.value = createReportId();
   
   triggerEventDanmaku();
   prepareEvent(false);
+  resetPageScroll();
 }
 
-function prepareEvent(allowTrending = true) {
+function prepareEvent(allowTrending = true, resetResources = true) {
   selectedPair.value = [];
   isBreakingNews.value = false;
   resetQte();
+  if (resetResources) SResetEpisodeResources(episodeResources);
+  if (biasCharacterId.value) focusCharacterId.value = biasCharacterId.value;
 
-  // 闄嶄綆鐑悳棰戠巼锛?0% 姒傜巼寮瑰嚭鐑悳
-  if (allowTrending && Math.random() < 0.4) {
+  if (allowTrending && getRandomValue() < 0.4) {
     generateTrendingTopic();
   }
 
-  const canTriggerInterruption = currentEventIndex.value - lastInterruptionIndex.value >= 3;
-  const isSudden = currentEventIndex.value > 1 && canTriggerInterruption && Math.random() < 0.32;
+  const isSudden = SShouldTriggerCrisis(crisisContext.value, getRandomValue);
 
   if (isSudden) {
-    lastInterruptionIndex.value = currentEventIndex.value;
+    seasonState.crisisCount += 1;
+    seasonState.lastCrisisEventIndex = currentEventIndex.value + 1;
     isBreakingNews.value = true;
     startQTE();
   }
-  
+
   if (currentEvent.value?.type === 'RANKING' || currentEvent.value?.type === 'PICK_TWO') {
     rankingList.value = [...eventCandidates.value];
   }
+
+  refreshPreparedEventContent();
+}
+
+function refreshPreparedEventContent() {
+  const event = currentEvent.value;
+  if (!event) {
+    choiceOptions.value = [];
+    processedDescription.value = '';
+    return;
+  }
+
+  processedDescription.value = SResolveEventDescription(event.description, eventCandidates.value);
+  if (event.type !== 'CHOICE') {
+    choiceOptions.value = [];
+    return;
+  }
+  const rawChoices = typeof event.choices === 'function' ? event.choices(eventCandidates.value) : event.choices;
+  choiceOptions.value = shuffleList(rawChoices).map(createChoicePreview);
+}
+
+function createChoicePreview(choice: Choice): Choice {
+  if (!choice.effectTags?.includes('FINALE_AUDIT')) return choice;
+  const projectedPressure = seasonState.biasPressure + (SGetNarrativeTagEffect(choice.effectTags).biasPressure || 0);
+  const assessmentDelta = SGetFinaleAssessmentDelta(projectedPressure);
+  return { ...choice, preview: `当前偏心压力 ${projectedPressure}，收官审查预计使本命考核 ${formatDelta(assessmentDelta)} 分，可能影响一班席位。` };
+}
+
+function SResolveEventDescription(description: string, candidates: Character[]) {
+  if (!description.includes('${random_char}')) return description;
+  const pick = candidates[Math.floor(getRandomValue() * Math.max(candidates.length, 1))] || topCharacter.value;
+  return description.replaceAll('${random_char}', pick.name);
 }
 
 function handleQteComplete(success: boolean, scenario: QTEScenario) {
   if (success) {
     const bonus = scenario.type === 'TIMING' ? 8 : 5;
-    characters.forEach(c => c.popularity += bonus);
-    fanFactions.groupFans += 5;
-    fanFactions.publicFans += 4;
+    applySimulationEffect({ ...SCreateEventPopularityEffect(characters, createPopularityEffect(characters, bonus)), factions: { groupFans: 5, publicFans: 4 }, season: { producerReputation: 5, groupHeat: 4 } });
     addDanmaku('这就是制作人的实力。');
   } else {
     const penalty = 3;
-    characters.forEach(c => c.popularity -= penalty);
-    fanFactions.antiFans += 6;
+    applySimulationEffect({ popularity: createPopularityEffect(characters, -penalty), factions: { antiFans: 6 }, season: { producerReputation: -5, dramaDebt: 2 } });
     addDanmaku('刚才那段有点危险。');
   }
-  SClampFanFactions(fanFactions);
-  clampPopularity();
 }
 
 function nextEvent() {
+  insertEpisodeBranchAfterFixedNodes();
+  const completedEpisode = SGetJustCompletedEpisode(groupShowProgram, eventHistory, classTrackState.episodeResults);
   currentEventIndex.value++;
-  if (currentEventIndex.value < gameEvents.value.length) {
-    prepareEvent();
-    gameState.value = 'event';
-  } else {
-    gameState.value = 'end';
-    clearTrendingTopics();
-    unlockAchievements();
+  if (completedEpisode) {
+    SApplyEpisodeAssessment(classTrackState, characters);
+    SReshuffleClasses(classTrackState, completedEpisode.id, biasCharacterId.value);
   }
+  if (currentEventIndex.value < gameEvents.value.length) {
+    prepareNextEvent();
+    if (completedEpisode) showClassResult(completedEpisode.id);
+    return;
+  }
+  if (completedEpisode) return openFinalClassConfirmation(completedEpisode.id);
+  finishSeason();
+}
+
+function insertEpisodeBranchAfterFixedNodes() {
+  const episode = SGetEpisodeAwaitingBranch(groupShowProgram, eventHistory, classTrackState.episodeResults);
+  if (!episode) return;
+  const branchEvent = SGetEpisodeBranchEvent(episode, classTrackState, seasonState, biasCharacterId.value, programBranchEvents);
+  gameEvents.value.splice(currentEventIndex.value + 1, 0, branchEvent);
+}
+
+function prepareNextEvent() {
+  prepareEvent();
+  gameState.value = 'event';
+}
+
+function finishSeason() {
+  gameState.value = 'end';
+  clearTrendingTopics();
+  unlockAchievements();
+}
+
+function showClassResult(episodeId: string) {
+  const result = classTrackState.episodeResults.find(item => item.episodeId === episodeId);
+  if (!result) return;
+  openNoticeModal(getClassResultMessage(result), '班级热报');
+}
+
+function getClassResultMessage(result: SClassTrackState['episodeResults'][number]): string {
+  return `本期考核结束，座位重新安排。升班：${getCharacterNames(result.promotedIds)}。降班：${getCharacterNames(result.demotedIds)}。本命目前在${result.biasClass === 'CLASS1' ? '一班' : '二班'}。`;
+}
+
+function getCharacterNames(ids: string[]): string {
+  const names = ids.map(id => characters.find(character => character.id === id)?.name).filter(Boolean);
+  return names.length ? names.join('、') : '本期无变动';
 }
 
 function unlockAchievements() {
@@ -729,71 +858,142 @@ function unlockAchievements() {
 }
 
 // --- Event Handlers ---
-function clampPopularity() {
-  characters.forEach(c => {
-    if (c.popularity > 100) c.popularity = 100;
-    if (c.popularity < 0) c.popularity = 0;
-  });
-}
-
-function triggerFeedback(result: string, effectTags: GameEffectTag[] = []) {
+function applyEventResult(result: string, draft: Character[], tags: GameEffectTag[] = [], recordingDeltas: Record<string, number> = {}) {
   const event = currentEvent.value;
   if (!event) return;
-  const bond = SUpdateBondMap(bondMap, selectedPair.value);
-  const bondBonus = SApplyBondBonus(selectedPair.value, bond);
-  const finalResult = bondBonus ? `${result} ${bondBonus}` : result;
-  SApplyFactionReaction(fanFactions, finalResult, event, effectTags);
-  clampPopularity();
+  const eventEffect = SCreateEventFactionEffect(event, tags);
+  const draftEffect = SCreateEventDraftEffect(characters, createFinaleBiasDraft(draft, tags), tags);
+  const classPopularity = SCreateClassPopularityDeltas(classTrackState, draftEffect.popularity || {});
+  const seasonEffect = createEventSeasonEffect(event, tags);
+  const finaleAssessmentDeltas = SCreateFinaleAssessmentDeltas(
+    classTrackState,
+    biasCharacterId.value,
+    seasonState.biasPressure + (seasonEffect.biasPressure || 0),
+    tags.includes('FINALE_AUDIT'),
+  );
+  const assessmentDeltas = SMergeAssessmentDeltas(
+    SCreateEventAssessmentDeltas(classTrackState, classPopularity),
+    recordingDeltas,
+    finaleAssessmentDeltas,
+  );
+  const applied = applySimulationEffect({ ...draftEffect, popularity: classPopularity, factions: eventEffect.factions, season: seasonEffect, bond: createSelectedPairBond() });
+  SAddAssessmentScores(classTrackState, assessmentDeltas);
+  applySimulationEffect({ season: SGetNarrativeResolutionEffect(event.id) });
+  const eventResult = applied.bondBonusText ? `${result} ${applied.bondBonusText}` : result;
+  const message = `${eventResult}${applyProgramBonus()}`;
+  triggerFeedback(message, applied.affectedIds, tags, getAssessmentImpactLines(assessmentDeltas, seasonEffect, finaleAssessmentDeltas));
+}
+
+/** Routes the finale's personal ending to the selected bias instead of the current popularity leader. */
+function createFinaleBiasDraft(draft: Character[], tags: GameEffectTag[]): Character[] {
+  if (!tags.includes('FINALE_AUDIT')) return draft;
+  const bias = draft.find(character => character.id === biasCharacterId.value);
+  if (bias) bias.popularity += 10;
+  return draft;
+}
+
+function applyProgramBonus(): string {
+  const bonus = SGetProgramBonus(currentEventIndex.value, getRandomValue);
+  if (!bonus) return '';
+  const characterDraft = cloneData(characters);
+  const factionDraft: SFanFactionState = { ...fanFactions };
+  const summary = bonus.apply(characterDraft, factionDraft);
+  const effect = SCreateEventDraftEffect(characters, characterDraft);
+  applySimulationEffect({ ...effect, factions: SCreateFactionDraftEffect(fanFactions, factionDraft) });
+  return ` 节目组掉落「${bonus.name}」：${summary}`;
+}
+
+function createEventSeasonEffect(event: GameEvent, tags: GameEffectTag[]): Partial<SSeasonState> {
+  return addEventSeasonEffect(SGetNarrativeTagEffect(tags), event, tags);
+}
+
+function addEventSeasonEffect(effect: Partial<SSeasonState>, event: GameEvent, tags: GameEffectTag[]): Partial<SSeasonState> {
+  const heat = event.type === 'PICK_TWO' ? 4 : event.type === 'RANKING' ? 3 : 2;
+  const reputation = tags.includes('ANTI_RISK') ? 4 : 1;
+  return { ...effect, groupHeat: (effect.groupHeat || 0) + heat + (tags.includes('GROUP_BOOST') ? 3 : 0), producerReputation: (effect.producerReputation || 0) + reputation, anticipation: (effect.anticipation || 0) + (tags.includes('PUBLIC_BOOST') ? 2 : 0) };
+}
+
+function createSelectedPairBond(): SGameEffect['bond'] | undefined {
+  const event = currentEvent.value;
+  if (selectedPair.value.length !== 2) return undefined;
+  if (!event || event.type !== 'PICK_TWO') return undefined;
+  const [first, second] = selectedPair.value;
+  const isTeam = event.pairRole === 'TEAM';
+  return { pairIds: [first.id, second.id], names: `${first.name} x ${second.name}`, delta: isTeam ? 10 : 18, grantPopularityBonus: !isTeam };
+}
+
+function triggerFeedback(result: string, affectedIds: string[] = [], effectTags: GameEffectTag[] = [], impactLines: string[] = []) {
+  const event = currentEvent.value;
+  if (!event) return;
+  const finalResult = result;
 
   // 记录历史。
-  eventHistory.push({ event, result: finalResult });
-  enqueueFollowUpEvent(event);
+  eventHistory.push({ event, result: finalResult, effectTags });
   
   // 识别受影响成员。
-  const affectedIds = new Set<string>();
+  const highlightedIds = new Set(affectedIds);
   characters.forEach(c => {
     if (finalResult.includes(c.name)) {
-      affectedIds.add(c.id);
+      highlightedIds.add(c.id);
     }
   });
   // PICK_TWO 事件同时高亮选中的两位成员。
   if (selectedPair.value.length > 0) {
-    selectedPair.value.forEach(c => affectedIds.add(c.id));
+    selectedPair.value.forEach(c => highlightedIds.add(c.id));
   }
 
-  notifyToast(finalResult);
-  highlightedCharIds.value = affectedIds;
-
-  addDanmaku(`现场热报：${finalResult.slice(0, 20)}...`);
-
-  // 短暂高亮后恢复。
-  setTimeout(() => {
-    highlightedCharIds.value = new Set();
-    nextEvent();
-  }, 1500);
+  highlightedCharIds.value = highlightedIds;
+  addDanmaku(`粉圈热报：${finalResult.slice(0, 20)}...`);
+  notifyToast(finalResult, 3200, '本轮回响', impactLines);
+  activeStudioPage.value = 'event';
+  nextEvent();
+  resetPageScroll();
 }
 
-function enqueueFollowUpEvent(event: GameEvent) {
-  const followUpId = SGetFollowUpEventId(createEventChainContext(event));
-  const followUpEvent = eventMap.value.get(followUpId);
-  if (followUpEvent) SInsertFollowUpEvent(gameEvents.value, currentEventIndex.value, followUpEvent);
+function confirmResultModal() {
+  const mode = resultModalMode.value;
+  showResultModal.value = false;
+  if (mode === 'final') {
+    finishSeason();
+    resetPageScroll();
+    return;
+  }
 }
 
-function createEventChainContext(event: GameEvent) {
-  return {
-    eventType: event.type,
-    recordingMode: recordingMode.value,
-    antiFans: fanFactions.antiFans,
-    topBondValue: topBond.value?.value || 0,
-    lowRankGrowth: getLowRankGrowth(),
-  };
+function getAssessmentImpactLines(deltas: Record<string, number>, seasonEffect: Partial<SSeasonState>, finaleDeltas: Record<string, number>): string[] {
+  const biasDelta = deltas[biasCharacterId.value] || 0;
+  const biasScore = classTrackState.assessmentScore[biasCharacterId.value] || 0;
+  const lines = [`本命考核 ${formatDelta(biasDelta)} -> ${biasScore} 分`];
+  if (selectedPair.value.length === 2) lines.push(`搭档考核 ${formatPairDelta(deltas)}`);
+  if (seasonEffect.biasPressure) lines.push(`偏心压力 ${formatDelta(seasonEffect.biasPressure)}`);
+  if (finaleDeltas[biasCharacterId.value]) lines.push(`收官席位赌局 ${formatDelta(finaleDeltas[biasCharacterId.value])}`);
+  return lines.slice(0, 4);
+}
+
+function formatPairDelta(deltas: Record<string, number>): string {
+  return formatDelta(selectedPair.value.reduce((total, character) => total + (deltas[character.id] || 0), 0));
+}
+
+function formatDelta(value: number): string {
+  return `${value >= 0 ? '+' : ''}${value}`;
 }
 
 function handleChoice(choice: Choice) {
-  const result = choice.action(characters);
+  if (showResultModal.value) return;
   const controlResult = applyRecordingControls();
-  clampPopularity();
-  triggerFeedback(controlResult ? `${result} ${controlResult}` : result, choice.effectTags);
+  const draft = cloneData(characters);
+  const result = withRandomModifier(controlResult.successModifier + fanMomentumModifier.value, () => choice.action(draft));
+  applyEventResult(SFormatRoundResult(result, controlResult.message), draft, choice.effectTags, createRecordingAssessmentDeltas(controlResult.successModifier));
+}
+
+function createRecordingAssessmentDeltas(successModifier: number): Record<string, number> {
+  if (!successModifier) return {};
+  return SCreateRecordingAssessmentDeltas(classTrackState, characters, averagePopularity.value, recordingMode.value, focusCharacterId.value, executionIntensity.value);
+}
+
+function SFormatRoundResult(choiceResult: string, recordingMessage = ''): string {
+  if (!recordingMessage) return `【这波操作】${choiceResult}`;
+  return `【机位加戏】${recordingMessage}\n【这波操作】${choiceResult}`;
 }
 
 onUnmounted(() => {
@@ -804,72 +1004,30 @@ onUnmounted(() => {
 });
 
 onMounted(() => {
-  savedGame.value = readGameSave();
+  initializeSavedGame();
   unlockedAchievementIds.value = new Set(readAchievementIds());
 });
 
-watch(
-  () => saveSnapshot.value,
-  () => saveCurrentGame(),
-  { deep: true }
-);
-
-function applyRecordingControls() {
-  const cost = executionIntensity.value * RECORDING_INTENSITY_COST;
-  if (!spendBudget(cost)) return '录制参数预算不足，本轮只执行事件方案。';
-  const focus = focusCharacter.value;
-  SRecordRecordingRun(studioLedger, recordingMode.value, cost, focus.name);
-  if (recordingMode.value === 'BALANCE') return applyBalanceMode();
-  if (recordingMode.value === 'FOCUS') return applyFocusMode(focus);
-  return applyDramaMode(focus);
-}
-
-function applyBalanceMode() {
-  characters.filter(char => char.popularity < averagePopularity.value).forEach(applyBalanceBonus);
-  fanFactions.groupFans += executionIntensity.value;
-  return '录制模式「群像均衡」生效，低位成员获得补镜头。';
-}
-
-function applyFocusMode(focus: Character) {
-  const traitBonus = SGetRecordingTraitBonus(focus, 'FOCUS') * executionIntensity.value;
-  focus.popularity += executionIntensity.value * 2 + traitBonus;
-  fanFactions.soloFans += executionIntensity.value;
-  highlightedCharIds.value = new Set([focus.id]);
-  return `镜头焦点锁定 ${focus.name}，个人高光额外放大。`;
-}
-
-function applyDramaMode(focus: Character) {
-  const traitBonus = SGetRecordingTraitBonus(focus, 'DRAMA') * executionIntensity.value;
-  focus.popularity += executionIntensity.value * 3 + traitBonus;
-  fanFactions.publicFans += executionIntensity.value * 2;
-  fanFactions.antiFans += getDramaAntiIncrease(focus);
-  highlightedCharIds.value = new Set([focus.id]);
-  return `抓马剪辑拉满，${focus.name} 讨论度暴涨，但争议声量也会上升。`;
-}
-
-function applyBalanceBonus(char: Character) {
-  char.popularity += executionIntensity.value + SGetRecordingTraitBonus(char, 'BALANCE');
-}
-
-function getDramaAntiIncrease(focus: Character) {
-  const baseIncrease = Math.max(1, executionIntensity.value - 1);
-  return Math.max(0, baseIncrease - SGetDramaAntiReduction(focus));
-}
-
 function handlePickTwo() {
-  if (currentEvent.value?.type !== 'PICK_TWO') return;
+  if (showResultModal.value) return;
+  const event = currentEvent.value;
+  if (!event || event.type !== 'PICK_TWO') return;
   if (selectedPair.value.length !== 2) return;
-  const [char1, char2] = selectedPair.value;
-  const result = currentEvent.value.choices.action(char1, char2, characters);
-  clampPopularity();
-  triggerFeedback(result);
+  const controlResult = applyRecordingControls();
+  const draft = cloneData(characters);
+  const [first, second] = selectedPair.value.map(character => draft.find(item => item.id === character.id)!);
+  const result = withRandomModifier(controlResult.successModifier + fanMomentumModifier.value, () => event.choices.action(first, second, draft));
+  applyEventResult(SFormatRoundResult(result, controlResult.message), draft, [], createRecordingAssessmentDeltas(controlResult.successModifier));
 }
 
 function handleRanking() {
-  if (currentEvent.value?.type !== 'RANKING') return;
-  const result = currentEvent.value.choices.action(rankingList.value);
-  clampPopularity();
-  triggerFeedback(result);
+  if (showResultModal.value) return;
+  const event = currentEvent.value;
+  if (!event || event.type !== 'RANKING') return;
+  const controlResult = applyRecordingControls();
+  const draft = rankingList.value.map(character => cloneData(character));
+  const result = withRandomModifier(controlResult.successModifier + fanMomentumModifier.value, () => event.choices.action(draft));
+  applyEventResult(SFormatRoundResult(result, controlResult.message), draft, [], createRecordingAssessmentDeltas(controlResult.successModifier));
 }
 
 function updateRankingList(nextRankingList: Character[]) {
@@ -897,146 +1055,40 @@ function toggleBondCandidate(character: Character) {
   selectedBondIds.value = [...selectedBondIds.value, character.id].slice(-2);
 }
 
+function addBondAssessmentScores(pair: Character[], intensity: number) {
+  SAddAssessmentScores(classTrackState, SCreatePairAssessmentDeltas(classTrackState, pair.map(character => character.id), intensity));
+}
+
+function addFanAssessmentScores(type: SFanProgramKey, intensity: number) {
+  if (type !== 'SOLO') return;
+  SAddAssessmentScores(classTrackState, SCreateBiasAssessmentDeltas(classTrackState, biasCharacterId.value, intensity));
+}
+
 function getBondValue(char1: Character, char2: Character) {
   return bondMap[SGetPairKey(char1, char2)]?.value || 0;
 }
 
-function handleBondProject(type: SBondProjectKey) {
-  if (selectedBondCharacters.value.length !== 2) return showStudioFeedback('先选择两位成员，再开启双人企划。');
-  const cost = BOND_PROJECT_BASE_COST[type] * bondProjectIntensity.value;
-  if (!spendBudget(cost)) return showStudioFeedback('预算不足，双人企划排不上日程。');
-  SRecordBondProject(studioLedger, type, cost, selectedBondCharacters.value.map(char => char.name).join(' × '));
-  applyBondProject(type, selectedBondCharacters.value);
-}
-
-function applyBondProject(type: SBondProjectKey, pair: Character[]) {
-  const bond = SUpdateBondMap(bondMap, pair);
-  const traitBonus = SGetBondTraitBonus(pair, type);
-  const bonus = ((type === 'STAGE' ? 3 : 2) + traitBonus) * bondProjectIntensity.value;
-  if (bond) bond.value = Math.min(100, bond.value + traitBonus * 4);
-  pair.forEach(char => char.popularity += bonus);
-  fanFactions.cpFans += (type === 'LIVE' ? 5 : 3) * bondProjectIntensity.value;
-  SClampFanFactions(fanFactions);
-  clampPopularity();
-  showStudioFeedback(`${pair[0].name} × ${pair[1].name} 企划推进，羁绊升至 ${bond?.value || 0}。`);
-}
-
-function handleReportAction(type: SReportActionKey) {
-  const cost = type === 'TOP' ? 14000 : 10000;
-  if (!spendBudget(cost)) return showStudioFeedback('预算不足，策略会先暂停。');
-  SRecordReportAction(studioLedger, type, cost);
-  applyReportAction(type);
-  SClampFanFactions(fanFactions);
-  clampPopularity();
-}
-
-function applyReportAction(type: SReportActionKey) {
-  if (type === 'BALANCE') characters.filter(char => char.popularity < averagePopularity.value).forEach(char => char.popularity += 4);
-  if (type === 'TOP') eventCandidates.value.slice(0, 3).forEach(char => char.popularity += 4);
-  if (type === 'CLEAN') fanFactions.antiFans -= 8;
-  showStudioFeedback(type === 'BALANCE' ? '补短板会议完成，低位成员获得额外镜头。' : type === 'TOP' ? 'TOP 资源包加码，前三人气继续冲高。' : '舆情复盘完成，黑粉声量下降。');
-}
-
 function handleSharePoster() {
   isGeneratingPoster.value = true;
-  SDownloadSharePoster({
+  downloadSharePoster({
     title: producerTitle.value.name,
     grade: producerTitle.value.grade,
     topCharacters: sortedCharacters.value,
     factions: fanFactions,
+    recap: seasonRecap.value,
     topBond: topBond.value,
+    biasName: biasCharacter.value.name,
+    biasBreakthrough: biasBreakthrough.value,
+    finalClassLabel: finalClassLabel.value,
   });
   setTimeout(() => isGeneratingPoster.value = false, 400);
 }
 
-// --- Settlement Logic ---
-const producerTitle = computed<ProducerTitle>(() => {
-  const avgPopularity = averagePopularity.value;
-  const gap = topCharacter.value.popularity - bottomCharacter.value.popularity;
-
-  let grade = 'C';
-  let gradeColor = '#94a3b8';
-  if (avgPopularity > 95) { grade = 'SSS'; gradeColor = '#fbbf24'; }
-  else if (avgPopularity > 90) { grade = 'S'; gradeColor = '#fb7185'; }
-  else if (avgPopularity > 85) { grade = 'A'; gradeColor = '#22c55e'; }
-  else if (avgPopularity > 75) { grade = 'B'; gradeColor = '#60a5fa'; }
-
-  let title = '合格制作人';
-  let color = '#38bdf8';
-  if (avgPopularity > 98) { title = '内娱救世主'; color = '#fbbf24'; }
-  else if (avgPopularity > 92 && gap < 20) { title = '群像端水大师'; color = '#22c55e'; }
-  else if (avgPopularity > 92) { title = '金牌幕后推手'; color = '#fb7185'; }
-  else if (gap > 45) { title = '断层剧本专家'; color = '#a78bfa'; }
-  else if (avgPopularity > 85) { title = '资深行业总监'; color = '#38bdf8'; }
-  else if (avgPopularity < 60) { title = '糊团拯救失败者'; color = '#64748b'; }
-  else if (avgPopularity < 75) { title = '平稳运营助理'; color = '#94a3b8'; }
-
-  return { name: title, color, grade, gradeColor };
-});
-
-const producerAnalysis = computed<ProducerAnalysisItem[]>(() => {
-  const avgPopularity = averagePopularity.value;
-  const top = topCharacter.value;
-  const bottom = bottomCharacter.value;
-  const gap = top.popularity - bottom.popularity;
-  const usedBudget = INITIAL_BUDGET - budget.value;
-  const analysis: ProducerAnalysisItem[] = [];
-
-  if (gap > 40) {
-    analysis.push({ label: '核心策略', value: '单核驱动', detail: `资源明显集中在 ${top.name} 身上，爆点更强，但队伍生态更容易失衡。` });
-  } else if (gap < 18) {
-    analysis.push({ label: '核心策略', value: '群像共振', detail: '成员差距被控制在健康范围内，团体感和持续运营空间更好。' });
-  } else {
-    analysis.push({ label: '核心策略', value: '阶梯递进', detail: '主次分明且全员在线，适合继续做长期内容运营。' });
-  }
-
-  const riskyChoices = eventHistory.filter(h => h.result.includes('豪赌') || h.result.includes('翻车') || h.result.includes('失败') || h.result.includes('争议'));
-  analysis.push({ label: '风险偏好', value: riskyChoices.length > 2 ? '激进冒险' : '审慎决策', detail: riskyChoices.length > 2 ? '你偏爱高风险高回报的抓马打法，热度强但舆情波动也大。' : '你的选择更偏稳健，能够降低试错成本。' });
-
-  if (usedBudget > 80000) {
-    analysis.push({ label: '公关投入', value: '重金砸榜', detail: '预算投入非常积极，短期热度强，但后续需要关注回报效率。' });
-  } else if (usedBudget < 20000) {
-    analysis.push({ label: '公关投入', value: '低成本操盘', detail: '你更多依赖内容和事件自然发酵，财务健康度很高。' });
-  } else {
-    analysis.push({ label: '公关投入', value: '精算平衡', detail: '预算使用节制且精准，关键节点有投入，整体风险可控。' });
-  }
-
-  if (avgPopularity > 88) {
-    analysis.push({ label: '国民认可', value: '全网入坑', detail: '平均人气已经进入高位，具备进一步破圈传播的基础。' });
-  } else if (avgPopularity < 70) {
-    analysis.push({ label: '国民认可', value: '垂直圈地', detail: '当前热度仍偏核心粉圈，需要更强的破圈事件。' });
-  }
-
-  analysis.push({ label: '粉丝生态', value: fanFactionSummary.value, detail: `本局最强讨论盘是「${fanFactionSummary.value}」。团粉 ${fanFactions.groupFans}，唯粉 ${fanFactions.soloFans}，CP 粉 ${fanFactions.cpFans}，路人盘 ${fanFactions.publicFans}，黑粉声量 ${fanFactions.antiFans}。` });
-
-  if (topBond.value) {
-    analysis.push({ label: '化学反应', value: topBond.value.names, detail: `这组羁绊值达到 ${topBond.value.value}，已经具备继续开发双人舞台、花絮或综艺搭档的潜力。` });
-  }
-
-  return analysis;
-});
-
-const producerMedals = computed<ProducerMedal[]>(() => {
-  const medals: ProducerMedal[] = [];
-  const avgPopularity = averagePopularity.value;
-  const usedBudget = INITIAL_BUDGET - budget.value;
-  const totalGrowth = characters.reduce((acc, c) => acc + (c.popularity - initialPopularityMap[c.id]), 0);
-
-  if (avgPopularity > 90) medals.push({ icon: 'TOP', title: '收视神话', desc: '全员人气爆发' });
-  if (usedBudget < 10000) medals.push({ icon: 'SAVE', title: '小本经营', desc: '极低成本操盘' });
-  if (usedBudget > 90000) medals.push({ icon: 'PR', title: '豪门推手', desc: '公关费用拉满' });
-  if (totalGrowth > 50) medals.push({ icon: 'UP', title: '人气推手', desc: '成员大幅增粉' });
-  if (qteSuccessCount.value >= 3) medals.push({ icon: 'LIVE', title: '临场专家', desc: '突发事件处理优秀' });
-  if (fanFactions.groupFans > 80) medals.push({ icon: 'TEAM', title: '团魂操盘手', desc: '团粉盘大爆发' });
-  if (fanFactions.cpFans > 70) medals.push({ icon: 'PAIR', title: '化学反应大师', desc: 'CP 讨论破圈' });
-  if (topBond.value?.value && topBond.value.value > 70) medals.push({ icon: 'DUO', title: '双人叙事导演', desc: '羁绊线拉满' });
-  if (studioClosure.value.every(item => item.actions > 0)) medals.push({ icon: 'OPS', title: '全链路制作人', desc: '四个工作台都形成闭环' });
-
-  if (completedGameGoalCount.value >= 3) {
-    medals.push({ icon: 'GOAL', title: '目标全清', desc: '本局制作目标全部完成' });
-  }
-
-  return medals;
+const { producerTitle } = useProducerReport({
+  averagePopularity,
+  seasonScore,
+  topCharacter,
+  bottomCharacter,
 });
 
 </script>
@@ -1046,7 +1098,6 @@ const producerMedals = computed<ProducerMedal[]>(() => {
     <VcHomeView
       v-if="gameState === 'home'"
       :hero-characters="heroCharacters"
-      :reversed-hero-characters="reversedHeroCharacters"
       :has-saved-game="hasSavedGame"
       :saved-game-label="savedGameLabel"
       :achievement-count="achievementCount"
@@ -1066,7 +1117,7 @@ const producerMedals = computed<ProducerMedal[]>(() => {
       :average-popularity="averagePopularity"
       :achievements="achievementResults"
       @continue-saved-game="continueSavedGame"
-      @enter-roster="gameState = 'roster'"
+      @enter-roster="enterRoster"
       @discard-saved-game="discardSavedGame"
       @back-home="gameState = 'home'"
     />
@@ -1075,20 +1126,11 @@ const producerMedals = computed<ProducerMedal[]>(() => {
       v-if="gameState === 'roster'"
       :characters="characters"
       :average-popularity="averagePopularity"
-      @randomize-popularity="randomizePopularity"
       @start-game="startGame"
-      @adjust-popularity="adjustCharacterPopularity"
+      @adjust-popularity="adjustStartingPopularity"
     />
 
-    <!-- 2. Event Screen -->
     <div v-if="gameState === 'event' && currentEvent" class="game-view">
-      <div class="ambient-bg-event">
-        <div class="glow-sphere-event"></div>
-      </div>
-      <div class="producer-status-line">
-        <span class="status-indicator">直播中</span>
-        <span class="status-text">当前环节: {{ currentEvent.title }}</span>
-      </div>
       <VcQteOverlay
         :active="qteActive"
         :scenario="currentQTEScenario"
@@ -1109,7 +1151,14 @@ const producerMedals = computed<ProducerMedal[]>(() => {
       <VcTopControlBar
         :current-event-index="currentEventIndex"
         :total-events="gameEvents.length"
+        :episode-title="currentProgramEpisode?.title || '开录日: 主题曲定位'"
+        :class1-count="classRoster.CLASS1.length"
+        :bias-class-label="finalClassLabel"
+        :bias-assessment-score="biasAssessmentStanding.score"
+        :bias-assessment-status="biasAssessmentStatus"
         :budget="budget"
+        :episode-resources="episodeResources"
+        :bias-character="biasCharacter"
         :has-trending="isAnyTrending"
         :show-danmaku="showDanmaku"
         :reduce-motion="reduceMotion"
@@ -1118,49 +1167,10 @@ const producerMedals = computed<ProducerMedal[]>(() => {
         @toggle-reduce-motion="toggleReduceMotion"
       />
 
-      <VcStudioNav :active-studio-page="activeStudioPage" @change-page="setActiveStudioPage" />
-      <VcGameGoalsPanel :goals="gameGoalResults" />
-      <VcFanWorkspace
-        v-if="activeStudioPage === 'fans'"
-        :fan-factions="fanFactions"
-        :fan-operation-intensity="fanOperationIntensity"
-        :fan-program-base-cost="FAN_PROGRAM_BASE_COST"
-        :operation-cards="operationCards"
-        :used-card-ids="usedCardIds"
-        :budget="budget"
-        :card-feedback="cardFeedback"
-        @change-intensity="changeFanOperationIntensity"
-        @set-intensity="setFanOperationIntensity"
-        @run-program="handleFanProgram"
-        @use-card="handleUseCard"
-      />
-
-      <VcBondWorkspace
-        v-if="activeStudioPage === 'bonds'"
-        :bond-candidate-list="bondCandidateList"
-        :selected-bond-ids="selectedBondIds"
-        :selected-bond-characters="selectedBondCharacters"
-        :selected-bond-value="selectedBondValue"
-        :bond-project-intensity="bondProjectIntensity"
-        :bond-project-base-cost="BOND_PROJECT_BASE_COST"
-        :top-bond="topBond"
-        @toggle-candidate="toggleBondCandidate"
-        @change-intensity="changeBondProjectIntensity"
-        @set-intensity="setBondProjectIntensity"
-        @start-project="handleBondProject"
-      />
-
-      <VcReportWorkspace
-        v-if="activeStudioPage === 'report'"
-        :average-popularity="averagePopularity"
-        :fan-faction-summary="fanFactionSummary"
-        :budget="budget"
-        :top-bond="topBond"
-        :studio-total-spend="studioTotalSpend"
-        :studio-closure="studioClosure"
-        :studio-ledger="studioLedger"
-        :sorted-characters="sortedCharacters"
-        @run-report-action="handleReportAction"
+      <VcStudioNav
+        :active-studio-page="activeStudioPage"
+        :report-available="reportAvailability.isAvailable"
+        @change-page="setActiveStudioPage"
       />
 
       <VcTrendingManager
@@ -1170,38 +1180,105 @@ const producerMedals = computed<ProducerMedal[]>(() => {
         @handle-topic="handleTrending"
       />
 
-      <div v-if="activeStudioPage === 'recording'" class="event-layout">
+      <div class="event-layout">
         <VcPopularityDashboard
           :show="showPopularityDashboard"
           :sorted-characters="sortedCharacters"
           :top-character="topCharacter"
           :highlighted-char-ids="highlightedCharIds"
           :trending-queue="trendingQueue"
-          :budget="budget"
-          :support-cost="HEART_SUPPORT_COST"
           @close="closePopularityDashboard"
-          @support-character="handleHeartClick"
         />
 
         <VcLiveCockpit
+          v-if="activeStudioPage === 'recording'"
           :recording-mode="recordingMode"
           :focus-character="focusCharacter"
+          :bias-character-id="biasCharacterId"
           :event-candidates="eventCandidates"
           :focus-character-id="focusCharacterId"
           :execution-intensity="executionIntensity"
           :recording-intensity-cost="RECORDING_INTENSITY_COST"
+          :recording-success-modifier="effectiveRecordingModifier"
+          :fan-momentum-modifier="fanMomentumModifier"
+          :event-success-modifier="effectiveEventModifier"
+          :recording-resource-cost="recordingResourceCost"
+          :recording-plan-message="recordingPlanMessage"
           @select-focus="setFocusCharacter"
           @set-recording-mode="setRecordingMode"
           @change-intensity="changeExecutionIntensity"
           @set-intensity="setExecutionIntensity"
+          @back-to-event="setActiveStudioPage('event')"
+        />
+
+        <VcGameGoalsPanel
+          v-if="activeStudioPage === 'goals'"
+          :goals="gameGoalResults"
+          :claimed-goal-ids="claimedGoalIds"
+          @claim-reward="claimGoalReward"
+        />
+
+        <VcFanWorkspace
+          v-if="activeStudioPage === 'fans'"
+          :fan-factions="fanFactions"
+          :fan-operation-intensity="fanOperationIntensity"
+          :fan-program-base-cost="FAN_PROGRAM_BASE_COST"
+          :bias-character="biasCharacter"
+          :fan-momentum-label="formatModifier(fanMomentumModifier)"
+          :recording-mode-label="recordingModeLabels[recordingMode]"
+          @change-intensity="changeFanOperationIntensity"
+          @set-intensity="setFanOperationIntensity"
+          @run-program="handleFanProgram"
+        />
+
+        <VcBondWorkspace
+          v-if="activeStudioPage === 'bonds'"
+          :bond-candidate-list="bondCandidateList"
+          :selected-bond-ids="selectedBondIds"
+          :selected-bond-characters="selectedBondCharacters"
+          :selected-bond-value="selectedBondValue"
+          :bond-project-intensity="bondProjectIntensity"
+          :bond-project-base-cost="BOND_PROJECT_BASE_COST"
+          :top-bond="topBond"
+          @toggle-candidate="toggleBondCandidate"
+          @change-intensity="changeBondProjectIntensity"
+          @set-intensity="setBondProjectIntensity"
+          @start-project="handleBondProject"
+        />
+
+        <VcReportWorkspace
+          v-if="activeStudioPage === 'report' && reportAvailability.isAvailable"
+          :fan-faction-summary="fanFactionSummary"
+          :fan-factions="fanFactions"
+          :studio-closure="studioClosure"
+          :studio-ledger="studioLedger"
+          :sorted-characters="sortedCharacters"
+          :class-roster="classRoster"
+          :assessment-score="classTrackState.assessmentScore"
+          :report-availability="reportAvailability"
+          @run-report-action="handleReportAction"
         />
 
         <VcEventStage
+          v-if="activeStudioPage === 'event'"
           :is-breaking-news="isBreakingNews"
           :current-event-index="currentEventIndex"
           :total-events="gameEvents.length"
           :title="currentEvent.title"
           :description="processedDescription"
+          :episode-title="currentProgramEpisode?.title || '开录日: 主题曲定位'"
+          :episode-summary="currentProgramEpisode?.summary || '先确定这一季团综的第一记忆点。'"
+          :class1-count="classRoster.CLASS1.length"
+          :bias-class-label="finalClassLabel"
+          :narrative-threads="narrativeThreads"
+          :focus-name="focusCharacter.name"
+          :recording-mode-label="recordingModeLabels[recordingMode]"
+          :recording-plan-message="recordingPlanMessage"
+          :recording-modifier-label="formatModifier(effectiveRecordingModifier)"
+          :fan-modifier-label="formatModifier(fanMomentumModifier)"
+          :total-modifier-label="formatModifier(effectiveEventModifier)"
+          :recording-ready="recordingReady"
+          @open-recording="setActiveStudioPage('recording')"
         >
             <VcChoiceEventPanel
               v-if="currentEvent.type === 'CHOICE'"
@@ -1214,6 +1291,7 @@ const producerMedals = computed<ProducerMedal[]>(() => {
               :candidates="rankingList"
               :selected-pair="selectedPair"
               :selected-pair-bond-value="selectedPairBond?.value || 0"
+              :pair-role="currentEvent.pairRole"
               @toggle-selection="toggleSelection"
               @submit="handlePickTwo"
             />
@@ -1228,23 +1306,29 @@ const producerMedals = computed<ProducerMedal[]>(() => {
       </div>
     </div>
 
-    <VcToastHint :show="showToast" :message="toastMessage" />
+    <VcResultModal
+      :show="showResultModal"
+      :message="resultModalMessage"
+      :title="resultModalTitle"
+      @confirm="confirmResultModal"
+    />
+
+    <VcToastHint
+      :show="showToast"
+      :message="toastMessage"
+      :title="toastTitle"
+      :impact-lines="toastImpactLines"
+    />
 
     <VcSettlementView
       v-if="gameState === 'end'"
       :producer-title="producerTitle"
-      :settlement-report-id="settlementReportId"
-      :producer-medals="producerMedals"
-      :game-goals="gameGoalResults"
-      :achievements="settlementAchievements"
-      :studio-closure="studioClosure"
-      :producer-analysis="producerAnalysis"
-      :event-history="eventHistory"
-      :is-history-expanded="isHistoryExpanded"
-      :sorted-characters="sortedCharacters"
-      :initial-popularity-map="initialPopularityMap"
       :is-generating-poster="isGeneratingPoster"
-      @toggle-history="toggleHistoryExpanded"
+      :producer-identity="producerIdentity"
+      :season-recap="seasonRecap"
+      :bias-name="biasCharacter.name"
+      :bias-breakthrough="biasBreakthrough"
+      :final-class-label="finalClassLabel"
       @share-poster="handleSharePoster"
       @restart="restartToRoster"
     />

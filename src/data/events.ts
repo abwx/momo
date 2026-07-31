@@ -1,49 +1,56 @@
 import type { Character } from './characters';
+import { getRandomValue, shuffleList } from '../utils/random';
 import type { GameEvent } from './type/GameEvent';
+import { additionalEvents } from './additionalEvents';
 export type { Choice, GameEffectTag, GameEvent, GameEventType } from './type/GameEvent';
 
-const randomResult = (successChance: number) => Math.random() < successChance;
+const randomResult = (successChance: number) => getRandomValue() < successChance;
 
-// --- 动态文案工具库 ---
-const getChoiceText = (type: string, char: Character) => {
-  const templates: Record<string, string[]> = {
-    CENTER: [
-      `让众望所归的 ${char.name} 稳坐 C 位，保住基本盘。`,
-      `赌一把 ${char.name} 的舞台爆发力，制造“断层”名场面。`,
-      `钦定 ${char.name} 开启逆袭剧本，让全网见证黑马诞生。`,
-      `以 ${char.name} 为核心构建视觉重心，强化团队初印象。`
-    ],
-    BRAND: [
-      `看中 ${char.name} 的高冷气质，向顶级时尚资源发起冲击。`,
-      `利用 ${char.name} 的国民亲和力，争取品牌大众代言。`,
-      `押注 ${char.name} 的电影脸，在试镜中用硬照实力说话。`,
-      `推举时尚感爆棚的 ${char.name}，试图刷新全团商务逼格。`
-    ],
-    VARIETY: [
-      `派 ${char.name} 去综艺刷脸，利用其性格魅力圈粉。`,
-      `让 ${char.name} 展现私下反差萌，在慢综艺中建立人设。`,
-      `靠 ${char.name} 的临场反应撑起场面，在真人秀里抢镜头。`,
-      `推荐 ${char.name} 跨界出击，用真实的少年感征服路人。`
-    ],
-    DANCE: [
-      `派舞蹈机器 ${char.name} 开启杀手锏模式，血洗舞池。`,
-      `利用 ${char.name} 极具张力的肢体表达，在 Battle 中绝杀。`,
-      `让 ${char.name} 展示苦练的技巧，用实力堵住黑粉的嘴。`,
-      `推荐 ${char.name} 领舞，通过极具观赏性的动作收割关注。`
-    ],
-    VOCAL: [
-      `让主唱担当 ${char.name} 开启“消音审判”模式，惊艳全场。`,
-      `派 ${char.name} 挑战超高难度曲目，展现职业级唱功。`,
-      `推举音色流 ${char.name} 演绎深情片段，在和声中突围。`,
-      `钦点 ${char.name} 领衔高音部分，用业务能力为全团正名。`
-    ]
-  };
+type ChoiceTextType = 'CENTER' | 'BRAND' | 'VARIETY' | 'DANCE' | 'VOCAL';
 
-  const pool = templates[type] || [`选择 ${char.name} 进行下一步。`];
-  // 使用 ID 产生相对固定的随机索引，避免在同一事件中出现重复描述
-  const index = (char.id.length + char.name.length) % pool.length;
-  return pool[index];
+const CHOICE_TEXT_TEMPLATES: Record<ChoiceTextType, string[]> = {
+  CENTER: [
+    '让众望所归的 $name 稳坐 C 位，把基本盘托稳。',
+    '押一把 $name 的舞台爆发力，做成这期的名场面。',
+    '钦定 $name 开逆袭剧本，让全网记住这匹黑马。',
+    '以 $name 为核心搭视觉重心，先把团队初印象立住。',
+    '把主题曲中心位交给 $name，赌他接得住这份偏爱。',
+  ],
+  BRAND: [
+    '看中 $name 的气质，往顶级时尚资源上冲一冲。',
+    '靠 $name 的亲和力，去拿更大众的品牌代言。',
+    '押注 $name 的镜头脸，用硬照在试镜里说话。',
+    '推时尚感在线的 $name，给全团商务抬一档。',
+  ],
+  VARIETY: [
+    '派 $name 去综艺刷脸，用性格魅力慢慢圈粉。',
+    '让 $name 露出反差萌，在慢综艺里养人设。',
+    '靠 $name 的临场反应撑场，真人秀里多抢点镜头。',
+    '推荐 $name 跨界露脸，用少年感收一路人缘。',
+  ],
+  DANCE: [
+    '派舞感很炸的 $name 上杀手锏，把舞池热度拉满。',
+    '用 $name 的肢体张力，在 Battle 里拿下高光。',
+    '让 $name 秀出苦练的技巧，用实力回击质疑。',
+    '推荐 $name 领舞，靠好看的动作收割讨论。',
+  ],
+  VOCAL: [
+    '让主唱感很强的 $name 扛高光段，惊艳一下全场。',
+    '派 $name 挑战高难度曲目，把唱功摊开给人看。',
+    '推音色特别的 $name 唱深情段落，在和声里突围。',
+    '钦点 $name 领衔高音部分，用业务能力给全团撑腰。',
+  ],
 };
+
+/** 同一批选项尽量不撞句，名字动态填入。 */
+export function SAssignChoiceTexts(type: ChoiceTextType, characters: Character[]): string[] {
+  const pool = CHOICE_TEXT_TEMPLATES[type];
+  const order = shuffleList(pool.map((_, index) => index));
+  return characters.map((character, index) => {
+    const template = pool[order[index % order.length]];
+    return template.replaceAll('$name', character.name);
+  });
+}
 
 // --- 核心事件池 (20+ 事件) ---
 
@@ -52,26 +59,28 @@ export const event_c_position: GameEvent = {
   type: 'CHOICE',
   title: '主题曲 Center 席位之争',
   description: '聚光灯下的核心位不仅是荣耀，更是压力。你必须决定，是将这份权力交给目前的人气王，还是亲手书写一段“黑马突围”的佳话？',
-  choices: (candidates: Character[]) => candidates.map(char => {
-    const isTop = char.popularity > 85;
-    return {
-      text: getChoiceText('CENTER', char),
-      action: (chars: Character[]) => {
-        const target = chars.find(c => c.id === char.id)!;
-        if (randomResult(isTop ? 0.75 : 0.4)) {
-          target.popularity += isTop ? 15 : 35;
-          return isTop 
-            ? `果然，${target.name} 的 Center 舞台稳如磐石。#初C众望所归# 登顶热搜，品牌方纷纷发来意向单，这波基本盘彻底稳住了！`
-            : `你创造了内娱奇迹！${target.name} 在公演中超常发挥，那种“一定要被看见”的眼神极具感染力，全网都在问“那个黑马是谁”！`;
-        } else {
+  choices: (candidates: Character[]) => {
+    const texts = SAssignChoiceTexts('CENTER', candidates);
+    return candidates.map((char, index) => {
+      const isTop = index === 0;
+      return {
+        text: texts[index],
+        action: (chars: Character[]) => {
+          const target = chars.find(c => c.id === char.id)!;
+          if (randomResult(isTop ? 0.75 : 0.4)) {
+            target.popularity += isTop ? 15 : 35;
+            return isTop
+              ? `果然，${target.name} 的 Center 舞台稳如磐石。#初C众望所归# 登顶热搜，品牌方纷纷发来意向单，这波基本盘彻底稳住了！`
+              : `你创造了内娱奇迹！${target.name} 在公演中超常发挥，那种“一定要被看见”的眼神极具感染力，全网都在问“那个黑马是谁”！`;
+          }
           target.popularity -= 12;
           return isTop
             ? `意料之外的翻车！${target.name} 或许是因为压力太大，舞台表现显得紧绷且呆板。路人吐槽“德不配位”，其他选手的粉丝开始集体质疑。`
             : `逆袭剧本宣告失败。${target.name} 在高强度的核心位训练下力不从心，公演舞台被评价为“接不住戏”，这次大胆的尝试反而让他陷入了群嘲。`;
-        }
-      }
-    };
-  })
+        },
+      };
+    });
+  },
 };
 
 export const event_scandal_01: GameEvent = {
@@ -137,9 +146,9 @@ export const event_variety_duo_01: GameEvent = {
   choices: {
     action: (char1: Character, char2: Character) => {
       // 优化逻辑：大幅提升基础成功率 (从 0.45 提升至 0.7)
-      const isGoodMatch = (char1.personality === '喜剧人' && char2.personality === '喜剧人') || 
-                         (char1.personality === '高情商' && char2.personality === '内秀舞担') ||
-                         (char1.personality === 'ACE候补' && char2.personality === 'ACE候补');
+      const isGoodMatch = (char1.personality === '快乐担' && char2.personality === '快乐担') ||
+                         (char1.personality === '情商担当' && char2.personality === '舞担感') ||
+                         (char1.personality === '全能担当' && char2.personality === '全能担当');
       if (randomResult(isGoodMatch ? 0.95 : 0.7)) {
         char1.popularity += 25; char2.popularity += 25;
         return `节目效果爆炸！${char1.name} 和 ${char2.name} 在节目中的互补感绝了，“这对神仙组合”的切片在短视频平台疯狂刷屏，CP 粉原地过年！`;
@@ -171,20 +180,23 @@ export const event_brand_deal: GameEvent = {
   type: 'CHOICE',
   title: '高奢品牌全球大使试镜',
   description: '某国际顶奢品牌正在寻找具备“高级感”的面孔。这不仅是时尚资源的飞跃，更是咖位的象征。全网盯着这块肥肉，稍有不慎就会被嘲“越阶”。',
-  choices: (candidates: Character[]) => candidates.slice(0, 4).map(char => ({
-    text: getChoiceText('BRAND', char),
-    action: (chars: Character[]) => {
-      const target = chars.find(c => c.id === char.id)!;
-      const isFashionable = target.personality === '佛系贵公子' || target.personality === '懵懂门面';
-      if (randomResult(isFashionable ? 0.8 : 0.4)) {
-        target.popularity += 30;
-        return `拿下！${target.name} 的表现力获得了品牌方的高度赞赏。官宣当天，全团的时尚指数被瞬间拔高，这就是传说中的“高奢脸”吧。`;
-      } else {
+  choices: (candidates: Character[]) => {
+    const picks = candidates.slice(0, 4);
+    const texts = SAssignChoiceTexts('BRAND', picks);
+    return picks.map((char, index) => ({
+      text: texts[index],
+      action: (chars: Character[]) => {
+        const target = chars.find(c => c.id === char.id)!;
+        const isFashionable = target.personality === '松弛贵气' || target.personality === '少年门面';
+        if (randomResult(isFashionable ? 0.8 : 0.4)) {
+          target.popularity += 30;
+          return `拿下！${target.name} 的表现力获得了品牌方的高度赞赏。官宣当天，全团的时尚指数被瞬间拔高，这就是传说中的“高奢脸”吧。`;
+        }
         target.popularity -= 5;
         return `遗憾落选。品牌方认为 ${target.name} 的气质过于“幼态”或“偶像感太重”，与品牌调性不符。黑粉已经开始嘲讽其“强行越阶”了。`;
-      }
-    }
-  }))
+      },
+    }));
+  },
 };
 
 export const event_training_injury: GameEvent = {
@@ -242,7 +254,7 @@ export const event_collab_stage: GameEvent = {
   description: '跨年盛典需要派两名成员与歌坛天后同台。这不仅是提咖的机会，更是展现唱功的生死场。',
   choices: {
     action: (char1: Character, char2: Character) => {
-      const isVocalPower = char1.personality === 'ACE候补' || char2.personality === 'ACE候补';
+      const isVocalPower = char1.personality === '全能担当' || char2.personality === '全能担当';
       if (randomResult(isVocalPower ? 0.85 : 0.5)) {
         char1.popularity += 25; char2.popularity += 25;
         return `完美契合！${char1.name} 和 ${char2.name} 的和声竟然没有被天后盖住。#某某神仙唱功# 霸占趋势榜第一，国民度大幅跃升！`;
@@ -271,7 +283,7 @@ export const event_live_stream_accident: GameEvent = {
       text: '【逗趣互损】内容是成员们毫无包袱的模仿和打闹。',
       action: (chars) => {
         chars.forEach(c => c.popularity += 12);
-        return `这种真实的性格魅力让网友直呼“这就是我想看的少年感”。全员喜剧人的人设坐稳了，商业价值上升。`;
+        return `这种真实的性格魅力让网友直呼“这就是我想看的少年感”。全员快乐担的人设坐稳了，商业价值上升。`;
       }
     },
     {
@@ -340,20 +352,23 @@ export const event_variety_guest: GameEvent = {
   type: 'CHOICE',
   title: '单兵作战：热门慢综艺常驻邀请',
   description: '某档高口碑慢综艺需要一名常驻嘉宾，这对提升路人缘和国民度极其关键。各家粉丝已经在工作室评论区“开撕”，要求公司公平对待。',
-  choices: (candidates: Character[]) => candidates.slice(0, 4).map(char => ({
-    text: getChoiceText('VARIETY', char),
-    action: (chars: Character[]) => {
-      const target = chars.find(c => c.id === char.id)!;
-      const isGoodFit = char.personality === '高情商' || char.personality === '佛系贵公子' || char.personality === '喜剧人';
-      if (randomResult(isGoodFit ? 0.8 : 0.4)) {
-        target.popularity += 25;
-        return `大获成功！${target.name} 在节目中展现的性格魅力简直是“吸粉利器”。路人纷纷感叹“这个小伙子真不错”，国民度稳步提升。`;
-      } else {
+  choices: (candidates: Character[]) => {
+    const picks = candidates.slice(0, 4);
+    const texts = SAssignChoiceTexts('VARIETY', picks);
+    return picks.map((char, index) => ({
+      text: texts[index],
+      action: (chars: Character[]) => {
+        const target = chars.find(c => c.id === char.id)!;
+        const isGoodFit = char.personality === '情商担当' || char.personality === '松弛贵气' || char.personality === '快乐担';
+        if (randomResult(isGoodFit ? 0.8 : 0.4)) {
+          target.popularity += 25;
+          return `大获成功！${target.name} 在节目中展现的性格魅力简直是“吸粉利器”。路人纷纷感叹“这个小伙子真不错”，国民度稳步提升。`;
+        }
         target.popularity -= 5;
         return `反响平平。${target.name} 在节目中话太少，剪辑出来的镜头屈指可数。虽然没出错，但也完全没有起到圈粉的作用，浪费了一个好机会。`;
-      }
-    }
-  }))
+      },
+    }));
+  },
 };
 
 export const event_airport_fashion: GameEvent = {
@@ -363,7 +378,7 @@ export const event_airport_fashion: GameEvent = {
   description: '机场生图是衡量艺人时尚潜力的第一标准。你决定重点打造哪两名成员的穿搭？',
   choices: {
     action: (char1: Character, char2: Character) => {
-      const isFashionable = char1.personality === '佛系贵公子' || char2.personality === '懵懂门面';
+      const isFashionable = char1.personality === '松弛贵气' || char2.personality === '少年门面';
       // 提升基础成功率 (从 0.45 提升至 0.75)
       if (randomResult(isFashionable ? 0.95 : 0.75)) {
         char1.popularity += 18; char2.popularity += 18;
@@ -398,7 +413,7 @@ export const event_dance_battle: GameEvent = {
   description: '为了展现团队硬实力，你需要派出两名成员参加顶流街舞节目的 Battle 录制。',
   choices: {
     action: (char1: Character, char2: Character) => {
-      const isDancer = char1.personality === '内秀舞担' || char2.personality === '内秀舞担';
+      const isDancer = char1.personality === '舞担感' || char2.personality === '舞担感';
       if (randomResult(isDancer ? 0.9 : 0.5)) {
         char1.popularity += 28; char2.popularity += 20;
         return `炸裂！${char1.name} 的地板动作直接让全场沸腾。#四代舞力天花板# 登顶热搜，实力口碑彻底打响！`;
@@ -419,7 +434,7 @@ export const event_audition_chance: GameEvent = {
     text: `押注颜值优势，派 ${char.name} 去导演组试戏。`,
     action: (chars: Character[]) => {
       const target = chars.find(c => c.id === char.id)!;
-      const isActorLook = char.personality === '懵懂门面' || char.personality === '佛系贵公子';
+      const isActorLook = char.personality === '少年门面' || char.personality === '松弛贵气';
       if (randomResult(isActorLook ? 0.75 : 0.45)) {
         target.popularity += 22;
         return `试镜成功！导演评价其“天生一张电影脸”。官宣后的定妆照瞬间刷屏，成功收割了大批颜粉，转型之路首战告捷。`;
@@ -473,20 +488,23 @@ export const event_solo_cover: GameEvent = {
   type: 'CHOICE',
   title: '机遇：首支个人翻唱作品发布',
   description: '为了展现成员个人特色，你决定在 B 站发布一支高质量的翻唱视频。这种垂直领域的展示是圈内“吸粉”的神器。',
-  choices: (candidates: Character[]) => candidates.slice(0, 4).map(char => ({
-    text: getChoiceText('VOCAL', char),
-    action: (chars: Character[]) => {
-      const target = chars.find(c => c.id === char.id)!;
-      const isVocal = char.personality === 'ACE候补' || char.personality === '高情商';
-      if (randomResult(isVocal ? 0.85 : 0.5)) {
-        target.popularity += 20;
-        return `惊艳全场！${target.name} 的独特唱腔赋予了老歌新生命。视频在 B 站迅速达成百万播放，吸引了大量垂直乐评人的关注 and 点赞。`;
-      } else {
+  choices: (candidates: Character[]) => {
+    const picks = candidates.slice(0, 4);
+    const texts = SAssignChoiceTexts('VOCAL', picks);
+    return picks.map((char, index) => ({
+      text: texts[index],
+      action: (chars: Character[]) => {
+        const target = chars.find(c => c.id === char.id)!;
+        const isVocal = char.personality === '全能担当' || char.personality === '情商担当';
+        if (randomResult(isVocal ? 0.85 : 0.5)) {
+          target.popularity += 20;
+          return `惊艳全场！${target.name} 的独特唱腔赋予了老歌新生命。视频在 B 站迅速达成百万播放，吸引了大量垂直乐评人的关注 and 点赞。`;
+        }
         target.popularity -= 5;
         return `反响平淡。虽然唱功在线，但缺乏个人辨识度和记忆点。在这个看脸又看个性的时代，平庸就是制作人最大的失败。`;
-      }
-    }
-  }))
+      },
+    }));
+  },
 };
 
 export const event_fan_project: GameEvent = {
@@ -539,11 +557,11 @@ export const event_variety_clash: GameEvent = {
   description: '在综艺录制中，两名成员因为分组问题与前辈艺人产生了小摩擦。现场导演非常不满。',
   choices: {
     action: (char1: Character, char2: Character) => {
-      const hasHighEQ = char1.personality === '高情商' || char2.personality === '高情商';
+      const hasHighEQ = char1.personality === '情商担当' || char2.personality === '情商担当';
       // 提升基础成功率 (从 0.4 提升至 0.7)
       if (randomResult(hasHighEQ ? 0.98 : 0.7)) {
         char1.popularity += 12; char2.popularity += 12;
-        return `危机公关成功！多亏了其中一人的高情商斡旋，不仅化解了尴尬，还赢得了前辈的赞赏。这段互动成了节目的神来之笔。`;
+        return `危机公关成功！多亏其中一人情商在线、出面圆场，不仅化解了尴尬，还赢得了前辈的赞赏。这段互动成了节目的神来之笔。`;
       } else {
         char1.popularity -= 15; char2.popularity -= 15;
         return `灾难性录制。两人在现场显得局促且缺乏礼貌，这种不专业的表现被工作人员传到了网上，口碑遭到重创。`;
@@ -680,27 +698,19 @@ export const event_award_ceremony: GameEvent = {
 // --- 事件分发逻辑 (确保不重复) ---
 
 export const eventPool: GameEvent[] = [
-  event_scandal_01,
   event_variety_duo_01,
   event_vlog_ranking,
-  event_brand_deal,
   event_training_injury,
   event_collab_stage,
   event_live_stream_accident,
-  event_fan_gift_crisis,
   event_variety_guest,
-  event_airport_fashion,
   event_mr_removed_vocal,
   event_dance_battle,
-  event_audition_chance,
   event_training_vlog_accident,
-  event_solo_cover,
-  event_fan_project,
   event_variety_clash,
   event_dance_practice_vlog,
   event_variety_drama,
-  event_award_ceremony,
-  event_debut_countdown
+  ...additionalEvents,
 ];
 
 export const openingEvent: GameEvent = event_c_position;

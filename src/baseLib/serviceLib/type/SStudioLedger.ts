@@ -6,7 +6,7 @@ export type SFanProgramKey = 'GROUP' | 'SOLO' | 'CP' | 'PUBLIC' | 'ANTI';
 
 export type SBondProjectKey = 'STAGE' | 'LIVE' | 'VLOG';
 
-export type SReportActionKey = 'BALANCE' | 'TOP' | 'CLEAN';
+export type SReportActionKey = 'BALANCE' | 'CLEAN';
 
 export interface SStudioLedger {
   spend: Record<SStudioLedgerKey, number>;
@@ -14,7 +14,6 @@ export interface SStudioLedger {
   fanPrograms: Record<SFanProgramKey, number>;
   bondProjects: Record<SBondProjectKey, number>;
   reportActions: Record<SReportActionKey, number>;
-  cardUses: number;
   highlights: string[];
 }
 

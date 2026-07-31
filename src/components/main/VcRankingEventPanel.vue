@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, watch } from 'vue';
 import draggable from 'vuedraggable';
 import type { Character } from '../../data/characters';
 import { getImageUrl } from '../../utils/imageUrl';
@@ -9,30 +9,41 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  'update:rankingList': [rankingList: Character[]];
+  'update:rankingList': [value: Character[]];
   submit: [];
 }>();
 
-const editableRankingList = computed({
-  get: () => props.rankingList,
-  set: (value: Character[]) => emit('update:rankingList', value),
-});
+const editableRankingList = ref<Character[]>([...props.rankingList]);
 
+watch(
+  () => props.rankingList,
+  (list) => {
+    editableRankingList.value = [...list];
+  }
+);
+
+watch(
+  editableRankingList,
+  (list) => {
+    emit('update:rankingList', list);
+  },
+  { deep: true }
+);
 </script>
 
 <template>
   <div class="ranking-area">
-    <p class="pick-two-hint">拖动成员卡片进行排序。</p>
-    <draggable v-model="editableRankingList" item-key="id" class="drag-list" handle=".drag-item" animation="300">
+    <p class="pick-two-hint">拖动成员卡片进行排序</p>
+    <draggable v-model="editableRankingList" item-key="id" class="drag-list" handle=".drag-item" animation="220">
       <template #item="{ element, index }">
         <div class="drag-item">
           <span class="rank-badge" :class="'rank-' + (index + 1)">{{ index + 1 }}</span>
           <img :src="getImageUrl(element.image)" :alt="element.name" class="drag-img" loading="lazy" decoding="async" />
           <span class="drag-name">{{ element.name }}</span>
-          <span class="drag-handle">↕</span>
+          <span class="drag-handle" aria-hidden="true">↕</span>
         </div>
       </template>
     </draggable>
-    <button @click="emit('submit')" class="start-button submit-rank" style="margin-top: 2rem;">确认排位并发布</button>
+    <button class="primary-btn" @click="emit('submit')">确认排位并发布</button>
   </div>
 </template>

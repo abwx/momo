@@ -17,7 +17,7 @@ const STUDIO_NAMES: Record<SStudioLedgerKey, string> = {
 };
 
 export function SCreateStudioLedger(): SStudioLedger {
-  return { spend: SCreateSpend(), recordingModes: SCreateRecordingModes(), fanPrograms: SCreateFanPrograms(), bondProjects: SCreateBondProjects(), reportActions: SCreateReportActions(), cardUses: 0, highlights: [] };
+  return { spend: SCreateSpend(), recordingModes: SCreateRecordingModes(), fanPrograms: SCreateFanPrograms(), bondProjects: SCreateBondProjects(), reportActions: SCreateReportActions(), highlights: [] };
 }
 
 export function SResetStudioLedger(ledger: SStudioLedger) {
@@ -34,17 +34,6 @@ export function SRecordFanProgram(ledger: SStudioLedger, type: SFanProgramKey, c
   ledger.fanPrograms[type] += 1;
   SRecordSpend(ledger, 'fans', cost);
   SAddHighlight(ledger, `粉丝台：${SFanProgramName(type)}上线`);
-}
-
-export function SRecordFanSupport(ledger: SStudioLedger, cost: number, name: string) {
-  SRecordSpend(ledger, 'fans', cost);
-  SAddHighlight(ledger, `粉丝台：${name} 应援加码`);
-}
-
-export function SRecordOperationCard(ledger: SStudioLedger, cost: number, name: string) {
-  ledger.cardUses += 1;
-  SRecordSpend(ledger, 'fans', cost);
-  SAddHighlight(ledger, `粉丝台：打出「${name}」`);
 }
 
 export function SRecordBondProject(ledger: SStudioLedger, type: SBondProjectKey, cost: number, names: string) {
@@ -89,7 +78,7 @@ function SCreateBondProjects(): Record<SBondProjectKey, number> {
 }
 
 function SCreateReportActions(): Record<SReportActionKey, number> {
-  return { BALANCE: 0, TOP: 0, CLEAN: 0 };
+  return { BALANCE: 0, CLEAN: 0 };
 }
 
 function SRecordSpend(ledger: SStudioLedger, key: SStudioLedgerKey, cost: number) {
@@ -107,9 +96,9 @@ function SBuildRecordingClosure(ledger: SStudioLedger, averagePopularity: number
 }
 
 function SBuildFanClosure(ledger: SStudioLedger, fanSummary: string): SStudioClosure {
-  const actions = SSumValues(ledger.fanPrograms) + ledger.cardUses;
+  const actions = SSumValues(ledger.fanPrograms);
   if (!actions) return SIdleClosure('fans');
-  return SCreateClosure('fans', actions, ledger.spend.fans, fanSummary, `${STopFanProgramText(ledger)}，卡牌 ${ledger.cardUses} 次`);
+  return SCreateClosure('fans', actions, ledger.spend.fans, fanSummary, `最高频 ${SFanProgramName(STopKey(ledger.fanPrograms))}`);
 }
 
 function SBuildBondClosure(ledger: SStudioLedger, topBond: SBondPair | null): SStudioClosure {
@@ -121,7 +110,7 @@ function SBuildBondClosure(ledger: SStudioLedger, topBond: SBondPair | null): SS
 function SBuildReportClosure(ledger: SStudioLedger): SStudioClosure {
   const actions = SSumValues(ledger.reportActions);
   if (!actions) return SIdleClosure('report');
-  return SCreateClosure('report', actions, ledger.spend.report, STopReportText(ledger), '用于修正短板、TOP 资源和舆情风险');
+  return SCreateClosure('report', actions, ledger.spend.report, STopReportText(ledger), '用于修正成员断层和舆情风险');
 }
 
 function SCreateClosure(key: SStudioLedgerKey, actions: number, spend: number, result: string, detail: string): SStudioClosure {
@@ -134,10 +123,6 @@ function SIdleClosure(key: SStudioLedgerKey): SStudioClosure {
 
 function STopModeText(ledger: SStudioLedger) {
   return `主策略 ${SModeName(STopKey(ledger.recordingModes))}`;
-}
-
-function STopFanProgramText(ledger: SStudioLedger) {
-  return `最高频 ${SFanProgramName(STopKey(ledger.fanPrograms))}`;
 }
 
 function STopReportText(ledger: SStudioLedger) {
@@ -165,5 +150,5 @@ function SBondProjectName(type: SBondProjectKey) {
 }
 
 function SReportActionName(type: SReportActionKey) {
-  return { BALANCE: '补短板会议', TOP: 'TOP 加码', CLEAN: '舆情复盘' }[type];
+  return { BALANCE: '补短板会议', CLEAN: '舆情复盘' }[type];
 }

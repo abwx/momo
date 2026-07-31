@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Choice } from '../../data/events';
+import { SGetNarrativeChoiceHint } from '../../baseLib/serviceLib/SGameNarrative';
 
 defineProps<{
   choices: Choice[];
@@ -9,44 +10,28 @@ const emit = defineEmits<{
   selectChoice: [choice: Choice];
 }>();
 
-const directiveTypes = ['稳盘控场', '高光押注', '舆情反打', '粉圈运营'];
-const directiveTargets = ['路人盘', '团粉盘', '唯粉盘', 'CP粉'];
-
-function getDirectiveType(index: number) {
-  return directiveTypes[index % directiveTypes.length];
-}
-
-function getDirectiveCost(index: number) {
-  return [8000, 16000, 24000, 12000][index % 4];
-}
-
-function getDirectiveRisk(index: number) {
-  return [28, 62, 84, 45][index % 4];
-}
-
-function getDirectiveTarget(index: number) {
-  return directiveTargets[index % directiveTargets.length];
+function getChoiceHint(choice: Choice): string {
+  return SGetNarrativeChoiceHint(choice.effectTags);
 }
 </script>
 
 <template>
   <div class="director-board">
     <div class="director-board-header">
-      <span class="board-kicker">导播台 / 方案调度</span>
-      <span class="board-hint">选择一套执行方案，系统会立即结算舆情与人气。</span>
+      <strong class="board-kicker">选一套出片思路</strong>
+      <span class="board-hint">选定后立刻结算，考核变化会显示在本轮回响里</span>
     </div>
-    <button v-for="(choice, index) in choices" :key="index" @click="emit('selectChoice', choice)" class="directive-card">
-      <span class="directive-topline">
-        <span class="directive-type">{{ getDirectiveType(index) }}</span>
-        <span class="directive-cost">预算预估 ¥{{ getDirectiveCost(index).toLocaleString() }}</span>
-      </span>
-      <span class="directive-copy">{{ choice.text }}</span>
-      <span class="directive-meta">
-        <span>影响：{{ getDirectiveTarget(index) }}</span>
-        <span>风险 {{ getDirectiveRisk(index) }}%</span>
-      </span>
-      <span class="risk-meter">
-        <span class="risk-fill" :style="{ width: getDirectiveRisk(index) + '%' }"></span>
+    <button
+      v-for="(choice, index) in choices"
+      :key="index"
+      class="directive-card"
+      @click="emit('selectChoice', choice)"
+    >
+      <span class="directive-index">{{ String(index + 1).padStart(2, '0') }}</span>
+      <span class="directive-detail">
+        <span class="directive-copy">{{ choice.text }}</span>
+        <small v-if="getChoiceHint(choice)" class="narrative-choice-hint">赛季影响：{{ getChoiceHint(choice) }}</small>
+        <small v-if="choice.preview" class="narrative-choice-hint risk">{{ choice.preview }}</small>
       </span>
     </button>
   </div>

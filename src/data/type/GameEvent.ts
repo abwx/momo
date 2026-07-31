@@ -1,11 +1,24 @@
 import type { Character } from '../characters';
 
 export type GameEventType = 'CHOICE' | 'PICK_TWO' | 'RANKING';
+export type PickTwoRole = 'DUO_STAGE' | 'TEAM';
 
-export type GameEffectTag = 'GROUP_BOOST' | 'ANTI_RISK' | 'PUBLIC_BOOST';
+export type GameEffectTag =
+  | 'GROUP_BOOST'
+  | 'ANTI_RISK'
+  | 'PUBLIC_BOOST'
+  | 'DRAMA_ESCALATE'
+  | 'DRAMA_SETTLE'
+  | 'FOCUS_ESCALATE'
+  | 'FOCUS_SETTLE'
+  | 'CP_ESCALATE'
+  | 'CP_SETTLE'
+  | 'UNDERDOG_SPOTLIGHT'
+  | 'FINALE_AUDIT';
 
 export type Choice = {
   text: string;
+  preview?: string;
   action: (characters: Character[]) => string;
   effectTags?: GameEffectTag[];
 };
@@ -31,6 +44,7 @@ export type ChoiceGameEvent = {
 export type PickTwoGameEvent = {
   id: string;
   type: 'PICK_TWO';
+  pairRole?: PickTwoRole;
   title: string;
   description: string;
   choices: PickTwoChoices;

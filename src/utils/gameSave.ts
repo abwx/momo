@@ -1,24 +1,28 @@
 import type { Character } from '../data/characters';
-import type { GameEvent } from '../data/events';
+import type { GameEffectTag, GameEvent } from '../data/events';
 import type { SFanFactionState } from '../baseLib/serviceLib/type/SFanFactionState';
 import type { SBondPair } from '../baseLib/serviceLib/type/SBondPair';
 import type {
   SRecordingModeKey,
   SStudioLedger,
-  SStudioLedgerKey,
 } from '../baseLib/serviceLib/type/SStudioLedger';
 import type { EventHistoryItem } from '../data/type/SettlementReport';
+import type { StudioViewKey } from '../data/type/StudioView';
+import type { SGameRandomState } from '../baseLib/serviceLib/SGameRandom';
+import type { SSeasonState } from '../baseLib/serviceLib/type/SSeasonState';
+import type { SEpisodeResources } from '../baseLib/serviceLib/type/SEpisodeResources';
+import type { SClassTrackState } from '../baseLib/serviceLib/type/SClassTrack';
 import { cloneData } from './cloneData';
 
 const GAME_SAVE_KEY = 'momo.producer.save.v1';
 
 export interface GameSaveData {
-  version: 1;
+  version: 9;
   savedAt: number;
   gameState: 'event' | 'end';
   currentEventIndex: number;
   eventIds: string[];
-  eventHistory: { eventId: string; result: string }[];
+  eventHistory: { eventId: string; result: string; effectTags?: GameEffectTag[] }[];
   characters: Pick<Character, 'id' | 'popularity'>[];
   initialPopularityMap: Record<string, number>;
   budget: number;
@@ -26,16 +30,21 @@ export interface GameSaveData {
   bondMap: Record<string, SBondPair>;
   studioLedger: SStudioLedger;
   qteSuccessCount: number;
-  activeStudioPage: SStudioLedgerKey;
+  activeStudioPage: StudioViewKey;
   recordingMode: SRecordingModeKey;
   focusCharacterId: string;
+  biasCharacterId?: string;
   executionIntensity: number;
   fanOperationIntensity: number;
   bondProjectIntensity: number;
-  usedCardIds: string[];
-  cardFeedback: string;
   settlementReportId: string;
   activeGoalIds?: string[];
+  completedGoalIds?: string[];
+  claimedGoalIds?: string[];
+  randomState?: SGameRandomState;
+  seasonState?: SSeasonState;
+  episodeResources?: SEpisodeResources;
+  classTrackState: SClassTrackState;
 }
 
 export interface GameSaveSource {
@@ -50,16 +59,21 @@ export interface GameSaveSource {
   bondMap: Record<string, SBondPair>;
   studioLedger: SStudioLedger;
   qteSuccessCount: number;
-  activeStudioPage: SStudioLedgerKey;
+  activeStudioPage: StudioViewKey;
   recordingMode: SRecordingModeKey;
   focusCharacterId: string;
+  biasCharacterId: string;
   executionIntensity: number;
   fanOperationIntensity: number;
   bondProjectIntensity: number;
-  usedCardIds: Set<string>;
-  cardFeedback: string;
   settlementReportId: string;
   activeGoalIds: string[];
+  completedGoalIds: Set<string>;
+  claimedGoalIds: Set<string>;
+  randomState: SGameRandomState;
+  seasonState: SSeasonState;
+  episodeResources: SEpisodeResources;
+  classTrackState: SClassTrackState;
 }
 
 export interface GameSaveRestoreTarget {
@@ -70,16 +84,17 @@ export interface GameSaveRestoreTarget {
   studioLedger: SStudioLedger;
   eventHistory: EventHistoryItem[];
   eventMap: Map<string, GameEvent>;
+  classTrackState: SClassTrackState;
 }
 
 export function createGameSaveData(source: GameSaveSource): GameSaveData {
   return {
-    version: 1,
+    version: 9,
     savedAt: Date.now(),
     gameState: source.gameState,
     currentEventIndex: source.currentEventIndex,
     eventIds: source.gameEvents.map(event => event.id),
-    eventHistory: source.eventHistory.map(item => ({ eventId: item.event.id, result: item.result })),
+    eventHistory: source.eventHistory.map(item => ({ eventId: item.event.id, result: item.result, effectTags: item.effectTags })),
     characters: source.characters.map(char => ({ id: char.id, popularity: char.popularity })),
     initialPopularityMap: { ...source.initialPopularityMap },
     budget: source.budget,
@@ -90,13 +105,18 @@ export function createGameSaveData(source: GameSaveSource): GameSaveData {
     activeStudioPage: source.activeStudioPage,
     recordingMode: source.recordingMode,
     focusCharacterId: source.focusCharacterId,
+    biasCharacterId: source.biasCharacterId,
     executionIntensity: source.executionIntensity,
     fanOperationIntensity: source.fanOperationIntensity,
     bondProjectIntensity: source.bondProjectIntensity,
-    usedCardIds: [...source.usedCardIds],
-    cardFeedback: source.cardFeedback,
     settlementReportId: source.settlementReportId,
     activeGoalIds: [...source.activeGoalIds],
+    completedGoalIds: [...source.completedGoalIds],
+    claimedGoalIds: [...source.claimedGoalIds],
+    randomState: { ...source.randomState },
+    seasonState: { ...source.seasonState },
+    episodeResources: { ...source.episodeResources },
+    classTrackState: cloneData(source.classTrackState),
   };
 }
 
@@ -106,6 +126,7 @@ export function restoreGameSaveCollections(target: GameSaveRestoreTarget, saveDa
   restoreRecord(target.bondMap, saveData.bondMap);
   Object.assign(target.fanFactions, saveData.fanFactions);
   Object.assign(target.studioLedger, saveData.studioLedger);
+  Object.assign(target.classTrackState, cloneData(saveData.classTrackState));
   restoreEventHistory(target.eventHistory, target.eventMap, saveData);
 }
 
@@ -141,7 +162,7 @@ function _readRawSave(): string | null {
 function _parseSave(rawSave: string): GameSaveData | null {
   try {
     const saveData = JSON.parse(rawSave) as GameSaveData;
-    return saveData.version === 1 ? saveData : null;
+    return saveData.version === 9 ? saveData : null;
   } catch {
     return null;
   }
@@ -158,7 +179,7 @@ function restoreEventHistory(eventHistory: EventHistoryItem[], eventMap: Map<str
   eventHistory.length = 0;
   saveData.eventHistory.forEach(item => {
     const event = eventMap.get(item.eventId);
-    if (event) eventHistory.push({ event, result: item.result });
+    if (event) eventHistory.push({ event, result: item.result, effectTags: item.effectTags });
   });
 }
 

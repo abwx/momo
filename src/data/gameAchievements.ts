@@ -10,13 +10,13 @@ export const GAME_ACHIEVEMENTS: GameAchievement[] = [
   {
     id: 'goal-clean-run',
     title: '目标全清',
-    desc: '单局完成 3 个制作目标',
+    desc: '单局完成 3 个本期 KPI',
     isUnlocked: context => context.completedGoalCount >= 3,
   },
   {
     id: 'bond-director',
-    title: '双人叙事导演',
-    desc: '任意羁绊值达到 80',
+    title: '嗑点导演',
+    desc: '任意一对嗑点达到 80',
     isUnlocked: context => context.topBondValue >= 80,
   },
   {
@@ -28,19 +28,13 @@ export const GAME_ACHIEVEMENTS: GameAchievement[] = [
   {
     id: 'budget-master',
     title: '铁算盘制作人',
-    desc: '结算预算保留 40000',
+    desc: '结算经费还剩 40000',
     isUnlocked: context => context.budget >= 40000,
   },
   {
-    id: 'full-pipeline',
-    title: '全链路闭环',
-    desc: '四个工作台都至少执行一次',
-    isUnlocked: context => context.completedWorkspaces >= 4,
-  },
-  {
     id: 'story-weaver',
-    title: '连锁叙事',
-    desc: '单局触发 2 个后续事件',
-    isUnlocked: context => context.followUpEventCount >= 2,
+    title: '整季收官',
+    desc: '完整录完 4 期团综',
+    isUnlocked: context => context.completedEpisodeCount >= 4,
   },
 ];

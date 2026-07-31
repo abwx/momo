@@ -1,7 +1,6 @@
 export const INITIAL_BUDGET = 100000;
 export const MAX_OPERATION_LEVEL = 4;
 export const RECORDING_INTENSITY_COST = 2500;
-export const HEART_SUPPORT_COST = 5000;
 
 export const FAN_PROGRAM_BASE_COST = {
   GROUP: 6000,
