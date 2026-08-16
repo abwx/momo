@@ -78,4 +78,18 @@ describe('SGameScore', () => {
     expect(SGetSeasonGrade(54)).toBe('D');
     expect(SGetSeasonGrade(53)).toBe('F');
   });
+
+  it('caps a high raw score when risk is left unresolved', () => {
+    const season = SCreateSeasonState();
+    season.groupHeat = 100;
+    season.producerReputation = 100;
+    season.biasPressure = 12;
+    const factions = { groupFans: 90, soloFans: 80, cpFans: 80, publicFans: 100, antiFans: 10 };
+
+    const score = SCreateSeasonScore(createCharacters(100), factions, season, 100000);
+
+    expect(score.rawGrade).toBe('SSS');
+    expect(score.grade).toBe('A');
+    expect(score.gradeCapReason).toContain('偏心');
+  });
 });

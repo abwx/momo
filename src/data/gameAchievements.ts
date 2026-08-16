@@ -3,15 +3,9 @@ import type { GameAchievement } from './type/GameAchievement';
 export const GAME_ACHIEVEMENTS: GameAchievement[] = [
   {
     id: 'first-s-grade',
-    title: '金牌开机',
+    title: '金牌收官',
     desc: '结算平均人气达到 90',
-    isUnlocked: context => context.averagePopularity >= 90,
-  },
-  {
-    id: 'goal-clean-run',
-    title: '目标全清',
-    desc: '单局完成 3 个本期 KPI',
-    isUnlocked: context => context.completedGoalCount >= 3,
+    isUnlocked: context => context.isSeasonComplete && context.averagePopularity >= 90,
   },
   {
     id: 'bond-director',
@@ -28,13 +22,13 @@ export const GAME_ACHIEVEMENTS: GameAchievement[] = [
   {
     id: 'budget-master',
     title: '铁算盘制作人',
-    desc: '结算经费还剩 40000',
-    isUnlocked: context => context.budget >= 40000,
+    desc: '赛季结算经费还剩 40000',
+    isUnlocked: context => context.isSeasonComplete && context.budget >= 40000,
   },
   {
     id: 'story-weaver',
     title: '整季收官',
     desc: '完整录完 4 期团综',
-    isUnlocked: context => context.completedEpisodeCount >= 4,
+    isUnlocked: context => context.isSeasonComplete && context.completedEpisodeCount >= 4,
   },
 ];

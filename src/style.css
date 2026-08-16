@@ -1,4 +1,7 @@
 ﻿/* Global reset and shared controls. Page rules live in ./styles. */
+@import "tailwindcss/theme" prefix(tw);
+@import "tailwindcss/utilities" prefix(tw);
+
 @import './styles/home.css';
 @import './styles/producer-hub.css';
 @import './styles/roster.css';
@@ -12,29 +15,37 @@
 :root {
   --bg: #0a0608;
   --card: #161014;
-  --surface: rgba(255, 250, 247, 0.05);
-  --surface-strong: rgba(255, 250, 247, 0.08);
+  --surface: rgb(255 250 247 / 0.05);
+  --surface-strong: rgb(255 250 247 / 0.08);
+  --surface-2: rgb(255 250 247 / 0.04);
   --ink: #fffaf7;
-  --muted: rgba(255, 250, 247, 0.6);
-  --line: rgba(255, 250, 247, 0.16);
-  --soft-line: rgba(255, 250, 247, 0.1);
+  --muted: rgb(255 250 247 / 0.62);
+  --line: rgb(255 250 247 / 0.16);
+  --soft-line: rgb(255 250 247 / 0.1);
   --red: #e11d48;
   --blue: #5b8fde;
   --yellow: #efc53d;
   --gold: #ffd166;
   --rose: #ff8fa3;
   --ok: #6dcea8;
-  --elev:
-    0 1px 0 rgba(255, 255, 255, 0.05) inset,
-    0 12px 28px rgba(0, 0, 0, 0.22);
-  --elev-strong:
-    0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 16px 36px rgba(0, 0, 0, 0.35);
-  --radius: 14px;
-  --radius-sm: 10px;
+  --elev: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 12px 28px rgb(0 0 0 / 0.22);
+  --elev-strong: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 16px 36px rgb(0 0 0 / 0.35);
+  --radius: 8px;
+  --radius-sm: 8px;
   --touch: 44px;
   --nav-h: 64px;
-  --pad: 0.85rem;
+  --pad: 16px;
+  --dialog-background: #161014;
+  --dialog-border-radius: 8px;
+  --dialog-title-color: #fffaf7;
+  --dialog-message-color: rgb(255 250 247 / 0.62);
+  --dialog-confirm-button-color: #e11d48;
+  --snackbar-width: min(420px, calc(100vw - 32px));
+  --snackbar-color: #fffaf7;
+  --snackbar-border-radius: 8px;
+  --snackbar-background: #161014;
+  --snackbar-info-background: #161014;
+  --snackbar-border-color: rgb(255 250 247 / 0.16);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --font: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -124,12 +135,10 @@ img {
   padding: 0.75rem 1rem;
   border: 0;
   border-radius: var(--radius-sm);
-  color: #fffaf7;
+  color: var(--ink);
   background: var(--red);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.12) inset,
-    0 12px 28px rgba(225, 29, 72, 0.28);
-  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), filter 0.15s var(--ease);
+  box-shadow: none;
+  transition: transform 0.15s var(--ease), background 0.15s var(--ease);
 }
 
 .primary-btn:active,
@@ -138,9 +147,7 @@ img {
 .roster-dock button:active,
 .landing-btn:active {
   transform: translateY(1px) scale(0.99);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.1) inset,
-    0 8px 18px rgba(225, 29, 72, 0.22);
+  box-shadow: none;
 }
 
 .primary-btn:disabled,

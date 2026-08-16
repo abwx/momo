@@ -3,7 +3,7 @@ import type { ProducerTitle, SProducerReportContext } from './type/SProducerRepo
 /** Creates the title shown in the season settlement. */
 export function SGetProducerTitle(context: SProducerReportContext): ProducerTitle {
   const gap = context.topCharacter.popularity - context.bottomCharacter.popularity;
-  return { name: SGetTitleName(context.averagePopularity, gap), color: SGetTitleColor(context.averagePopularity, gap), grade: context.seasonScore.grade, gradeColor: SGetGradeColor(context.seasonScore.grade) };
+  return { name: SGetTitleName(context.averagePopularity, gap), color: SGetTitleColor(context.averagePopularity, gap), grade: context.seasonScore.grade, gradeCapReason: context.seasonScore.gradeCapReason, gradeColor: SGetGradeColor(context.seasonScore.grade) };
 }
 
 function SGetTitleName(averagePopularity: number, gap: number): string {

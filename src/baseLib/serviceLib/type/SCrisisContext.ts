@@ -1,5 +1,7 @@
 export interface SCrisisContext {
   antiFans: number;
+  biasPressure: number;
+  cpHeat: number;
   crisisCount: number;
   dramaDebt: number;
   eventIndex: number;

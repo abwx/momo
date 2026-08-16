@@ -1,11 +1,11 @@
 import type { SCrisisContext, SReportAvailability } from './type/SCrisisContext';
 
-const MAX_CRISIS_COUNT = 2;
+const MAX_CRISIS_COUNT = 3;
 
 export function SShouldTriggerCrisis(context: SCrisisContext, random: () => number): boolean {
   if (context.crisisCount >= MAX_CRISIS_COUNT) return false;
   if (context.eventIndex + 1 - context.lastCrisisEventIndex < 3) return false;
-  return SHasCrisisSignal(context) && random() < 0.48;
+  return random() < SGetCrisisChance(context);
 }
 
 export function SGetReportAvailability(context: SCrisisContext): SReportAvailability {
@@ -14,8 +14,15 @@ export function SGetReportAvailability(context: SCrisisContext): SReportAvailabi
   return { canBalance, canClean, isAvailable: canBalance || canClean, reason: SGetReportReason(canBalance, canClean) };
 }
 
-function SHasCrisisSignal(context: SCrisisContext): boolean {
-  return context.antiFans >= 30 || context.dramaDebt >= 6 || context.hasNegativeTrending;
+function SGetCrisisChance(context: SCrisisContext): number {
+  const signals = [
+    context.antiFans >= 30 ? 0.6 : 0,
+    context.dramaDebt >= 6 ? 0.56 : 0,
+    context.biasPressure >= 8 ? 0.52 : 0,
+    context.cpHeat >= 8 ? 0.52 : 0,
+    context.hasNegativeTrending ? 0.64 : 0,
+  ];
+  return Math.max(...signals);
 }
 
 function SGetReportReason(canBalance: boolean, canClean: boolean): string {

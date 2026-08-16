@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Character } from '../../data/characters';
 import type { EventHistoryItem } from '../../data/type/SettlementReport';
-import { SAddAssessmentScores, SApplyEpisodeAssessment, SCreateClassPopularityDeltas, SCreateEventAssessmentDeltas, SCreateFinaleAssessmentDeltas, SCreateRecordingAssessmentDeltas, SCreateClassTrackState, SGetAssessmentStanding, SGetClassMultiplier, SGetJustCompletedEpisode, SReshuffleClasses } from './SClassTrack';
+import { SAddAssessmentScores, SApplyEpisodeAssessment, SCreateClassPopularityDeltas, SCreateEventAssessmentDeltas, SCreateFinaleAssessmentDeltas, SCreateClassTrackState, SGetAssessmentStanding, SGetClassMultiplier, SGetJustCompletedEpisode, SReshuffleClasses } from './SClassTrack';
 
 const characters = Array.from({ length: 9 }, (_, index) => ({ id: `member-${index + 1}`, name: `Member ${index + 1}`, image: '', personality: '成长势', popularity: 90 - index, description: '' })) as Character[];
 
@@ -47,11 +47,8 @@ describe('SClassTrack', () => {
     const state = SCreateClassTrackState(characters);
     const eventDeltas = SCreateEventAssessmentDeltas(state, { 'member-1': 10, 'member-8': 10 });
     const popularityDeltas = SCreateClassPopularityDeltas(state, { 'member-1': 10, 'member-8': 10 });
-    const recordingDeltas = SCreateRecordingAssessmentDeltas(state, characters, 86, 'FOCUS', 'member-8', 2);
-
     expect(eventDeltas).toEqual({ 'member-1': 3, 'member-8': 3 });
     expect(popularityDeltas).toEqual({ 'member-1': 10, 'member-8': 8.5 });
-    expect(recordingDeltas).toEqual({ 'member-8': 2 });
   });
 
   it('reports the score and distance to the class one cutoff', () => {

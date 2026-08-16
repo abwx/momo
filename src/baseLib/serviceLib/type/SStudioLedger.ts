@@ -1,6 +1,4 @@
-export type SStudioLedgerKey = 'recording' | 'fans' | 'bonds' | 'report';
-
-export type SRecordingModeKey = 'BALANCE' | 'FOCUS' | 'DRAMA';
+export type SStudioLedgerKey = 'fans' | 'bonds' | 'report';
 
 export type SFanProgramKey = 'GROUP' | 'SOLO' | 'CP' | 'PUBLIC' | 'ANTI';
 
@@ -10,7 +8,6 @@ export type SReportActionKey = 'BALANCE' | 'CLEAN';
 
 export interface SStudioLedger {
   spend: Record<SStudioLedgerKey, number>;
-  recordingModes: Record<SRecordingModeKey, number>;
   fanPrograms: Record<SFanProgramKey, number>;
   bondProjects: Record<SBondProjectKey, number>;
   reportActions: Record<SReportActionKey, number>;

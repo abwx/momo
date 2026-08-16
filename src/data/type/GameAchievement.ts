@@ -1,10 +1,10 @@
 export interface GameAchievementContext {
   averagePopularity: number;
-  completedGoalCount: number;
   topBondValue: number;
   qteSuccessCount: number;
   budget: number;
   completedEpisodeCount: number;
+  isSeasonComplete: boolean;
 }
 
 export interface GameAchievement {

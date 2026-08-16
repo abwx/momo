@@ -46,7 +46,7 @@ function drawPoster(context: CanvasRenderingContext2D, options: SharePosterOptio
 function drawPosterText(context: CanvasRenderingContext2D, options: SharePosterOptions) {
   context.fillStyle = '#ffffff';
   context.font = '800 48px sans-serif';
-  context.fillText('突围模拟器', 88, 120);
+  context.fillText('四代一班模拟器', 88, 120);
   context.font = '900 78px sans-serif';
   context.fillText(options.title, 88, 220);
   context.fillStyle = '#ffcf66';
@@ -109,5 +109,5 @@ function drawPosterFooter(context: CanvasRenderingContext2D, topBond: SBondPair 
   context.fillText(`最强羁绊：${topBond?.names || '尚未形成'}`, 108, 1300);
   context.fillStyle = '#64748b';
   context.font = '600 28px sans-serif';
-  context.fillText('突围模拟器 / 数据仅供娱乐', 88, 1380);
+  context.fillText('四代一班模拟器 / 数据仅供娱乐', 88, 1380);
 }

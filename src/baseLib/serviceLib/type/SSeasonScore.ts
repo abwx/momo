@@ -9,5 +9,8 @@ export interface SSeasonScoreItem {
 export interface SSeasonScore {
   total: number;
   grade: string;
+  rawGrade: string;
+  gradeCap: string;
+  gradeCapReason: string;
   items: SSeasonScoreItem[];
 }

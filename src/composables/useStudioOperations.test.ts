@@ -2,6 +2,7 @@ import { computed, reactive, ref } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import type { Character } from '../data/characters';
 import { SCreateStudioLedger } from '../baseLib/serviceLib/SStudioLedger';
+import type { SFanPulse } from '../baseLib/serviceLib/type/SFanPulse';
 import { useStudioOperations } from './useStudioOperations';
 
 const characters: Character[] = [
@@ -17,12 +18,43 @@ describe('useStudioOperations', () => {
       return false;
     });
     const operations = useStudioOperations({
-      applyEffect: vi.fn(), averagePopularity: computed(() => 75), bondMap: reactive({}), bondProjectIntensity: ref(1), budget: ref(100000), characters, eventCandidates: computed(() => characters), executionIntensity: ref(2), fanOperationIntensity: ref(2), focusCharacter: computed(() => characters[0]), biasCharacter: computed(() => characters[0]), highlightedCharIds: ref(new Set()), onBondProjectRecorded: vi.fn(), onFanProgramRecorded: vi.fn(), recordingMode: ref('BALANCE'), selectedBondCharacters: computed(() => characters), showFeedback: message => feedback.push(message), spendBudget: vi.fn(() => true), spendResources, studioLedger: reactive(SCreateStudioLedger()), topCharacter: computed(() => characters[1]),
+      applyEffect: vi.fn(), averagePopularity: computed(() => 75), bondMap: reactive({}), budget: ref(100000), characters, biasCharacter: computed(() => characters[0]), onBondProjectRecorded: vi.fn(() => []), onFanProgramRecorded: vi.fn(() => []), selectedBondCharacters: computed(() => characters), showFeedback: message => feedback.push(message), spendBudget: vi.fn(() => true), spendResources, studioLedger: reactive(SCreateStudioLedger()),
     });
 
     operations.handleBondProject('STAGE');
 
     expect(spendResources).toHaveBeenCalledWith({ camera: 1, edit: 1 }, 'CP 营业');
     expect(feedback).toEqual(['CP 营业还差 镜头份 1 / 成片权 1，这期额度不够，先缓一缓。']);
+  });
+
+  it('records a solo fan run and reports its decision cost', () => {
+    const ledger = reactive(SCreateStudioLedger());
+    const applyEffect = vi.fn();
+    const showFeedback = vi.fn();
+    const onFanProgramRecorded = vi.fn(() => ['assessment +2']);
+    const operations = useStudioOperations({
+      applyEffect, averagePopularity: computed(() => 75), bondMap: reactive({}), budget: ref(100000), characters, biasCharacter: computed(() => characters[0]), onBondProjectRecorded: vi.fn(() => []), onFanProgramRecorded, selectedBondCharacters: computed(() => characters), showFeedback, spendBudget: vi.fn(() => true), spendResources: vi.fn(() => true), studioLedger: ledger,
+    });
+
+    operations.handleFanProgram('SOLO');
+
+    expect(ledger.fanPrograms.SOLO).toBe(1);
+    expect(applyEffect).toHaveBeenCalledWith(expect.objectContaining({ season: { biasPressure: 2 } }));
+    expect(onFanProgramRecorded).toHaveBeenCalledWith('SOLO', 1);
+    expect(showFeedback.mock.calls[0][1]).toContain('偏心压力 +2');
+  });
+
+  it('uses the fan response to clear a live negative topic and advance the brief', () => {
+    const advancePulse = vi.fn();
+    const resolveNegativeTrending = vi.fn();
+    const pulse: SFanPulse = { id: 'crisis', phase: 'OPEN', title: '', quote: '', program: 'ANTI', programHint: '', pairIds: ['guan-junchen', 'chen-yiheng'], project: 'VLOG', projectHint: '' };
+    const operations = useStudioOperations({
+      applyEffect: vi.fn(), averagePopularity: computed(() => 75), bondMap: reactive({}), budget: ref(100000), characters, biasCharacter: computed(() => characters[0]), fanPulse: computed(() => pulse), onBondProjectRecorded: vi.fn(() => []), onFanProgramRecorded: vi.fn(() => []), selectedBondCharacters: computed(() => characters), showFeedback: vi.fn(), spendBudget: vi.fn(() => true), spendResources: vi.fn(() => true), studioLedger: reactive(SCreateStudioLedger()), onPulseHandled: advancePulse, resolveNegativeTrending,
+    });
+
+    operations.handleFanProgram('ANTI');
+
+    expect(resolveNegativeTrending).toHaveBeenCalledOnce();
+    expect(advancePulse).toHaveBeenCalledOnce();
   });
 });

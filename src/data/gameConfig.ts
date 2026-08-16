@@ -1,6 +1,11 @@
 export const INITIAL_BUDGET = 100000;
 export const MAX_OPERATION_LEVEL = 4;
-export const RECORDING_INTENSITY_COST = 2500;
+
+export const RECORDING_SCENE_COST = {
+  CHOICE: 3500,
+  PICK_TWO: 4500,
+  RANKING: 5500,
+} as const;
 
 export const FAN_PROGRAM_BASE_COST = {
   GROUP: 6000,

@@ -5,9 +5,3 @@ export type CharacterTraitKey =
   | 'PUBLIC_FAVOR'
   | 'PR_SHIELD'
   | 'GROWTH_CURVE';
-
-export interface CharacterTrait {
-  key: CharacterTraitKey;
-  name: string;
-  desc: string;
-}

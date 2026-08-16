@@ -1,23 +1,24 @@
 <script setup lang="ts">
-defineProps<{
+import { onUnmounted, watch } from 'vue';
+import { Snackbar } from '@varlet/ui';
+import '@varlet/ui/es/snackbar/style/index.mjs';
+
+const props = defineProps<{
   show: boolean;
   message: string;
   title?: string;
   impactLines?: string[];
 }>();
-</script>
 
-<template>
-  <Transition name="toast">
-    <div v-if="show" class="toast-hint" role="status" aria-live="polite">
-      <div class="toast-icon">LOG</div>
-      <div class="toast-body">
-        <div class="toast-title">{{ title || '粉圈热报' }}</div>
-        <p class="toast-text">{{ message }}</p>
-        <div v-if="impactLines?.length" class="toast-impacts">
-          <span v-for="impact in impactLines" :key="impact">{{ impact }}</span>
-        </div>
-      </div>
-    </div>
-  </Transition>
-</template>
+function getToastContent(): string {
+  return [props.title || '粉圈热报', props.message, ...(props.impactLines || [])].join('\n');
+}
+
+function updateToast(show: boolean) {
+  Snackbar.clear();
+  if (show) Snackbar({ content: getToastContent(), position: 'center', duration: 0, forbidClick: true, vertical: true });
+}
+
+watch(() => props.show, updateToast);
+onUnmounted(() => Snackbar.clear());
+</script>

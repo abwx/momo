@@ -1,4 +1,4 @@
-export interface SSeasonState {
+export interface SSeasonMetrics {
   groupHeat: number;
   producerReputation: number;
   anticipation: number;
@@ -6,6 +6,14 @@ export interface SSeasonState {
   dramaDebt: number;
   cpHeat: number;
   crisisCount: number;
-  lastCrisisEventIndex: number;
   lowRankMomentum: number;
 }
+
+export interface SSeasonFlow {
+  fanPulseEventIndex: number;
+  fanPulseStep: number;
+  programPlanPromptIndex: number;
+  lastCrisisEventIndex: number;
+}
+
+export type SSeasonState = SSeasonMetrics & SSeasonFlow;

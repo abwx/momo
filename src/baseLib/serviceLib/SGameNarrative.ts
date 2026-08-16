@@ -3,7 +3,6 @@ import type { GameEffectTag } from '../../data/type/GameEvent';
 import type { SBondPair } from './type/SBondPair';
 import type { SNarrativeOutcome, SNarrativeThread } from './type/SNarrativeThread';
 import type { SSeasonState } from './type/SSeasonState';
-import type { SStudioLedger } from './type/SStudioLedger';
 
 export interface SProducerIdentity {
   title: string;
@@ -21,21 +20,16 @@ const S_NARRATIVE_TAG_EFFECTS: Partial<Record<GameEffectTag, Partial<SSeasonStat
 };
 
 const S_NARRATIVE_TAG_HINTS: Partial<Record<GameEffectTag, string>> = {
-  DRAMA_ESCALATE: '争议债上升', DRAMA_SETTLE: '争议债下降',
-  FOCUS_ESCALATE: '偏心压力上升', FOCUS_SETTLE: '镜头落差缓和',
-  CP_ESCALATE: 'CP 热度升高', CP_SETTLE: 'CP 热度收束',
-  UNDERDOG_SPOTLIGHT: '低位逆袭推进', FINALE_AUDIT: '触发终局审查',
+  GROUP_BOOST: '团粉 +7 · 群像优先', ANTI_RISK: '黑词 -6 · 口碑优先',
+  PUBLIC_BOOST: '路人关注 +5 · 传播优先', DRAMA_ESCALATE: '争议债 +6 · 口碑 -3',
+  DRAMA_SETTLE: '争议债 -8 · 口碑 +4', FOCUS_ESCALATE: '唯粉 +5 · 偏心压力 +6',
+  FOCUS_SETTLE: '团粉 +5 · 偏心压力 -8', CP_ESCALATE: 'CP 粉 +8 · CP 热度 +6',
+  CP_SETTLE: '团粉 +4 · CP 热度 -8', UNDERDOG_SPOTLIGHT: '路人关注 +5 · 低位曝光 +6',
+  FINALE_AUDIT: '触发收官审查',
 };
 
 export function SGetNarrativeThreads(state: SSeasonState): SNarrativeThread[] {
   return [SCreateBiasThread(state), SCreateDramaThread(state), SCreateCpThread(state), SCreateUnderdogThread(state)].filter(Boolean) as SNarrativeThread[];
-}
-
-export function SGetNarrativeResolutionEffect(eventId: string): Partial<SSeasonState> {
-  if (eventId === 'followup-cp-afterglow') return { cpHeat: -6, anticipation: 3 };
-  if (eventId === 'followup-low-rank-spotlight') return { lowRankMomentum: -8, producerReputation: 3 };
-  if (eventId === 'followup-public-crisis') return { dramaDebt: -3, producerReputation: 4 };
-  return {};
 }
 
 /** Converts a branch decision into state that can affect later events and the final report. */
@@ -48,13 +42,13 @@ export function SGetNarrativeChoiceHint(tags: GameEffectTag[] = []): string {
 }
 
 export function SGetNarrativeOutcomes(state: SSeasonState, history: EventHistoryItem[], topBond: SBondPair | null, lowRankGrowth: number): SNarrativeOutcome[] {
-  return [SCreateBiasOutcome(state, history), SCreateDramaOutcome(history), SCreateCpOutcome(topBond, history), SCreateUnderdogOutcome(lowRankGrowth, history)].filter(Boolean) as SNarrativeOutcome[];
+  return [SCreateBiasOutcome(state, history), SCreateDramaOutcome(history), SCreateCpOutcome(topBond), SCreateUnderdogOutcome(lowRankGrowth, history)].filter(Boolean) as SNarrativeOutcome[];
 }
 
-export function SGetProducerIdentity(state: SSeasonState, ledger: SStudioLedger): SProducerIdentity {
-  if (ledger.recordingModes.DRAMA >= 3 || state.anticipation >= 30) return { title: '话题制造机', detail: '你愿意用争议换取讨论，并知道何时安排回收。' };
-  if (state.biasPressure >= 16 || ledger.recordingModes.FOCUS >= 4) return { title: '本命操盘手', detail: '镜头始终偏向一个名字，粉圈也因此记住了你的偏爱。' };
-  if (state.lowRankMomentum >= 8 || ledger.recordingModes.BALANCE >= 4) return { title: '群像派导演', detail: '你把被忽略的人留在镜头里，让团综拥有更长的后劲。' };
+export function SGetProducerIdentity(state: SSeasonState): SProducerIdentity {
+  if (state.dramaDebt >= 10 || state.anticipation >= 30) return { title: '话题制造机', detail: '你愿意用争议换取讨论，并知道何时安排回收。' };
+  if (state.biasPressure >= 16) return { title: '本命操盘手', detail: '镜头始终偏向一个名字，粉圈也因此记住了你的偏爱。' };
+  if (state.lowRankMomentum >= 8) return { title: '群像派导演', detail: '你把被忽略的人留在镜头里，让团综拥有更长的后劲。' };
   return { title: '稳妥节目监制', detail: '你优先保证节目口碑与团体秩序，把风险留在可控范围。' };
 }
 
@@ -84,17 +78,14 @@ function SCreateThread(key: string, title: string, value: number, detail: string
 
 function SCreateBiasOutcome(state: SSeasonState, history: EventHistoryItem[]): SNarrativeOutcome | null {
   if (SHasTag(history, 'FOCUS_SETTLE')) return { title: '群像回收', detail: '你在偏心争议扩大前把镜头交还给了其他成员，团体叙事重新站稳。' };
-  if (SHasEvent(history, 'followup-focus-boycott')) return { title: '偏心反噬', detail: '过度集中镜头引发了粉圈抵触，本季主角线最终留下了代价。' };
   return state.biasPressure >= 8 ? { title: '镜头主角', detail: '你用连续高光剪出了一位本季主角。' } : null;
 }
 
 function SCreateDramaOutcome(history: EventHistoryItem[]): SNarrativeOutcome | null {
-  if (SHasEvent(history, 'followup-drama-collapse')) return { title: '争议失控', detail: '这条抓马线越过了可控边界，热度兑现成了本季最难收拾的后遗症。' };
   return SHasTag(history, 'DRAMA_SETTLE') ? { title: '争议回收', detail: '你没有让悬念失控，而是把争议剪回了节目叙事。' } : null;
 }
 
-function SCreateCpOutcome(topBond: SBondPair | null, history: EventHistoryItem[]): SNarrativeOutcome | null {
-  if (SHasEvent(history, 'followup-cp-fatigue')) return { title: 'CP 透支', detail: '双人热度被连续加码，讨论盘开始从嗑糖转为审视。' };
+function SCreateCpOutcome(topBond: SBondPair | null): SNarrativeOutcome | null {
   return topBond?.value && topBond.value >= 36 ? { title: '化学反应', detail: `${topBond.names} 成为本季最有记忆点的双人线。` } : null;
 }
 
@@ -111,8 +102,4 @@ function SAddNarrativeEffect(target: Partial<SSeasonState>, source?: Partial<SSe
 
 function SHasTag(history: EventHistoryItem[], tag: GameEffectTag): boolean {
   return history.some(item => item.effectTags?.includes(tag));
-}
-
-function SHasEvent(history: EventHistoryItem[], eventId: string): boolean {
-  return history.some(item => item.event.id === eventId);
 }

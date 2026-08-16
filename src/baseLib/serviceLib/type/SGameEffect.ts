@@ -1,6 +1,6 @@
 import type { GameEffectTag } from '../../../data/type/GameEvent';
 import type { SFanFactionState } from './SFanFactionState';
-import type { SSeasonState } from './SSeasonState';
+import type { SSeasonMetrics } from './SSeasonState';
 
 export interface SBondEffect {
   pairIds: [string, string];
@@ -12,7 +12,7 @@ export interface SBondEffect {
 export interface SGameEffect {
   popularity?: Record<string, number>;
   factions?: Partial<SFanFactionState>;
-  season?: Partial<SSeasonState>;
+  season?: Partial<SSeasonMetrics>;
   budgetDelta?: number;
   bond?: SBondEffect;
   tags?: GameEffectTag[];

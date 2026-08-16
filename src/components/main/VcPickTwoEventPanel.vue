@@ -6,6 +6,7 @@ import { getImageUrl } from '../../utils/imageUrl';
 
 const props = defineProps<{
   candidates: Character[];
+  hookCandidateIds?: string[];
   selectedPair: Character[];
   selectedPairBondValue: number;
   pairRole?: PickTwoRole;
@@ -26,7 +27,7 @@ const pairMetricLabel = computed(() => props.pairRole === 'TEAM' ? '默契值' :
 <template>
   <div class="pick-two-board">
     <p class="pick-two-hint">
-      从人气前五中选两人（已选 {{ selectedPair.length }} / 2）
+      本镜指名两人（已选 {{ selectedPair.length }} / 2）
     </p>
     <p v-if="selectedPair.length === 2" class="bond-preview">
       {{ selectedPair[0].name }} × {{ selectedPair[1].name }} · {{ pairMetricLabel }} {{ selectedPairBondValue }}
@@ -43,6 +44,7 @@ const pairMetricLabel = computed(() => props.pairRole === 'TEAM' ? '默契值' :
         <img :src="getImageUrl(character.image)" :alt="character.name" loading="lazy" decoding="async" />
         <span class="pick-meta">
           <strong>{{ character.name }}</strong>
+          <small v-if="hookCandidateIds?.includes(character.id)" class="candidate-signal">粉盘候补</small>
           <small>{{ character.personality }} · {{ character.popularity }} 热度</small>
         </span>
       </button>
@@ -52,7 +54,7 @@ const pairMetricLabel = computed(() => props.pairRole === 'TEAM' ? '默契值' :
       :disabled="selectedPair.length !== 2"
       @click="emit('submit')"
     >
-      确认人选
+      确认本镜人选
     </button>
   </div>
 </template>

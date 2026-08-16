@@ -1,15 +1,16 @@
 import type { Character } from '../../data/characters';
-import type { GameEvent } from '../../data/events';
+import type { GameEvent } from '../../data/type/GameEvent';
 import type { ProgramEpisode } from '../../data/type/ProgramEpisode';
 import { getRandomValue } from '../../utils/random';
 
-const POPULARITY_JITTER = 7;
+const POPULARITY_MIN = 55;
+const POPULARITY_MAX = 90;
 
-/** 每季开局：在默认热度上下浮动，避免每局前五永远同一批。 */
-export function SJitterStartingPopularity(characters: Character[], amplitude = POPULARITY_JITTER): Character[] {
+/** 每季开局：全员热度独立随机，不沿用静态表，避免像现实排名。 */
+export function SRandomizeStartingPopularity(characters: Character[]): Character[] {
   return characters.map(character => ({
     ...character,
-    popularity: SClampPopularity(character.popularity + SRandomDelta(amplitude)),
+    popularity: SRandomPopularity(),
   }));
 }
 
@@ -23,6 +24,11 @@ export function SCreateProgramSeasonEvents(
   return [openingEvent, ...program.flatMap(episode => SGetEpisodeEvents(episode, eventMap))];
 }
 
+/** Counts authored nodes only; conditional branches are intentionally excluded. */
+export function SGetProgramMainEventCount(program: ProgramEpisode[]): number {
+  return 1 + program.reduce((count, episode) => count + episode.eventIds.length, 0);
+}
+
 function SGetEpisodeEvents(episode: ProgramEpisode, eventMap: Map<string, GameEvent>): GameEvent[] {
   return episode.eventIds.map(eventId => SGetProgramEvent(episode.id, eventId, eventMap));
 }
@@ -33,10 +39,6 @@ function SGetProgramEvent(episodeId: string, eventId: string, eventMap: Map<stri
   return event;
 }
 
-function SRandomDelta(amplitude: number): number {
-  return Math.floor(getRandomValue() * (amplitude * 2 + 1)) - amplitude;
-}
-
-function SClampPopularity(value: number): number {
-  return Math.min(95, Math.max(50, Math.round(value)));
+function SRandomPopularity(): number {
+  return POPULARITY_MIN + Math.floor(getRandomValue() * (POPULARITY_MAX - POPULARITY_MIN + 1));
 }

@@ -3,22 +3,24 @@ import type { TrendingTopic } from '../data/type/TrendingTopic';
 import { getRandomValue } from '../utils/random';
 
 export interface UseTrendingOptions {
-  isActive: () => boolean;
+  canGenerateTopics: () => boolean;
   getRandomName: () => string;
   onExpire: (topic: TrendingTopic) => void;
+  shouldRunTimer: () => boolean;
 }
 
 const MAX_TRENDING_TOPICS = 3;
 const TRENDING_DURATION = 10000;
 const TRENDING_INTERVAL = 100;
+type TimerId = ReturnType<typeof globalThis.setInterval>;
 
 export function useTrending(options: UseTrendingOptions) {
   const trendingQueue = ref<TrendingTopic[]>([]);
-  const topicTimers = new Map<string, number>();
+  const topicTimers = new Map<string, TimerId>();
   const isAnyTrending = computed(() => trendingQueue.value.length > 0);
 
   function generateTrendingTopic() {
-    if (!options.isActive() || trendingQueue.value.length >= MAX_TRENDING_TOPICS) return;
+    if (!options.canGenerateTopics() || trendingQueue.value.length >= MAX_TRENDING_TOPICS) return;
     const topic = createTrendingTopic(options.getRandomName());
     trendingQueue.value.push(topic);
     startTopicTimer(topic);
@@ -39,7 +41,7 @@ export function useTrending(options: UseTrendingOptions) {
   }
 
   function clearTrendingTimers() {
-    topicTimers.forEach(timer => window.clearInterval(timer));
+    topicTimers.forEach(timer => globalThis.clearInterval(timer));
     topicTimers.clear();
   }
 
@@ -56,13 +58,14 @@ export function useTrending(options: UseTrendingOptions) {
 
   function startTopicTimer(topic: TrendingTopic) {
     const step = (TRENDING_INTERVAL / TRENDING_DURATION) * 100;
-    const timer = window.setInterval(() => updateTopicTimer(topic, step), TRENDING_INTERVAL);
+    const timer = globalThis.setInterval(() => updateTopicTimer(topic, step), TRENDING_INTERVAL);
     topicTimers.set(topic.id, timer);
   }
 
   function updateTopicTimer(topic: TrendingTopic, step: number) {
+    if (!options.shouldRunTimer()) return;
     topic.timeLeft -= step;
-    if (topic.timeLeft > 0 && options.isActive()) return;
+    if (topic.timeLeft > 0) return;
     clearTopicTimer(topic.id);
     if (!getTrendingTopic(topic.id)) return;
     if (topic.type === 'NEGATIVE') options.onExpire(topic);
@@ -71,7 +74,7 @@ export function useTrending(options: UseTrendingOptions) {
 
   function clearTopicTimer(topicId: string) {
     const timer = topicTimers.get(topicId);
-    if (timer) window.clearInterval(timer);
+    if (timer) globalThis.clearInterval(timer);
     topicTimers.delete(topicId);
   }
 

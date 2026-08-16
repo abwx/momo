@@ -1,7 +1,7 @@
 {
-  "name": "镜头法则：首席制作人",
-  "short_name": "镜头法则",
-  "description": "偶像综艺录制与粉丝运营模拟器",
+  "name": "四代一班模拟器",
+  "short_name": "四代一班模拟器",
+  "description": "围绕本命冲击一班席位的虚构互动游戏",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#020617",

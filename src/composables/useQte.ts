@@ -2,6 +2,8 @@ import { ref } from 'vue';
 import type { QTEScenario, QTEType } from '../data/type/QTEScenario';
 import { getRandomValue } from '../utils/random';
 
+type TimerId = ReturnType<typeof globalThis.setInterval>;
+
 export interface UseQteOptions {
   scenarios: QTEScenario[];
   onComplete: (success: boolean, scenario: QTEScenario) => void;
@@ -16,8 +18,8 @@ export function useQte(options: UseQteOptions) {
   const qteSuccessCount = ref(0);
   const currentQTEScenario = ref<QTEScenario | null>(null);
   const timingDirection = ref(1);
-  let timingInterval: number | null = null;
-  let holdTimer: number | null = null;
+  let timingInterval: TimerId | null = null;
+  let holdTimer: TimerId | null = null;
 
   function getQteHint() {
     if (qteType.value === 'MASH') return '快点，连续点击';
@@ -30,6 +32,8 @@ export function useQte(options: UseQteOptions) {
   }
 
   function startQTE() {
+    if (qteActive.value || qteResult.value) return;
+    clearQteTimers();
     const scenario = options.scenarios[Math.floor(getRandomValue() * options.scenarios.length)];
     currentQTEScenario.value = scenario;
     qteType.value = scenario.type;
@@ -60,21 +64,21 @@ export function useQte(options: UseQteOptions) {
   }
 
   function startHold() {
-    if (qteType.value !== 'HOLD' || !qteActive.value) return;
+    if (qteType.value !== 'HOLD' || !qteActive.value || holdTimer) return;
     const start = Date.now();
-    holdTimer = window.setInterval(() => updateHoldValue(start), 50);
+    holdTimer = globalThis.setInterval(() => updateHoldValue(start), 50);
   }
 
   function stopHold() {
     if (!holdTimer) return;
-    window.clearInterval(holdTimer);
+    globalThis.clearInterval(holdTimer);
     holdTimer = null;
     if (qteActive.value) completeQTE(false);
   }
 
   function clearQteTimers() {
-    if (timingInterval) window.clearInterval(timingInterval);
-    if (holdTimer) window.clearInterval(holdTimer);
+    if (timingInterval) globalThis.clearInterval(timingInterval);
+    if (holdTimer) globalThis.clearInterval(holdTimer);
     timingInterval = null;
     holdTimer = null;
   }
@@ -93,7 +97,7 @@ export function useQte(options: UseQteOptions) {
 
   function startTimingLoop() {
     timingDirection.value = 1;
-    timingInterval = window.setInterval(() => {
+    timingInterval = globalThis.setInterval(() => {
       if (!qteActive.value || qteType.value !== 'TIMING') return clearQteTimers();
       qteValue.value += 4 * timingDirection.value;
       if (qteValue.value >= 100) timingDirection.value = -1;
@@ -104,13 +108,15 @@ export function useQte(options: UseQteOptions) {
   function updateHoldValue(start: number) {
     qteValue.value = Date.now() - start;
     if (qteValue.value < qteTarget.value) return;
-    if (holdTimer) window.clearInterval(holdTimer);
+    if (holdTimer) globalThis.clearInterval(holdTimer);
     holdTimer = null;
     completeQTE(true);
   }
 
   function completeQTE(success: boolean) {
+    if (!qteActive.value) return;
     qteActive.value = false;
+    clearQteTimers();
     const scenario = currentQTEScenario.value;
     if (!scenario) return;
     qteSuccessCount.value += success ? 1 : 0;

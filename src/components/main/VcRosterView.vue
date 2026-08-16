@@ -18,16 +18,15 @@ const selectedBiasCharacter = computed(() =>
   props.characters.find((char) => char.id === selectedBiasId.value)
 );
 
-function selectBias(characterId: string) {
+function selectBias(characterId: string): void {
   selectedBiasId.value = characterId;
 }
 
-function startWithBias() {
+function startWithBias(): void {
   emit('startGame', selectedBiasId.value);
 }
 
-function onAdjust(characterId: string, delta: number, event: Event) {
-  event.stopPropagation();
+function onAdjust(characterId: string, delta: number): void {
   emit('adjustPopularity', characterId, delta);
 }
 </script>
@@ -36,8 +35,8 @@ function onAdjust(characterId: string, delta: number, event: Event) {
   <div class="roster-view">
     <header class="roster-header">
       <div class="roster-hero">
-        <h1>选本命，调开局热度</h1>
-        <p>热度每局会轻微浮动，也可用 +/- 自定义；本命是开录默认机位焦点。</p>
+        <h1>选本命，开局热度已随机</h1>
+        <p>每人开局热度为本局随机生成的模拟值，不代表现实人气；可用 +/- 微调。本命会影响你的席位目标。</p>
       </div>
       <div class="roster-stats" aria-label="排班概览">
         <div><span>成员</span><strong>{{ characters.length }}</strong></div>
@@ -52,50 +51,41 @@ function onAdjust(characterId: string, delta: number, event: Event) {
         :key="character.id"
         class="char-row"
         :class="{ selected: selectedBiasId === character.id }"
-        role="button"
-        tabindex="0"
-        :aria-pressed="selectedBiasId === character.id"
-        @click="selectBias(character.id)"
-        @keydown.enter.prevent="selectBias(character.id)"
-        @keydown.space.prevent="selectBias(character.id)"
       >
-        <div class="char-avatar">
-          <img
-            :src="getImageUrl(character.image)"
-            :alt="character.name"
-            loading="lazy"
-            decoding="async"
-          />
-          <span v-if="selectedBiasId === character.id" class="bias-badge">本命</span>
-        </div>
-        <div class="char-meta">
-          <strong>{{ character.name }}</strong>
-          <span>{{ character.personality }}</span>
-        </div>
-        <div
-          class="pop-adjuster"
-          :aria-label="`${character.name} 开局热度`"
-          @click.stop
-        >
+        <button type="button" class="char-select" :aria-pressed="selectedBiasId === character.id" :aria-label="`选择 ${character.name} 作为本命`" @click="selectBias(character.id)">
+          <div class="char-avatar">
+            <img :src="getImageUrl(character.image)" :alt="character.name" loading="lazy" decoding="async" />
+            <span v-if="selectedBiasId === character.id" class="bias-badge">本命</span>
+          </div>
+          <div class="char-meta"><strong>{{ character.name }}</strong><span>{{ character.personality }}</span></div>
+        </button>
+        <div v-if="selectedBiasId === character.id" class="pop-adjuster" :aria-label="`${character.name} 开局热度`">
           <button
             class="adjust-btn"
             type="button"
             :disabled="character.popularity <= 50"
             :aria-label="`降低 ${character.name} 热度`"
-            @click="onAdjust(character.id, -2, $event)"
+            @click="onAdjust(character.id, -2)"
           >
             −
           </button>
-          <span class="pop-value">{{ character.popularity }}</span>
+          <div class="pop-value-wrap">
+            <small>热度</small>
+            <span class="pop-value">{{ character.popularity }}</span>
+          </div>
           <button
             class="adjust-btn"
             type="button"
             :disabled="character.popularity >= 95"
             :aria-label="`提高 ${character.name} 热度`"
-            @click="onAdjust(character.id, 2, $event)"
+            @click="onAdjust(character.id, 2)"
           >
             +
           </button>
+        </div>
+        <div v-else class="pop-score" :aria-label="`${character.name} 开局热度 ${character.popularity}`">
+          <small>热度</small>
+          <strong>{{ character.popularity }}</strong>
         </div>
       </article>
     </div>

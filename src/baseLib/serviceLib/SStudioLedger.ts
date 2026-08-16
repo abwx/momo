@@ -2,7 +2,6 @@ import type { SBondPair } from './type/SBondPair';
 import type {
   SBondProjectKey,
   SFanProgramKey,
-  SRecordingModeKey,
   SReportActionKey,
   SStudioClosure,
   SStudioLedger,
@@ -10,24 +9,17 @@ import type {
 } from './type/SStudioLedger';
 
 const STUDIO_NAMES: Record<SStudioLedgerKey, string> = {
-  recording: '录制现场',
-  fans: '粉丝运营',
-  bonds: '羁绊企划',
-  report: '数据报告',
+  fans: '粉盘物料',
+  bonds: '双人花絮',
+  report: '复盘处理',
 };
 
 export function SCreateStudioLedger(): SStudioLedger {
-  return { spend: SCreateSpend(), recordingModes: SCreateRecordingModes(), fanPrograms: SCreateFanPrograms(), bondProjects: SCreateBondProjects(), reportActions: SCreateReportActions(), highlights: [] };
+  return { spend: SCreateSpend(), fanPrograms: SCreateFanPrograms(), bondProjects: SCreateBondProjects(), reportActions: SCreateReportActions(), highlights: [] };
 }
 
 export function SResetStudioLedger(ledger: SStudioLedger) {
   Object.assign(ledger, SCreateStudioLedger());
-}
-
-export function SRecordRecordingRun(ledger: SStudioLedger, mode: SRecordingModeKey, cost: number, focusName: string) {
-  ledger.recordingModes[mode] += 1;
-  SRecordSpend(ledger, 'recording', cost);
-  SAddHighlight(ledger, `录制台：${SModeName(mode)}锁定 ${focusName}`);
 }
 
 export function SRecordFanProgram(ledger: SStudioLedger, type: SFanProgramKey, cost: number) {
@@ -48,25 +40,16 @@ export function SRecordReportAction(ledger: SStudioLedger, type: SReportActionKe
   SAddHighlight(ledger, `报告台：${SReportActionName(type)}执行`);
 }
 
-export function SGetStudioClosure(ledger: SStudioLedger, averagePopularity: number, fanSummary: string, topBond: SBondPair | null): SStudioClosure[] {
+export function SGetStudioClosure(ledger: SStudioLedger, fanSummary: string, topBond: SBondPair | null): SStudioClosure[] {
   return [
-    SBuildRecordingClosure(ledger, averagePopularity),
     SBuildFanClosure(ledger, fanSummary),
     SBuildBondClosure(ledger, topBond),
     SBuildReportClosure(ledger),
   ];
 }
 
-export function SGetTotalSpend(ledger: SStudioLedger) {
-  return Object.values(ledger.spend).reduce((sum, value) => sum + value, 0);
-}
-
 function SCreateSpend(): Record<SStudioLedgerKey, number> {
-  return { recording: 0, fans: 0, bonds: 0, report: 0 };
-}
-
-function SCreateRecordingModes(): Record<SRecordingModeKey, number> {
-  return { BALANCE: 0, FOCUS: 0, DRAMA: 0 };
+  return { fans: 0, bonds: 0, report: 0 };
 }
 
 function SCreateFanPrograms(): Record<SFanProgramKey, number> {
@@ -87,12 +70,6 @@ function SRecordSpend(ledger: SStudioLedger, key: SStudioLedgerKey, cost: number
 
 function SAddHighlight(ledger: SStudioLedger, text: string) {
   ledger.highlights = [text, ...ledger.highlights].slice(0, 6);
-}
-
-function SBuildRecordingClosure(ledger: SStudioLedger, averagePopularity: number): SStudioClosure {
-  const actions = SSumValues(ledger.recordingModes);
-  if (!actions) return SIdleClosure('recording');
-  return SCreateClosure('recording', actions, ledger.spend.recording, `平均人气 ${averagePopularity}`, STopModeText(ledger));
 }
 
 function SBuildFanClosure(ledger: SStudioLedger, fanSummary: string): SStudioClosure {
@@ -121,10 +98,6 @@ function SIdleClosure(key: SStudioLedgerKey): SStudioClosure {
   return SCreateClosure(key, 0, 0, '尚未启用', '本局没有形成工作台记录');
 }
 
-function STopModeText(ledger: SStudioLedger) {
-  return `主策略 ${SModeName(STopKey(ledger.recordingModes))}`;
-}
-
 function STopReportText(ledger: SStudioLedger) {
   return SReportActionName(STopKey(ledger.reportActions));
 }
@@ -135,10 +108,6 @@ function STopKey<T extends string>(record: Record<T, number>) {
 
 function SSumValues(record: Record<string, number>) {
   return Object.values(record).reduce((sum, value) => sum + value, 0);
-}
-
-function SModeName(mode: SRecordingModeKey) {
-  return { BALANCE: '群像平衡', FOCUS: '单推高光', DRAMA: '抓马剪辑' }[mode];
 }
 
 function SFanProgramName(type: SFanProgramKey) {

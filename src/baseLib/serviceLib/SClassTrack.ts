@@ -2,7 +2,6 @@ import type { Character } from '../../data/characters';
 import type { ProgramEpisode } from '../../data/type/ProgramEpisode';
 import type { EventHistoryItem } from '../../data/type/SettlementReport';
 import type { SClassKey, SClassTrackState, SEpisodeClassResult } from './type/SClassTrack';
-import type { SRecordingModeKey } from './type/SStudioLedger';
 
 export const S_CLASS1_CAPACITY = 7;
 const ASSESSMENT_RETENTION = 0.35;
@@ -43,11 +42,6 @@ export function SCreateEventAssessmentDeltas(state: SClassTrackState, popularity
 
 export function SCreateClassPopularityDeltas(state: SClassTrackState, popularity: Record<string, number>): Record<string, number> {
   return Object.fromEntries(Object.entries(popularity).map(([id, delta]) => [id, SGetClassPopularityDelta(state, id, delta)]));
-}
-
-export function SCreateRecordingAssessmentDeltas(state: SClassTrackState, characters: Character[], average: number, mode: SRecordingModeKey, focusId: string, intensity: number): Record<string, number> {
-  if (mode === 'BALANCE') return SCreateClassDeltas(state, characters.filter(character => character.popularity < average).map(character => character.id), Math.max(1, intensity - 1));
-  return SCreateClassDeltas(state, [focusId], intensity + (mode === 'DRAMA' ? 1 : 0));
 }
 
 export function SCreatePairAssessmentDeltas(state: SClassTrackState, ids: string[], intensity: number): Record<string, number> {

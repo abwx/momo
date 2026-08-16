@@ -21,4 +21,12 @@ describe('groupShowProgram', () => {
 
     expect(eventIds).toEqual(expect.arrayContaining(scheduledIds));
   });
+
+  it('keeps ranking nodes aligned to the top-five heat pool', () => {
+    const rankingEvents = groupShowEvents.filter(event => event.type === 'RANKING');
+    expect(rankingEvents.length).toBeGreaterThan(0);
+    rankingEvents.forEach(event => {
+      expect(event.description).toContain('热度前五');
+    });
+  });
 });

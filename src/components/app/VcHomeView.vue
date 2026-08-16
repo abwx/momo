@@ -1,88 +1,71 @@
 <script setup lang="ts">
+import { ArrowRight, CircleHelp } from 'lucide-vue-next';
 import type { Character } from "../../data/characters";
 import { getImageUrl } from "../../utils/imageUrl";
 
 defineProps<{
   heroCharacters: Character[];
-  hasSavedGame: boolean;
-  savedGameLabel: string;
-  achievementCount: number;
-  totalAchievementCount: number;
 }>();
 
 const emit = defineEmits<{
-  continueSavedGame: [];
   enterRoster: [];
-  discardSavedGame: [];
 }>();
 
-function getHeroImageLoading(index: number) {
-  return index < 4 ? "eager" : "lazy";
-}
-
 function getHeroFetchPriority(index: number) {
-  return index < 2 ? "high" : "auto";
+  return index < 4 ? "high" : "auto";
 }
 </script>
 
 <template>
-  <div class="landing-view">
+  <main class="landing-view">
     <div class="landing-cast" aria-hidden="true">
       <div
-        v-for="(char, index) in heroCharacters.slice(0, 6)"
+        v-for="(char, index) in heroCharacters"
         :key="'cast-' + char.id"
         class="landing-cast-tile"
-        :class="'tile-' + (index + 1)"
       >
         <img
           :src="getImageUrl(char.image)"
           alt=""
-          :loading="getHeroImageLoading(index)"
+          loading="eager"
           decoding="async"
           :fetchpriority="getHeroFetchPriority(index)"
         />
       </div>
-    </div>
-    <div class="landing-scrim"></div>
-
-    <div class="landing-panel">
-      <p class="landing-kicker">非官方同人 · β</p>
-      <h1 class="landing-brand">突围模拟器</h1>
-      <p class="landing-title">一班席位战</p>
-      <p class="landing-lead">
-        四期考核，本命能不能留在一班，由你决定。
-      </p>
-
-      <div class="landing-meta" aria-label="制作档案">
-        <span>{{ achievementCount }}/{{ totalAchievementCount }} 档案</span>
-        <span>{{ heroCharacters.length }} 位成员</span>
+      <div class="landing-cast-tile landing-mystery-tile">
+        <CircleHelp :size="28" stroke-width="1.5" aria-hidden="true" />
+        <span>神秘席位</span>
       </div>
+    </div>
+    <div class="landing-scrim" aria-hidden="true"></div>
+    <div class="landing-stage-number" aria-hidden="true">04</div>
+
+    <section class="landing-panel">
+      <div class="landing-topline">
+        <p class="landing-kicker">四代试录</p>
+        <span>15 人入席</span>
+      </div>
+      <h1 class="landing-brand"><span>四代一班</span><span>模拟器</span></h1>
+      <p class="landing-title">把本命送进一班</p>
+      <p class="landing-lead">
+        四期试录，本命能不能留在一班，由你决定。
+      </p>
 
       <div class="landing-actions">
-        <button
-          v-if="hasSavedGame"
-          class="landing-btn continue"
-          @click="emit('continueSavedGame')"
-        >
-          <span>继续录制</span>
-          <small>{{ savedGameLabel }}</small>
-        </button>
         <button class="landing-btn primary" @click="emit('enterRoster')">
-          <span>进入节目大厅</span>
-          <small>先选本命，再开录</small>
-        </button>
-        <button
-          v-if="hasSavedGame"
-          class="landing-clear"
-          @click="emit('discardSavedGame')"
-        >
-          清除本地存档
+          <span class="landing-btn-copy">
+            <strong>开启试录</strong>
+            <small>先选本命，再开录</small>
+          </span>
+          <ArrowRight :size="20" aria-hidden="true" />
         </button>
       </div>
 
+      <p class="landing-brief">选人气，控镜头，压住风向，争下一个一班席位。</p>
+
       <p class="landing-disclaimer">
-        非官方同人模拟，与时代峰峻及相关艺人、节目无关。内容纯属虚构，请勿商用转载。存档仅保存在本机。
+        本作是非官方、非商业的虚构互动模拟，与任何真实艺人、团体、节目、公司或平台无关联。请勿将角色关系、事件与现实人物经历对应或传播。
       </p>
-    </div>
-  </div>
+    </section>
+  </main>
 </template>

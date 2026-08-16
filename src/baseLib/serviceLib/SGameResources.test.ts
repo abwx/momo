@@ -17,4 +17,5 @@ describe('SGameResources', () => {
 
     expect(resources).toEqual(SCreateEpisodeResources());
   });
+
 });

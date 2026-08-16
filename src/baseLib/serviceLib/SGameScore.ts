@@ -6,7 +6,9 @@ import type { SSeasonState } from './type/SSeasonState';
 export function SCreateSeasonScore(characters: Character[], factions: SFanFactionState, season: SSeasonState, budget: number): SSeasonScore {
   const items = SCreateScoreItems(characters, factions, season, budget);
   const total = Math.round(items.reduce((sum, item) => sum + item.contribution, 0));
-  return { total, grade: SGetSeasonGrade(total), items };
+  const rawGrade = SGetSeasonGrade(total);
+  const cap = SGetGradeCap(factions, season, budget);
+  return { total, grade: SLimitGrade(rawGrade, cap.grade), rawGrade, gradeCap: cap.grade, gradeCapReason: cap.reason, items };
 }
 
 function SCreateScoreItems(characters: Character[], factions: SFanFactionState, season: SSeasonState, budget: number): SSeasonScoreItem[] {
@@ -57,4 +59,25 @@ export function SGetSeasonGrade(total: number): string {
   if (total >= 64) return 'C';
   if (total >= 54) return 'D';
   return 'F';
+}
+
+function SGetGradeCap(factions: SFanFactionState, season: SSeasonState, budget: number) {
+  const unresolvedRisk = Math.max(season.biasPressure, season.dramaDebt, season.cpHeat);
+  if (factions.antiFans >= 40 || unresolvedRisk >= 16 || budget < 10000) return SCreateGradeCap('B', '舆情、叙事或经费已失控');
+  if (factions.antiFans >= 24 || unresolvedRisk >= 10 || budget < 20000) return SCreateGradeCap('A', '需先压住基线以上的负面、偏心或过度营业');
+  if (factions.antiFans >= 18 || unresolvedRisk >= 6 || budget < 35000) return SCreateGradeCap('S', '制作稳定度仍有明显短板');
+  if (factions.antiFans >= 12 || unresolvedRisk >= 3 || budget < 50000) return SCreateGradeCap('SS', '制作稳定度尚未达到满分标准');
+  return SCreateGradeCap('SSS', '');
+}
+
+function SCreateGradeCap(grade: string, reason: string) {
+  return { grade, reason };
+}
+
+function SLimitGrade(rawGrade: string, gradeCap: string): string {
+  return SGetGradeIndex(rawGrade) > SGetGradeIndex(gradeCap) ? gradeCap : rawGrade;
+}
+
+function SGetGradeIndex(grade: string): number {
+  return ['F', 'D', 'C', 'B', 'A', 'S', 'SS', 'SSS'].indexOf(grade);
 }
