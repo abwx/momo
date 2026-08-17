@@ -24,15 +24,11 @@ watch(
   }
 );
 
-watch(
-  editableRankingList,
-  (list) => {
-    emit('update:rankingList', list);
-  }
-);
-
 function moveCharacter(index: number, offset: number): void {
-  editableRankingList.value = moveListItem(editableRankingList.value, index, offset);
+  const nextList = moveListItem(editableRankingList.value, index, offset);
+  if (nextList === editableRankingList.value) return;
+  editableRankingList.value = nextList;
+  emit('update:rankingList', nextList);
 }
 </script>
 
