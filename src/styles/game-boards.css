@@ -94,11 +94,6 @@
   transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
 }
 
-.drag-item:active {
-  border-color: var(--blue);
-  box-shadow: none;
-}
-
 .rank-badge {
   display: grid;
   place-items: center;
@@ -135,8 +130,29 @@
   font-weight: 700;
 }
 
-.drag-handle {
-  color: var(--muted);
-  font-size: 1.05rem;
-  padding: 0.35rem;
+.drag-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.drag-move {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--soft-line);
+  border-radius: 6px;
+  background: var(--surface-strong);
+  color: var(--text);
+  touch-action: manipulation;
+}
+
+.drag-move:active:not(:disabled) {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.drag-move:disabled {
+  cursor: not-allowed;
+  opacity: 0.34;
 }
